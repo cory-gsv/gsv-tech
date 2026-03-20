@@ -1,65 +1,203 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+function ServiceCard({
+  eyebrow,
+  title,
+  text,
+  items,
+}: {
+  eyebrow: string;
+  title: string;
+  text: string;
+  items: string[];
+}) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="gsv-card">
+      <div className="gsv-eyebrow">{eyebrow}</div>
+      <h3>{title}</h3>
+      <p>{text}</p>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <main className="gsv-page">
+      <div className="gsv-shell">
+        <header className="gsv-header">
+          <div className="gsv-brand">
+            <div className="gsv-brand-mark">GSV</div>
+            <div>
+              <div className="gsv-brand-name">GSV Tech</div>
+              <div className="gsv-brand-sub">A division of Golden State Visions</div>
+            </div>
+          </div>
+
+          <nav className="gsv-nav">
+            <Link href="/services">Services</Link>
+            <a href="#why-us">Why Us</a>
+            <a href="#contact">Contact</a>
+          </nav>
+        </header>
+
+        <section className="gsv-hero">
+          <div className="gsv-hero-copy">
+            <div className="gsv-eyebrow">Business IT • Networking • Smart Home</div>
+            <h1>Technology systems built for modern businesses and connected homes.</h1>
+            <p>
+              GSV Tech provides small and medium-sized business IT support, network
+              infrastructure, UniFi deployments, and premium smart home solutions
+              including Lutron HomeWorks.
+            </p>
+
+            <div className="gsv-hero-actions">
+              <a className="gsv-btn gsv-btn-primary" href="#contact">
+                Book a Consult
+              </a>
+              <Link className="gsv-btn gsv-btn-secondary" href="/services">
+                Explore Services
+              </Link>
+            </div>
+          </div>
+
+          <div className="gsv-hero-panel">
+            <div className="gsv-status-card">
+              <div className="gsv-status-label">Focused on</div>
+              <div className="gsv-status-value">Reliable systems</div>
+            </div>
+
+            <div className="gsv-status-grid">
+              <div className="gsv-mini-stat">
+                <span>Business IT</span>
+                <strong>Support & buildouts</strong>
+              </div>
+              <div className="gsv-mini-stat">
+                <span>Networking</span>
+                <strong>WiFi, routing, security</strong>
+              </div>
+              <div className="gsv-mini-stat">
+                <span>Smart Home</span>
+                <strong>Lutron HomeWorks</strong>
+              </div>
+              <div className="gsv-mini-stat">
+                <span>Client Experience</span>
+                <strong>Portal & appointment flow</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="services" className="gsv-section">
+          <div className="gsv-section-head">
+            <div className="gsv-eyebrow">Services</div>
+            <h2>Built to support both business operations and high-end residential technology.</h2>
+            <p>
+              We bridge the gap between traditional IT support and modern system
+              integration, giving clients one trusted partner for infrastructure,
+              support, and automation.
+            </p>
+          </div>
+
+          <div className="gsv-card-grid">
+            <ServiceCard
+              eyebrow="01"
+              title="Business IT & Support"
+              text="Reliable support and system management for small and medium-sized businesses."
+              items={[
+                "Microsoft 365 & Google Workspace",
+                "User onboarding and device setup",
+                "Remote support and troubleshooting",
+                "Managed service plans",
+              ]}
+            />
+
+            <ServiceCard
+              eyebrow="02"
+              title="Networks & Infrastructure"
+              text="Clean, scalable network deployments for offices, job sites, and larger properties."
+              items={[
+                "UniFi network design and deployment",
+                "WiFi optimization and coverage planning",
+                "Structured wiring and rack organization",
+                "Firewall, VLAN, and site-to-site setup",
+              ]}
+            />
+
+            <ServiceCard
+              eyebrow="03"
+              title="Smart Home Systems"
+              text="Premium residential technology design and integration for modern living."
+              items={[
+                "Lutron HomeWorks system design",
+                "Lighting control and automation",
+                "Whole-home network infrastructure",
+                "Connected home technology consulting",
+              ]}
+            />
+          </div>
+        </section>
+
+        <section id="why-us" className="gsv-section gsv-section-alt">
+          <div className="gsv-section-head">
+            <div className="gsv-eyebrow">Why GSV Tech</div>
+            <h2>One partner for support, infrastructure, and automation.</h2>
+          </div>
+
+          <div className="gsv-feature-grid">
+            <div className="gsv-feature">
+              <h3>Business-first mindset</h3>
+              <p>
+                We help businesses stay productive with reliable systems, practical
+                support, and thoughtful long-term planning.
+              </p>
+            </div>
+
+            <div className="gsv-feature">
+              <h3>Premium system design</h3>
+              <p>
+                From office networks to smart homes, we focus on clean installs,
+                stable performance, and a polished end-user experience.
+              </p>
+            </div>
+
+            <div className="gsv-feature">
+              <h3>Scalable client experience</h3>
+              <p>
+                Our long-term vision includes a client portal for service tracking,
+                appointments, system visibility, and account management.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="gsv-section">
+          <div className="gsv-contact">
+            <div className="gsv-contact-copy">
+              <div className="gsv-eyebrow">Contact</div>
+              <h2>Let’s talk about your business or home technology needs.</h2>
+              <p>
+                Whether you need IT support, a new network buildout, or a premium
+                smart home system, GSV Tech is ready to help.
+              </p>
+            </div>
+
+            <form className="gsv-contact-form">
+              <input type="text" placeholder="Your name" />
+              <input type="email" placeholder="Email address" />
+              <input type="text" placeholder="Company or project name" />
+              <textarea placeholder="Tell us what you need" rows={5} />
+              <button type="submit" className="gsv-btn gsv-btn-primary">
+                Send Inquiry
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
