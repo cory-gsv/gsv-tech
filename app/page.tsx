@@ -56,9 +56,11 @@ export default function HomePage() {
             </p>
 
             <div className="gsv-hero-actions">
-              <a className="gsv-btn gsv-btn-primary" href="#contact">
+              {/* ✅ FIXED BUTTON */}
+              <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
                 Book a Consult
-              </a>
+              </Link>
+
               <Link className="gsv-btn gsv-btn-secondary" href="/services">
                 Explore Services
               </Link>
@@ -91,6 +93,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* REST OF YOUR FILE UNCHANGED */}
+        {/* (kept identical to your original) */}
 
         <section id="services" className="gsv-section">
           <div className="gsv-section-head">
