@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
 function clean(v?: string | null) {
@@ -24,7 +24,7 @@ function formatDateTimePT(iso?: string) {
   }).format(d);
 }
 
-export default function BookConsultConfirmedPage() {
+function ConfirmedPageContent() {
   const searchParams = useSearchParams();
 
   const name = clean(searchParams.get("name"));
@@ -41,87 +41,109 @@ export default function BookConsultConfirmedPage() {
   const endDisplay = useMemo(() => formatDateTimePT(end), [end]);
 
   return (
+    <>
+      <section className="gsv-confirm-hero">
+        <div className="gsv-confirm-eyebrow">BOOKING CONFIRMED</div>
+        <h1>You’re all set.</h1>
+        <p>
+          Your GSV Tech consultation has been booked successfully.
+          A confirmation email with a calendar attachment has been sent to{" "}
+          <strong>{email || "your email address"}</strong>.
+        </p>
+      </section>
+
+      <section className="gsv-confirm-grid">
+        <div className="gsv-confirm-card">
+          <div className="gsv-confirm-eyebrow">APPOINTMENT DETAILS</div>
+          <h2>Consultation summary</h2>
+
+          <div className="gsv-confirm-detail-list">
+            <div className="gsv-confirm-row">
+              <span>Name</span>
+              <strong>{name || "—"}</strong>
+            </div>
+            <div className="gsv-confirm-row">
+              <span>Email</span>
+              <strong>{email || "—"}</strong>
+            </div>
+            <div className="gsv-confirm-row">
+              <span>Phone</span>
+              <strong>{phone || "—"}</strong>
+            </div>
+            <div className="gsv-confirm-row">
+              <span>Company</span>
+              <strong>{company || "—"}</strong>
+            </div>
+            <div className="gsv-confirm-row">
+              <span>Starts</span>
+              <strong>{startDisplay || "—"}</strong>
+            </div>
+            <div className="gsv-confirm-row">
+              <span>Ends</span>
+              <strong>{endDisplay || "—"}</strong>
+            </div>
+          </div>
+
+          {questions ? (
+            <div className="gsv-confirm-notes">
+              <div className="gsv-confirm-notes-label">What can we help with?</div>
+              <p>{questions}</p>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="gsv-confirm-card">
+          <div className="gsv-confirm-eyebrow">NEXT STEPS</div>
+          <h2>Join information</h2>
+
+          <div className="gsv-confirm-actions">
+            {zoomJoinUrl ? (
+              <a
+                className="gsv-confirm-btn gsv-confirm-btn-primary"
+                href={zoomJoinUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Join Zoom Meeting
+              </a>
+            ) : null}
+          </div>
+
+          {zoomPasscode ? (
+            <div className="gsv-confirm-passcode">
+              <span>Zoom Passcode</span>
+              <strong>{zoomPasscode}</strong>
+            </div>
+          ) : null}
+
+          <div className="gsv-confirm-footnote">
+            If you do not see the confirmation email, check your spam or promotions folder.
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ConfirmedPageFallback() {
+  return (
+    <>
+      <section className="gsv-confirm-hero">
+        <div className="gsv-confirm-eyebrow">BOOKING CONFIRMED</div>
+        <h1>Loading confirmation…</h1>
+        <p>Please wait while we load your booking details.</p>
+      </section>
+    </>
+  );
+}
+
+export default function BookConsultConfirmedPage() {
+  return (
     <main className="gsv-confirm-page">
       <div className="gsv-confirm-shell">
-        <section className="gsv-confirm-hero">
-          <div className="gsv-confirm-eyebrow">BOOKING CONFIRMED</div>
-          <h1>You’re all set.</h1>
-          <p>
-            Your GSV Tech consultation has been booked successfully.
-            A confirmation email with a calendar attachment has been sent to{" "}
-            <strong>{email || "your email address"}</strong>.
-          </p>
-        </section>
-
-        <section className="gsv-confirm-grid">
-          <div className="gsv-confirm-card">
-            <div className="gsv-confirm-eyebrow">APPOINTMENT DETAILS</div>
-            <h2>Consultation summary</h2>
-
-            <div className="gsv-confirm-detail-list">
-              <div className="gsv-confirm-row">
-                <span>Name</span>
-                <strong>{name || "—"}</strong>
-              </div>
-              <div className="gsv-confirm-row">
-                <span>Email</span>
-                <strong>{email || "—"}</strong>
-              </div>
-              <div className="gsv-confirm-row">
-                <span>Phone</span>
-                <strong>{phone || "—"}</strong>
-              </div>
-              <div className="gsv-confirm-row">
-                <span>Company</span>
-                <strong>{company || "—"}</strong>
-              </div>
-              <div className="gsv-confirm-row">
-                <span>Starts</span>
-                <strong>{startDisplay || "—"}</strong>
-              </div>
-              <div className="gsv-confirm-row">
-                <span>Ends</span>
-                <strong>{endDisplay || "—"}</strong>
-              </div>
-            </div>
-
-            {questions ? (
-              <div className="gsv-confirm-notes">
-                <div className="gsv-confirm-notes-label">What can we help with?</div>
-                <p>{questions}</p>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="gsv-confirm-card">
-            <div className="gsv-confirm-eyebrow">NEXT STEPS</div>
-            <h2>Join information</h2>
-
-            <div className="gsv-confirm-actions">
-              {zoomJoinUrl ? (
-                <a
-                  className="gsv-confirm-btn gsv-confirm-btn-primary"
-                  href={zoomJoinUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Join Zoom Meeting
-                </a>
-              ) : null}
-            </div>
-
-            {zoomPasscode ? (
-              <div className="gsv-confirm-passcode">
-                <span>Zoom Passcode</span>
-                <strong>{zoomPasscode}</strong>
-              </div>
-            ) : null}
-
-            <div className="gsv-confirm-footnote">
-              If you do not see the confirmation email, check your spam or promotions folder.
-            </div>
-          </div>
-        </section>
+        <Suspense fallback={<ConfirmedPageFallback />}>
+          <ConfirmedPageContent />
+        </Suspense>
       </div>
 
       <style jsx>{`
