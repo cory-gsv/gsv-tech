@@ -13,9 +13,9 @@
   --dark-card-2: #26221d;
   --dark-line: rgba(255, 255, 255, 0.08);
 
-  --gold: #d6b25e;
-  --gold-soft: rgba(214, 178, 94, 0.15);
-  --gold-line: rgba(214, 178, 94, 0.24);
+  --gold: #ffc72c;
+  --gold-soft: rgba(255, 199, 44, 0.15);
+  --gold-line: rgba(255, 199, 44, 0.24);
 
   --max: 1280px;
   --radius-xl: 32px;
@@ -83,6 +83,7 @@ textarea {
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.08em;
+  flex: 0 0 auto;
 }
 
 .gsv-brand-name {
@@ -141,18 +142,63 @@ textarea {
 .gsv-eyebrow {
   color: var(--gold);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-weight: 900;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 14px;
+  text-shadow: none !important;
+}
+
+.gsv-section .gsv-section-head .gsv-eyebrow,
+.gsv-section .gsv-contact-copy .gsv-eyebrow,
+.gsv-section-head > .gsv-eyebrow,
+.gsv-contact-copy > .gsv-eyebrow {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #111111 !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+  margin-bottom: 24px !important;
+  padding-bottom: 11px !important;
+  background-image: linear-gradient(to right, #ffc72c, #ffc72c) !important;
+  background-repeat: no-repeat !important;
+  background-size: 46px 3px !important;
+  background-position: 18px 100% !important;
+}
+
+.gsv-section .gsv-section-head .gsv-eyebrow::before,
+.gsv-section .gsv-contact-copy .gsv-eyebrow::before,
+.gsv-section-head > .gsv-eyebrow::before,
+.gsv-contact-copy > .gsv-eyebrow::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 2px !important;
+  background: #ffc72c !important;
+  flex: 0 0 auto !important;
+  display: inline-block !important;
+  box-shadow: none !important;
+}
+
+.gsv-section .gsv-section-head .gsv-eyebrow::after,
+.gsv-section .gsv-contact-copy .gsv-eyebrow::after,
+.gsv-section-head > .gsv-eyebrow::after,
+.gsv-contact-copy > .gsv-eyebrow::after {
+  display: none !important;
 }
 
 .gsv-hero-copy h1 {
   margin: 0 0 18px;
-  font-size: clamp(42px, 6vw, 72px);
+  font-size: clamp(38px, 4.85vw, 58px);
   line-height: 0.98;
   letter-spacing: -0.045em;
-  max-width: 11ch;
+  max-width: 13ch;
   color: #ffffff;
 }
 
@@ -180,17 +226,23 @@ textarea {
   border-radius: 999px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 }
 
 .gsv-btn-primary {
-  background: var(--gold);
-  color: #111111;
-  font-weight: 700;
+  background: #ffc72c !important;
+  color: #111111 !important;
+  font-weight: 800;
 }
 
 .gsv-btn-primary:hover {
-  box-shadow: 0 10px 20px rgba(214, 178, 94, 0.2);
+  color: #111111 !important;
+  box-shadow: 0 10px 20px rgba(255, 199, 44, 0.22);
   transform: translateY(-1px);
 }
 
@@ -206,8 +258,8 @@ textarea {
 }
 
 .gsv-status-card {
-  background: rgba(214, 178, 94, 0.15);
-  border: 1px solid rgba(214, 178, 94, 0.28);
+  background: rgba(255, 199, 44, 0.15);
+  border: 1px solid rgba(255, 199, 44, 0.28);
   padding: 20px;
   border-radius: 20px;
 }
@@ -248,6 +300,128 @@ textarea {
   line-height: 1.45;
 }
 
+.gsv-hero-capabilities {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.gsv-hero-capabilities::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 199, 44, 0.22), transparent 32%),
+    radial-gradient(circle at 88% 82%, rgba(255, 255, 255, 0.09), transparent 34%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gsv-hero-capabilities > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead {
+  min-height: auto !important;
+  cursor: pointer;
+  transform: none !important;
+  padding: 16px 18px !important;
+  border-radius: 20px;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead .gsv-status-label {
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+  margin: 0 0 8px !important;
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead .gsv-status-value {
+  display: block !important;
+  font-size: 30px !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead p {
+  margin: 14px 0 0 !important;
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 14px !important;
+  line-height: 1.42 !important;
+  transition: color 220ms ease;
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead:hover {
+  transform: none !important;
+  border-color: rgba(255, 199, 44, 0.62);
+  background: rgba(255, 199, 44, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 199, 44, 0.14);
+}
+
+.gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead:hover p {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.gsv-capability-grid {
+  align-items: stretch;
+}
+
+.gsv-capability-card {
+  min-height: 172px;
+  cursor: pointer;
+  transform: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.gsv-capability-card p {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.45;
+  transition: color 220ms ease;
+}
+
+.gsv-capability-card strong {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.28;
+  transition: color 220ms ease;
+}
+
+.gsv-capability-card span {
+  transition: color 220ms ease;
+}
+
+.gsv-capability-card:hover {
+  transform: none !important;
+  border-color: rgba(255, 199, 44, 0.62);
+  background: rgba(255, 199, 44, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 199, 44, 0.12);
+}
+
+.gsv-capability-card:hover span {
+  color: var(--gold);
+}
+
+.gsv-capability-card:hover strong {
+  color: #ffffff;
+}
+
+.gsv-capability-card:hover p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
 .gsv-section {
   padding: 56px 0;
 }
@@ -257,7 +431,7 @@ textarea {
 }
 
 .gsv-section-head {
-  max-width: 860px;
+  max-width: 980px;
   margin-bottom: 28px;
 }
 
@@ -274,6 +448,11 @@ textarea {
   color: var(--muted-light);
   font-size: 17px;
   line-height: 1.75;
+  text-wrap: balance;
+}
+
+#how-we-work .gsv-section-head p {
+  text-wrap: balance !important;
 }
 
 .gsv-card-grid {
@@ -288,6 +467,24 @@ textarea {
   border: 1px solid var(--line-light);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 247, 243, 0.98));
   box-shadow: 0 12px 28px rgba(20, 16, 10, 0.05);
+}
+
+.gsv-card,
+.gsv-feature {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease;
+  will-change: transform;
+}
+
+.gsv-card:hover,
+.gsv-feature:hover {
+  transform: translateY(-5px) scale(1.018);
+  border-color: rgba(255, 199, 44, 0.38);
+  box-shadow: 0 22px 48px rgba(20, 16, 10, 0.13);
+  background: linear-gradient(180deg, #ffffff, rgba(248, 247, 243, 1));
 }
 
 .gsv-card {
@@ -334,6 +531,11 @@ textarea {
   box-shadow: 0 0 0 5px var(--gold-soft);
 }
 
+.gsv-card li strong {
+  font-weight: 900;
+  color: #111111;
+}
+
 .gsv-feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -355,6 +557,11 @@ textarea {
   margin: 0;
   color: var(--muted-light);
   line-height: 1.75;
+}
+
+.gsv-feature p strong {
+  font-weight: 900;
+  color: #111111;
 }
 
 .gsv-contact {
@@ -387,12 +594,16 @@ textarea {
 .gsv-contact-form input,
 .gsv-contact-form textarea {
   width: 100%;
-  border: 1px solid rgba(17, 17, 17, 0.1);
+  border: 1px solid rgba(17, 17, 17, 0.12);
   background: #ffffff;
   color: var(--text-light);
   border-radius: 16px;
   padding: 14px 16px;
   outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .gsv-contact-form input::placeholder,
@@ -402,8 +613,205 @@ textarea {
 
 .gsv-contact-form input:focus,
 .gsv-contact-form textarea:focus {
-  border-color: rgba(214, 178, 94, 0.5);
-  box-shadow: 0 0 0 4px rgba(214, 178, 94, 0.12);
+  border-color: #ffc72c;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 199, 44, 0.2);
+  background: #ffffff;
+}
+
+.gsv-contact-form button.gsv-btn-primary,
+.gsv-contact-form .gsv-btn-primary {
+  color: #111111 !important;
+  background: #ffc72c !important;
+  font-weight: 900;
+}
+
+.gsv-footer {
+  margin: 40px 0 28px;
+  padding: 32px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--dark-line);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 199, 44, 0.16), transparent 32%),
+    linear-gradient(180deg, var(--dark-card), var(--dark-card-2));
+  color: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+}
+
+.gsv-footer-main {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.45fr)
+    minmax(150px, 0.7fr)
+    minmax(220px, 0.9fr)
+    minmax(230px, 0.8fr);
+  gap: 34px;
+  align-items: start;
+}
+
+.gsv-footer-brand {
+  max-width: 540px;
+}
+
+.gsv-footer .gsv-brand-mark {
+  background: #111111;
+  color: var(--gold);
+}
+
+.gsv-footer .gsv-brand-name {
+  color: #ffffff;
+}
+
+.gsv-footer .gsv-brand-sub {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.gsv-footer-brand p,
+.gsv-footer-column p {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.gsv-footer-brand p {
+  max-width: 440px;
+  text-wrap: balance;
+}
+
+.gsv-footer-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gsv-footer-column h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 950;
+  text-shadow: none !important;
+}
+
+.gsv-footer-column a:not(.gsv-footer-btn) {
+  display: block;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.35;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gsv-footer-column a:not(.gsv-footer-btn):hover {
+  color: var(--gold);
+  transform: translateX(2px);
+}
+
+.gsv-footer-column:last-child {
+  max-width: 260px;
+}
+
+.gsv-footer-column:last-child p {
+  margin-top: 0;
+  max-width: 240px;
+}
+
+.gsv-footer .gsv-btn.gsv-footer-btn {
+  width: auto !important;
+  min-width: 148px !important;
+  max-width: 170px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 18px !important;
+  margin-top: 6px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  align-self: flex-start !important;
+  justify-self: flex-start !important;
+  color: #111111 !important;
+  background: #ffc72c !important;
+  box-shadow: none !important;
+}
+
+.gsv-footer .gsv-btn.gsv-footer-btn:hover {
+  color: #111111 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 18px rgba(255, 199, 44, 0.2) !important;
+}
+
+.gsv-footer-bottom {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--dark-line);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+}
+
+.gsv-footer-bottom a {
+  color: rgba(255, 255, 255, 0.78);
+  transition: color 0.2s ease;
+}
+
+.gsv-footer-bottom a:hover {
+  color: var(--gold);
+}
+
+.gsv-hero-copy h1,
+.gsv-section-head h2,
+.gsv-contact-copy h2,
+.gsv-card h3,
+.gsv-feature h3,
+.gsv-status-value,
+.gsv-capability-card strong {
+  text-wrap: balance;
+}
+
+section.gsv-section > .gsv-section-head > .gsv-eyebrow,
+section.gsv-section .gsv-contact-copy > .gsv-eyebrow {
+  color: #111111 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.22em !important;
+  text-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+section.gsv-section > .gsv-section-head > .gsv-eyebrow::before,
+section.gsv-section .gsv-contact-copy > .gsv-eyebrow::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 2px !important;
+  background: #ffc72c !important;
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1100px) {
+  .gsv-capability-card {
+    min-height: 150px;
+  }
+
+  .gsv-footer-main {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+
+  .gsv-footer-brand {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -416,6 +824,16 @@ textarea {
 
   .gsv-hero-copy h1 {
     max-width: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .gsv-capability-card {
+    min-height: auto;
+  }
+
+  .gsv-hero-panel.gsv-hero-capabilities > .gsv-capability-lead p {
+    font-size: 14px !important;
   }
 }
 
@@ -443,12 +861,22 @@ textarea {
   .gsv-hero-panel,
   .gsv-card,
   .gsv-feature,
-  .gsv-contact {
+  .gsv-contact,
+  .gsv-footer {
     border-radius: 24px;
   }
 
   .gsv-hero-copy {
     padding: 28px;
+  }
+
+  .gsv-hero-panel {
+    padding: 20px;
+  }
+
+  .gsv-hero-copy h1 {
+    font-size: clamp(34px, 9vw, 48px);
+    max-width: none;
   }
 
   .gsv-hero-copy p,
@@ -457,7 +885,51 @@ textarea {
     font-size: 16px;
   }
 
+  .gsv-section .gsv-section-head .gsv-eyebrow,
+  .gsv-section .gsv-contact-copy .gsv-eyebrow,
+  .gsv-section-head > .gsv-eyebrow,
+  .gsv-contact-copy > .gsv-eyebrow {
+    font-size: 12px !important;
+    letter-spacing: 0.2em !important;
+    font-weight: 950 !important;
+    text-shadow: none !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 11px !important;
+    background-size: 42px 3px !important;
+    background-position: 18px 100% !important;
+  }
+
   .gsv-status-grid {
     grid-template-columns: 1fr;
+  }
+
+  .gsv-footer {
+    padding: 24px;
+  }
+
+  .gsv-footer-main {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .gsv-footer-brand {
+    grid-column: auto;
+    max-width: none;
+  }
+
+  .gsv-footer-brand p {
+    max-width: none;
+  }
+
+  .gsv-footer-column:last-child {
+    max-width: none;
+  }
+
+  .gsv-footer-column:last-child p {
+    max-width: none;
+  }
+
+  .gsv-footer-bottom {
+    flex-direction: column;
   }
 }

@@ -32,7 +32,7 @@ export default function ServicesPage() {
         <div className="gsv-brand">
           <div className="gsv-brand-mark">GSV</div>
           <div>
-            <div className="gsv-brand-name">GSV Tech</div>
+            <div className="gsv-brand-name">Golden State Visions</div>
             <div className="gsv-brand-sub">A division of Golden State Visions</div>
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function ServicesPage() {
           <div className="gsv-eyebrow">Services</div>
           <h2>Comprehensive IT, networking, and smart home solutions.</h2>
           <p>
-            GSV Tech supports small and medium-sized businesses with buildouts,
+            Golden State Visions supports small and medium-sized businesses with buildouts,
             ongoing support, and scalable infrastructure, while also delivering
             premium connected-home solutions including Lutron HomeWorks.
           </p>
@@ -58,28 +58,28 @@ export default function ServicesPage() {
 
         <div className="gsv-card-grid">
           <ServiceBlock
-            eyebrow="01"
-            title="Business IT & Support"
-            text="Practical day-to-day support and long-term technology planning for growing businesses."
-            items={[
-              "Microsoft 365 and Google Workspace setup",
-              "User onboarding and workstation deployment",
-              "Remote troubleshooting and support",
-              "Managed service plans and recurring support",
-            ]}
-          />
+          eyebrow="01"
+          title="Business IT & Support"
+          text="Business technology planning, cloud platform administration, and day-to-day IT support for growing organizations."
+          items={[
+            "Managed IT services, remote support, and vendor coordination",
+            "Microsoft 365 and Google Workspace design, administration, and migration",
+            "Email, user, and workstation deployment",
+             "Business IT architecture, server infrastructure, and system implementation",
+          ]}
+        />
 
-          <ServiceBlock
-            eyebrow="02"
-            title="Networks & Infrastructure"
-            text="Clean, reliable infrastructure for offices, larger properties, and multi-device environments."
-            items={[
-              "UniFi network design and deployment",
-              "WiFi planning and coverage improvement",
-              "Structured wiring and rack organization",
-              "Firewall rules, VLANs, and site-to-site connectivity",
-            ]}
-          />
+         <ServiceBlock
+          eyebrow="02"
+          title="Networks & Infrastructure"
+          text="Reliable network infrastructure for small to medium sized offices, Custom Homes, and multi-device environments."
+          items={[
+          "Network architecture, gateway, and firewall implementation",
+          "WiFi design, coverage planning, and performance optimization",
+          "Structured cabling, rack design, and infrastructure organization",
+          "VLAN segmentation, access control, and secure site-to-site connectivity",
+  ]}
+/>
 
           <ServiceBlock
             eyebrow="03"
