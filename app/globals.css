@@ -58,12 +58,16 @@ textarea {
   margin: 0 auto;
 }
 
+/* =========================================================
+   Header / Brand
+   ========================================================= */
+
 .gsv-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 20px 0 28px;
+  gap: 28px;
+  padding: 22px 0 28px;
 }
 
 .gsv-brand {
@@ -96,6 +100,27 @@ textarea {
   color: var(--muted-light);
 }
 
+.gsv-logo-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: auto !important;
+  max-width: 100% !important;
+  flex: 0 0 auto !important;
+}
+
+.gsv-logo-img {
+  display: block !important;
+  width: 220px !important;
+  max-width: 220px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.gsv-header .gsv-logo-img {
+  width: 220px !important;
+  max-width: 220px !important;
+}
+
 .gsv-nav {
   display: flex;
   align-items: center;
@@ -111,6 +136,10 @@ textarea {
 .gsv-nav a:hover {
   color: var(--gold);
 }
+
+/* =========================================================
+   Hero
+   ========================================================= */
 
 .gsv-hero {
   display: grid;
@@ -149,50 +178,6 @@ textarea {
   text-shadow: none !important;
 }
 
-.gsv-section .gsv-section-head .gsv-eyebrow,
-.gsv-section .gsv-contact-copy .gsv-eyebrow,
-.gsv-section-head > .gsv-eyebrow,
-.gsv-contact-copy > .gsv-eyebrow {
-  position: relative !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  color: #111111 !important;
-  font-size: 13px !important;
-  line-height: 1 !important;
-  font-weight: 950 !important;
-  letter-spacing: 0.22em !important;
-  text-transform: uppercase !important;
-  text-shadow: none !important;
-  margin-bottom: 24px !important;
-  padding-bottom: 11px !important;
-  background-image: linear-gradient(to right, #ffc72c, #ffc72c) !important;
-  background-repeat: no-repeat !important;
-  background-size: 46px 3px !important;
-  background-position: 18px 100% !important;
-}
-
-.gsv-section .gsv-section-head .gsv-eyebrow::before,
-.gsv-section .gsv-contact-copy .gsv-eyebrow::before,
-.gsv-section-head > .gsv-eyebrow::before,
-.gsv-contact-copy > .gsv-eyebrow::before {
-  content: "" !important;
-  width: 8px !important;
-  height: 8px !important;
-  border-radius: 2px !important;
-  background: #ffc72c !important;
-  flex: 0 0 auto !important;
-  display: inline-block !important;
-  box-shadow: none !important;
-}
-
-.gsv-section .gsv-section-head .gsv-eyebrow::after,
-.gsv-section .gsv-contact-copy .gsv-eyebrow::after,
-.gsv-section-head > .gsv-eyebrow::after,
-.gsv-contact-copy > .gsv-eyebrow::after {
-  display: none !important;
-}
-
 .gsv-hero-copy h1 {
   margin: 0 0 18px;
   font-size: clamp(38px, 4.85vw, 58px);
@@ -216,6 +201,10 @@ textarea {
   gap: 12px;
   margin-top: 26px;
 }
+
+/* =========================================================
+   Buttons
+   ========================================================= */
 
 .gsv-btn {
   display: inline-flex;
@@ -256,6 +245,10 @@ textarea {
   border-color: var(--gold-line);
   color: var(--gold);
 }
+
+/* =========================================================
+   Hero Capability Panel
+   ========================================================= */
 
 .gsv-status-card {
   background: rgba(255, 199, 44, 0.15);
@@ -422,6 +415,58 @@ textarea {
   color: rgba(255, 255, 255, 0.82);
 }
 
+/* =========================================================
+   Section Labels
+   ========================================================= */
+
+.gsv-section .gsv-section-head .gsv-eyebrow,
+.gsv-section .gsv-contact-copy .gsv-eyebrow,
+.gsv-section-head > .gsv-eyebrow,
+.gsv-contact-copy > .gsv-eyebrow {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #111111 !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+  margin-bottom: 24px !important;
+  padding-bottom: 11px !important;
+  background-image: linear-gradient(to right, #ffc72c, #ffc72c) !important;
+  background-repeat: no-repeat !important;
+  background-size: 46px 3px !important;
+  background-position: 18px 100% !important;
+}
+
+.gsv-section .gsv-section-head .gsv-eyebrow::before,
+.gsv-section .gsv-contact-copy .gsv-eyebrow::before,
+.gsv-section-head > .gsv-eyebrow::before,
+.gsv-contact-copy > .gsv-eyebrow::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 2px !important;
+  background: #ffc72c !important;
+  flex: 0 0 auto !important;
+  display: inline-block !important;
+  box-shadow: none !important;
+}
+
+.gsv-section .gsv-section-head .gsv-eyebrow::after,
+.gsv-section .gsv-contact-copy .gsv-eyebrow::after,
+.gsv-section-head > .gsv-eyebrow::after,
+.gsv-contact-copy > .gsv-eyebrow::after {
+  display: none !important;
+}
+
+/* =========================================================
+   Sections / Cards
+   ========================================================= */
+
 .gsv-section {
   padding: 56px 0;
 }
@@ -564,6 +609,10 @@ textarea {
   color: #111111;
 }
 
+/* =========================================================
+   Contact
+   ========================================================= */
+
 .gsv-contact {
   border-radius: var(--radius-xl);
   padding: 28px;
@@ -626,6 +675,10 @@ textarea {
   font-weight: 900;
 }
 
+/* =========================================================
+   Footer
+   ========================================================= */
+
 .gsv-footer {
   margin: 40px 0 28px;
   padding: 32px;
@@ -653,17 +706,10 @@ textarea {
   max-width: 540px;
 }
 
-.gsv-footer .gsv-brand-mark {
-  background: #111111;
-  color: var(--gold);
-}
-
-.gsv-footer .gsv-brand-name {
-  color: #ffffff;
-}
-
-.gsv-footer .gsv-brand-sub {
-  color: rgba(255, 255, 255, 0.58);
+.gsv-footer .gsv-logo-img {
+  width: 240px !important;
+  max-width: 240px !important;
+  filter: brightness(1.08);
 }
 
 .gsv-footer-brand p,
@@ -765,6 +811,10 @@ textarea {
   color: var(--gold);
 }
 
+/* =========================================================
+   Typography Polish
+   ========================================================= */
+
 .gsv-hero-copy h1,
 .gsv-section-head h2,
 .gsv-contact-copy h2,
@@ -774,6 +824,10 @@ textarea {
 .gsv-capability-card strong {
   text-wrap: balance;
 }
+
+/* =========================================================
+   Final Section Label Override
+   ========================================================= */
 
 section.gsv-section > .gsv-section-head > .gsv-eyebrow,
 section.gsv-section .gsv-contact-copy > .gsv-eyebrow {
@@ -798,6 +852,10 @@ section.gsv-section .gsv-contact-copy > .gsv-eyebrow::before {
   flex: 0 0 auto !important;
   box-shadow: none !important;
 }
+
+/* =========================================================
+   Responsive
+   ========================================================= */
 
 @media (max-width: 1100px) {
   .gsv-capability-card {
@@ -851,6 +909,17 @@ section.gsv-section .gsv-contact-copy > .gsv-eyebrow::before {
   .gsv-nav {
     flex-wrap: wrap;
     gap: 14px;
+  }
+
+  .gsv-logo-img,
+  .gsv-header .gsv-logo-img {
+    width: 190px !important;
+    max-width: 190px !important;
+  }
+
+  .gsv-footer .gsv-logo-img {
+    width: 205px !important;
+    max-width: 205px !important;
   }
 
   .gsv-hero {

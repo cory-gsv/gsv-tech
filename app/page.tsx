@@ -1,6 +1,18 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+function BrandLogo() {
+  return (
+    <a href="#top" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+      <img
+        src="/images/gsv-logo.png"
+        alt="Golden State Visions Managed IT Services"
+        className="gsv-logo-img"
+      />
+    </a>
+  );
+}
+
 function ServiceCard({
   eyebrow,
   title,
@@ -28,16 +40,10 @@ function ServiceCard({
 
 export default function HomePage() {
   return (
-    <main className="gsv-page">
+    <main id="top" className="gsv-page">
       <div className="gsv-shell">
         <header className="gsv-header">
-          <div className="gsv-brand">
-            <div className="gsv-brand-mark">GSV</div>
-            <div>
-              <div className="gsv-brand-name">Golden State Visions</div>
-              <div className="gsv-brand-sub">Managed IT Services</div>
-            </div>
-          </div>
+          <BrandLogo />
 
           <nav className="gsv-nav">
             <a href="#services">Services</a>
@@ -338,13 +344,7 @@ export default function HomePage() {
         <footer className="gsv-footer">
           <div className="gsv-footer-main">
             <div className="gsv-footer-brand">
-              <div className="gsv-brand">
-                <div className="gsv-brand-mark">GSV</div>
-                <div>
-                  <div className="gsv-brand-name">Golden State Visions</div>
-                  <div className="gsv-brand-sub">Managed IT Services</div>
-                </div>
-              </div>
+              <BrandLogo />
 
               <p>
                 Business IT, secure networks, smart home integration, and procurement
