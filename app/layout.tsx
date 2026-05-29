@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Golden State Visions | Business IT, Networking & Smart Home Systems",
+  title: "Managed IT Services & Smart Home Automation | Lincoln, CA",
   description:
-    "Golden State Visions provides business IT support, network infrastructure, UniFi deployments, and smart home systems including Lutron HomeWorks.",
+    "Golden State Visions provides managed IT services, business network infrastructure, UniFi deployments, smart home integration, and technology procurement for Lincoln, Roseville, Rocklin, Granite Bay, and the greater Sacramento region. Call (916) 432-3373.",
 };
 
 export default function RootLayout({
