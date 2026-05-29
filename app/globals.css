@@ -1002,3 +1002,74 @@ section.gsv-section .gsv-contact-copy > .gsv-eyebrow::before {
     flex-direction: column;
   }
 }
+/* =========================================================
+   Contact confirmation modal - final override
+   ========================================================= */
+
+.gsv-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  background: rgba(17, 17, 17, 0.58) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.gsv-modal-card {
+  position: relative !important;
+  width: min(100%, 480px) !important;
+  border-radius: 28px !important;
+  padding: 34px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28) !important;
+  text-align: center !important;
+}
+
+.gsv-modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  border-radius: 999px !important;
+  background: #f5f3ee !important;
+  color: #111111 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.gsv-modal-icon {
+  width: 54px !important;
+  height: 54px !important;
+  margin: 0 auto 18px !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: #ffc72c !important;
+  color: #111111 !important;
+  font-size: 26px !important;
+  font-weight: 950 !important;
+}
+
+.gsv-modal-card h2 {
+  margin: 0 0 12px !important;
+  color: #111111 !important;
+  font-size: 30px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.gsv-modal-card p {
+  margin: 0 0 22px !important;
+  color: #5f5a52 !important;
+  line-height: 1.65 !important;
+}
+
+.gsv-modal-card .gsv-btn {
+  min-width: 140px !important;
+}

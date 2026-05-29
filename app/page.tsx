@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 function BrandLogo() {
@@ -39,6 +42,62 @@ function ServiceCard({
 }
 
 export default function HomePage() {
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactModalTitle, setContactModalTitle] = useState("Inquiry received.");
+  const [contactModalMessage, setContactModalMessage] = useState(
+    "Thanks for reaching out. Your message has been sent to Golden State Visions.",
+  );
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+
+  async function handleContactSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const payload = {
+      name: String(formData.get("name") || ""),
+      email: String(formData.get("email") || ""),
+      company: String(formData.get("company") || ""),
+      message: String(formData.get("message") || ""),
+    };
+
+    try {
+      setContactSubmitting(true);
+
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Inquiry could not be sent.");
+      }
+
+      form.reset();
+
+      setContactModalTitle("Inquiry received.");
+      setContactModalMessage(
+        "Thanks for reaching out. Golden State Visions will follow up as soon as possible.",
+      );
+      setContactModalOpen(true);
+    } catch (error) {
+      setContactModalTitle("Inquiry not sent.");
+      setContactModalMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while sending your inquiry.",
+      );
+      setContactModalOpen(true);
+    } finally {
+      setContactSubmitting(false);
+    }
+  }
   return (
     <main id="top" className="gsv-page">
       <div className="gsv-shell">
@@ -329,17 +388,52 @@ export default function HomePage() {
               </p>
             </div>
 
-            <form className="gsv-contact-form">
-              <input type="text" placeholder="Your name" />
-              <input type="email" placeholder="Email address" />
-              <input type="text" placeholder="Company or project name" />
-              <textarea placeholder="Tell us what you need" rows={5} />
-              <button type="submit" className="gsv-btn gsv-btn-primary">
-                Send Inquiry
+            <form className="gsv-contact-form" onSubmit={handleContactSubmit}>
+              <input name="name" type="text" placeholder="Your name" required />
+              <input name="email" type="email" placeholder="Email address" required />
+              <input name="company" type="text" placeholder="Company or project name" />
+              <textarea name="message" placeholder="Tell us what you need" rows={5} required />
+              <button type="submit" className="gsv-btn gsv-btn-primary" disabled={contactSubmitting}>
+                {contactSubmitting ? "Sending..." : "Send Inquiry"}
               </button>
             </form>
           </div>
         </section>
+
+        {contactModalOpen ? (
+          <div
+            className="gsv-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-modal-title"
+          >
+            <div className="gsv-modal-card">
+              <button
+                type="button"
+                className="gsv-modal-close"
+                aria-label="Close confirmation modal"
+                onClick={() => setContactModalOpen(false)}
+              >
+                ×
+              </button>
+
+              <div className="gsv-modal-icon">
+                {contactModalTitle === "Inquiry received." ? "✓" : "!"}
+              </div>
+
+              <h2 id="contact-modal-title">{contactModalTitle}</h2>
+              <p>{contactModalMessage}</p>
+
+              <button
+                type="button"
+                className="gsv-btn gsv-btn-primary"
+                onClick={() => setContactModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <footer className="gsv-footer">
           <div className="gsv-footer-main">
