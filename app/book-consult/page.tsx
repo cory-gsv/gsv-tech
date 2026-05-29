@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const FUNCTION_NAME = "gcal-sync";
+import Link from "next/link";
 
 type Slot = {
   start: string;
@@ -71,6 +68,25 @@ function formatDateTimePT(iso: string) {
   }).format(new Date(iso));
 }
 
+function formatSelectedTimePT(iso: string) {
+  const date = new Date(iso);
+
+  const day = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+
+  return `${day} @ ${time} PT`;
+}
+
 function formatWeekLabelFromDate(dateStr: string) {
   const start = new Date(`${dateStr}T00:00:00`);
   const end = addDays(start, 4);
@@ -93,6 +109,19 @@ function formatDayName(dateStr: string) {
 
 function formatDayNum(dateStr: string) {
   return new Date(`${dateStr}T00:00:00`).getDate();
+}
+
+function formatCalendarSelectionLabel(dateStr: string, timeLabel: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  const dateLabel = date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  return `${dateLabel} @ ${timeLabel} PT`;
 }
 
 function getWeekKey(dateStr: string) {
@@ -127,6 +156,7 @@ function buildDailyDisplaySlots(day: Day): DisplaySlot[] {
 
   return labels.map((label) => {
     const slot = byLabel.get(label) || null;
+
     return {
       key: `${day.date}-${label}`,
       label,
@@ -144,6 +174,8 @@ export default function BookConsultPage() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedDisplayTime, setSelectedDisplayTime] = useState("");
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
 
@@ -172,20 +204,10 @@ export default function BookConsultPage() {
   }, [selectedSlot, name, email, emailIsValid, phone, company, questions]);
 
   async function invokeFunction(body: unknown) {
-    if (!SUPABASE_URL) {
-      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL in .env.local");
-    }
-
-    if (!SUPABASE_ANON_KEY) {
-      throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local");
-    }
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/${FUNCTION_NAME}`, {
+    const res = await fetch("/api/book-consult", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify(body),
     });
@@ -225,11 +247,13 @@ export default function BookConsultPage() {
       if (!append) return incomingDays;
 
       const merged = [...prev];
+
       for (const day of incomingDays) {
         if (!merged.some((d) => d.date === day.date)) {
           merged.push(day);
         }
       }
+
       return merged;
     });
   }
@@ -263,7 +287,21 @@ export default function BookConsultPage() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function toggleDayExpanded(date: string) {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(date)) {
+        next.delete(date);
+      } else {
+        next.add(date);
+      }
+
+      return next;
+    });
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!selectedSlot) {
@@ -334,13 +372,32 @@ export default function BookConsultPage() {
     }));
   }, [days]);
 
+  const formLocked = !selectedSlot;
+
   return (
-    <main className="gsv-book-page">
+    <main id="top" className="gsv-book-page">
       <div className="gsv-book-shell">
+        <header className="gsv-header">
+          <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+            <img
+              src="/images/gsv-logo.png"
+              alt="Golden State Visions Managed IT Services"
+              className="gsv-logo-img"
+            />
+          </a>
+
+          <nav className="gsv-nav">
+            <a href="/#services">Services</a>
+            <a href="/#how-we-work">How We Work</a>
+            <a href="/#why-us">Why Choose Us</a>
+            <a href="/#contact">Contact</a>
+          </nav>
+        </header>
+
         <section className="gsv-book-top">
           <div className="gsv-book-hero">
             <div className="gsv-book-hero-inner">
-              <div className="gsv-book-eyebrow">GSV TECH CONSULTATION</div>
+              <div className="gsv-book-eyebrow">GSV CONSULTATION</div>
               <h1>Book time with us.</h1>
               <p>
                 Choose an available 30-minute slot, tell us a little about your project,
@@ -352,12 +409,21 @@ export default function BookConsultPage() {
           <div className="gsv-book-expect">
             <div className="gsv-book-expect-inner">
               <div className="gsv-book-eyebrow">WHAT TO EXPECT</div>
-              <h2>Fast, focused consultation</h2>
-              <ul>
-                <li>Review your current setup and goals</li>
-                <li>Identify immediate opportunities and next steps</li>
-                <li>Discuss support, infrastructure, or project scope</li>
-              </ul>
+              <h2>What to Expect: 30-Min Strategy Session</h2>
+
+              <div className="gsv-book-callouts">
+                <div className="gsv-book-callout">
+                  <span>Time Zone</span>
+                  <strong>All times shown in Pacific Time (PT)</strong>
+                </div>
+
+                <div className="gsv-book-callout">
+                  <span>Location</span>
+                  <strong>📍 Head Office: Lincoln, CA</strong>
+                </div>
+              </div>
+
+
             </div>
           </div>
         </section>
@@ -371,6 +437,9 @@ export default function BookConsultPage() {
                 <div>
                   <div className="gsv-book-eyebrow">AVAILABILITY</div>
                   <h2>Select a time</h2>
+                  <p className="gsv-book-card-sub">
+                    Pick a time to unlock the form.
+                  </p>
                 </div>
               </div>
 
@@ -385,6 +454,12 @@ export default function BookConsultPage() {
                       <div className="gsv-book-days">
                         {week.days.map((day) => {
                           const displaySlots = buildDailyDisplaySlots(day);
+                          const isExpanded = expandedDays.has(day.date);
+                          const visibleSlots = isExpanded ? displaySlots : displaySlots.slice(0, 5);
+                          const hasMoreSlots = displaySlots.length > 5;
+                          const dayHasSelectedSlot = day.slots.some(
+                            (slot) => selectedSlot?.start === slot.start,
+                          );
 
                           return (
                             <div key={day.date} className="gsv-book-day">
@@ -397,15 +472,17 @@ export default function BookConsultPage() {
                               </div>
 
                               <div className="gsv-book-slots">
-                                {displaySlots.map((item) => {
-                                  const active =
-                                    item.slot && selectedSlot?.start === item.slot.start;
+                                {visibleSlots.map((item) => {
+                                  const active = Boolean(
+                                    item.slot && selectedSlot?.start === item.slot.start,
+                                  );
+                                  const muted = dayHasSelectedSlot && !active;
 
                                   if (!item.available) {
                                     return (
                                       <div
                                         key={item.key}
-                                        className="gsv-book-slot gsv-book-slot-disabled"
+                                        className={`gsv-book-slot gsv-book-slot-disabled${muted ? " is-muted" : ""}`}
                                       >
                                         {item.label}
                                       </div>
@@ -416,10 +493,13 @@ export default function BookConsultPage() {
                                     <button
                                       key={item.key}
                                       type="button"
-                                      className={`gsv-book-slot${active ? " is-active" : ""}`}
+                                      className={`gsv-book-slot${active ? " is-active" : ""}${muted ? " is-muted" : ""}`}
                                       onClick={() => {
                                         if (!item.slot) return;
                                         setSelectedSlot(item.slot);
+                                        setSelectedDisplayTime(
+                                          formatCalendarSelectionLabel(day.date, item.label),
+                                        );
                                         setError("");
                                       }}
                                     >
@@ -427,6 +507,16 @@ export default function BookConsultPage() {
                                     </button>
                                   );
                                 })}
+
+                                {hasMoreSlots ? (
+                                  <button
+                                    type="button"
+                                    className="gsv-book-day-expand"
+                                    onClick={() => toggleDayExpanded(day.date)}
+                                  >
+                                    {isExpanded ? "Show fewer times ↑" : "View all times ↓"}
+                                  </button>
+                                ) : null}
                               </div>
                             </div>
                           );
@@ -446,7 +536,7 @@ export default function BookConsultPage() {
                         ? "Maximum range reached"
                         : loadingMore
                           ? "Loading..."
-                          : "Show More"}
+                          : "View Next Week →"}
                     </button>
                   </div>
                 </>
@@ -456,18 +546,26 @@ export default function BookConsultPage() {
 
           <div className="gsv-book-right">
             <div className="gsv-book-sticky-wrap">
-              <div className="gsv-book-card gsv-book-sticky">
+              <div className={`gsv-book-card gsv-book-sticky${formLocked ? " is-form-locked" : ""}`}>
                 <div className="gsv-book-eyebrow">BOOKING DETAILS</div>
                 <h2>Tell us about your project</h2>
 
-                <div className="gsv-book-selected">
-                  <div className="gsv-book-selected-label">SELECTED TIME</div>
+                <div className={`gsv-book-selected${selectedSlot ? " is-selected" : ""}`}>
+                  <div className="gsv-book-selected-label">
+                    {selectedSlot ? "CONFIRMED TIME" : "SELECTED TIME"}
+                  </div>
                   <div className="gsv-book-selected-value">
                     {selectedSlot
-                      ? formatDateTimePT(selectedSlot.start)
+                      ? `📍 ${selectedDisplayTime || formatSelectedTimePT(selectedSlot.start)}`
                       : "Choose a time from the calendar"}
                   </div>
                 </div>
+
+                {formLocked ? (
+                  <div className="gsv-book-lock-note">
+                    Select a consultation time to unlock the project details form.
+                  </div>
+                ) : null}
 
                 <div className="gsv-book-required-note">
                   <span className="gsv-required">*</span> Required fields
@@ -483,6 +581,7 @@ export default function BookConsultPage() {
                       name="name"
                       placeholder="Your name"
                       required
+                      disabled={formLocked}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />
@@ -498,6 +597,7 @@ export default function BookConsultPage() {
                       type="email"
                       placeholder="you@company.com"
                       required
+                      disabled={formLocked}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -512,6 +612,7 @@ export default function BookConsultPage() {
                       name="phone"
                       placeholder="(555) 555-5555"
                       required
+                      disabled={formLocked}
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -526,6 +627,7 @@ export default function BookConsultPage() {
                       name="company"
                       placeholder="Company name"
                       required
+                      disabled={formLocked}
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                     />
@@ -541,6 +643,7 @@ export default function BookConsultPage() {
                       rows={6}
                       placeholder="Briefly describe your needs, current setup, or project goals."
                       required
+                      disabled={formLocked}
                       value={questions}
                       onChange={(e) => setQuestions(e.target.value)}
                     />
@@ -563,6 +666,54 @@ export default function BookConsultPage() {
             </div>
           </div>
         </section>
+        <footer className="gsv-footer">
+          <div className="gsv-footer-main">
+            <div className="gsv-footer-brand">
+              <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+                <img
+                  src="/images/gsv-logo.png"
+                  alt="Golden State Visions Managed IT Services"
+                  className="gsv-logo-img"
+                />
+              </a>
+
+              <p>
+                Business IT, secure networks, smart home integration, and procurement
+                built for long-term reliability.
+              </p>
+            </div>
+
+            <div className="gsv-footer-column">
+              <h4>Explore</h4>
+              <a href="/#services">Services</a>
+              <a href="/#how-we-work">How We Work</a>
+              <a href="/#why-us">Why Choose Us</a>
+              <a href="/#contact">Contact</a>
+            </div>
+
+            <div className="gsv-footer-column">
+              <h4>Services</h4>
+              <a href="/#services">Business IT & Support</a>
+              <a href="/#services">Networks & Infrastructure</a>
+              <a href="/#services">Smart Home Integration</a>
+              <a href="/#why-us">Procurement & Planning</a>
+            </div>
+
+            <div className="gsv-footer-column">
+              <h4>Next Step</h4>
+              <p>Ready to review your systems or plan a new project?</p>
+              <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
+                Book a Consult
+              </Link>
+            </div>
+          </div>
+
+          <div className="gsv-footer-bottom">
+            <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
+            <a href="#top">Back to top</a>
+          </div>
+        </footer>
+
       </div>
 
       <style jsx>{`
@@ -573,14 +724,23 @@ export default function BookConsultPage() {
         .gsv-book-page {
           min-height: 100vh;
           background:
-            radial-gradient(circle at top left, rgba(214, 168, 79, 0.12), transparent 28%),
+            radial-gradient(circle at top left, rgba(255, 199, 44, 0.12), transparent 28%),
             linear-gradient(180deg, #f7f3ea 0%, #f8f5ee 48%, #f3efe6 100%);
           color: #161616;
-          padding: 34px 20px 70px;
+          padding: 20px 20px 34px;
+        }
+
+        .gsv-book-page :global(.gsv-header) {
+          padding: 8px 0 22px;
+        }
+
+        .gsv-book-page :global(.gsv-footer) {
+          margin-top: 34px;
+          margin-bottom: 0;
         }
 
         .gsv-book-shell {
-          --gsv-layout-gap: 22px;
+          --gsv-layout-gap: 16px;
           --gsv-left-col: minmax(0, 1.45fr);
           --gsv-right-col: minmax(370px, 0.85fr);
           --gsv-two-col-layout: var(--gsv-left-col) var(--gsv-right-col);
@@ -597,7 +757,7 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-top {
-          margin-bottom: 22px;
+          margin-bottom: 16px;
         }
 
         .gsv-book-hero,
@@ -613,7 +773,7 @@ export default function BookConsultPage() {
         .gsv-book-expect {
           min-width: 0;
           height: 100%;
-          padding: 28px 30px;
+          padding: 22px 24px;
           display: flex;
           align-items: stretch;
         }
@@ -650,9 +810,9 @@ export default function BookConsultPage() {
           display: inline-block;
           margin-bottom: 12px;
           font-size: 11px;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: 0.18em;
-          color: #a77d1f;
+          color: #8f6a16;
           text-transform: uppercase;
         }
 
@@ -662,6 +822,7 @@ export default function BookConsultPage() {
           line-height: 0.96;
           letter-spacing: -0.05em;
           color: #161616;
+          text-wrap: balance;
         }
 
         .gsv-book-hero p,
@@ -673,16 +834,47 @@ export default function BookConsultPage() {
 
         .gsv-book-expect h2,
         .gsv-book-card h2 {
-          margin: 0 0 12px;
-          font-size: 28px;
+          margin: 0 0 10px;
+          font-size: 25px;
           line-height: 1.05;
           letter-spacing: -0.03em;
           color: #161616;
+          text-wrap: balance;
         }
 
         .gsv-book-expect ul {
-          margin: 0;
-          padding-left: 18px;
+          display: none;
+        }
+
+        .gsv-book-callouts {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin: 4px 0 0;
+        }
+
+        .gsv-book-callout {
+          border: 1px solid rgba(255, 199, 44, 0.36);
+          background: rgba(255, 199, 44, 0.12);
+          border-radius: 14px;
+          padding: 10px 12px;
+        }
+
+        .gsv-book-callout span {
+          display: block;
+          margin-bottom: 4px;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #7c5a0d;
+        }
+
+        .gsv-book-callout strong {
+          display: block;
+          font-size: 13px;
+          line-height: 1.35;
+          color: #18130a;
         }
 
         .gsv-book-alert {
@@ -690,7 +882,7 @@ export default function BookConsultPage() {
           padding: 14px 16px;
           margin-bottom: 18px;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
         }
 
         .gsv-book-alert-error {
@@ -700,11 +892,19 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-card {
-          padding: 24px;
+          padding: 20px;
           min-width: 0;
           transition:
             transform 220ms ease,
-            box-shadow 220ms ease;
+            box-shadow 220ms ease,
+            opacity 220ms ease;
+        }
+
+        .gsv-book-card-sub {
+          margin: 0;
+          color: rgba(22, 22, 22, 0.58);
+          font-size: 14px;
+          line-height: 1.55;
         }
 
         .gsv-book-sticky {
@@ -720,7 +920,7 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-sticky::-webkit-scrollbar-thumb {
-          background: rgba(167, 125, 31, 0.18);
+          background: rgba(255, 199, 44, 0.22);
           border-radius: 999px;
           border: 2px solid transparent;
           background-clip: content-box;
@@ -736,7 +936,7 @@ export default function BookConsultPage() {
           align-items: center;
           justify-content: center;
           color: rgba(22, 22, 22, 0.55);
-          font-weight: 600;
+          font-weight: 700;
         }
 
         .gsv-book-week-block + .gsv-book-week-block {
@@ -747,7 +947,7 @@ export default function BookConsultPage() {
 
         .gsv-book-week-title {
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           color: #2b2b2b;
           margin-bottom: 14px;
         }
@@ -760,7 +960,7 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-day {
-          min-height: 518px;
+          min-height: 0;
           padding: 14px;
           border-radius: 22px;
           background: #fbfaf7;
@@ -768,24 +968,35 @@ export default function BookConsultPage() {
           display: flex;
           flex-direction: column;
           min-width: 0;
+          max-height: 560px;
+          overflow: auto;
+          overscroll-behavior: contain;
         }
 
         .gsv-book-day-head {
+          position: sticky;
+          top: 0;
+          z-index: 2;
           padding-bottom: 12px;
           margin-bottom: 12px;
           border-bottom: 1px solid rgba(22, 22, 22, 0.08);
+          background: #fbfaf7;
+          text-align: center;
         }
 
         .gsv-book-day-row {
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
+          gap: 8px;
           margin-bottom: 6px;
+          text-align: center;
         }
 
         .gsv-book-day-name {
           font-size: 13px;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: 0.08em;
           color: #303030;
         }
@@ -796,33 +1007,43 @@ export default function BookConsultPage() {
           border-radius: 999px;
           display: grid;
           place-items: center;
-          background: rgba(214, 168, 79, 0.18);
-          color: #7b5b14;
-          font-weight: 800;
+          background: rgba(255, 199, 44, 0.24);
+          color: #18130a;
+          font-weight: 900;
           font-size: 13px;
         }
 
         .gsv-book-day-meta {
+          width: 100%;
           font-size: 12px;
           color: rgba(22, 22, 22, 0.48);
+          text-align: center;
         }
 
         .gsv-book-slots {
           display: flex;
           flex-direction: column;
           gap: 8px;
+          transition:
+            max-height 240ms ease,
+            opacity 180ms ease;
         }
 
         .gsv-book-slot {
-          border: 1px solid rgba(167, 125, 31, 0.18);
+          border: 1px solid rgba(255, 199, 44, 0.26);
           background: #fff;
           color: #2b2b2b;
           border-radius: 14px;
           padding: 11px 10px;
-          font-weight: 700;
+          font-weight: 800;
           font-size: 13px;
           text-align: center;
-          transition: 0.18s ease;
+          transition:
+            transform 180ms ease,
+            background 180ms ease,
+            border-color 180ms ease,
+            color 180ms ease,
+            box-shadow 180ms ease;
         }
 
         button.gsv-book-slot {
@@ -830,16 +1051,31 @@ export default function BookConsultPage() {
         }
 
         button.gsv-book-slot:hover {
-          border-color: rgba(167, 125, 31, 0.38);
-          background: #fff8eb;
-          transform: translateY(-1px);
+          border-color: rgba(17, 24, 39, 0.55);
+          background: #fff8e8;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 18px rgba(17, 24, 39, 0.08);
+        }
+
+        button.gsv-book-slot:focus-visible {
+          outline: none;
+          border-color: #111827;
+          box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.34);
         }
 
         .gsv-book-slot.is-active {
-          background: linear-gradient(180deg, #f0d28d 0%, #e2bb64 100%);
-          border-color: #c4952b;
-          color: #241a07;
-          box-shadow: 0 8px 18px rgba(214, 168, 79, 0.22);
+          background: #111827;
+          border-color: #111827;
+          color: #ffffff;
+          box-shadow: 0 10px 22px rgba(17, 24, 39, 0.22);
+        }
+
+        button.gsv-book-slot.is-active:hover {
+          background: #000000;
+          border-color: #000000;
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 14px 26px rgba(17, 24, 39, 0.28);
         }
 
         .gsv-book-slot-disabled {
@@ -847,6 +1083,32 @@ export default function BookConsultPage() {
           color: rgba(22, 22, 22, 0.32);
           border-color: rgba(22, 22, 22, 0.08);
           cursor: not-allowed;
+          user-select: none;
+        }
+
+        .gsv-book-day-expand {
+          margin-top: 4px;
+          border: 1px solid rgba(17, 24, 39, 0.08);
+          background: rgba(255, 255, 255, 0.58);
+          color: #111827;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 900;
+          cursor: pointer;
+          padding: 8px 10px;
+          text-align: center;
+          transition:
+            background 180ms ease,
+            border-color 180ms ease,
+            color 180ms ease,
+            transform 180ms ease;
+        }
+
+        .gsv-book-day-expand:hover {
+          background: #fff8e8;
+          border-color: rgba(255, 199, 44, 0.52);
+          color: #7c5a0d;
+          transform: translateY(-1px);
         }
 
         .gsv-book-more {
@@ -861,7 +1123,7 @@ export default function BookConsultPage() {
           color: #222;
           border-radius: 999px;
           padding: 12px 18px;
-          font-weight: 700;
+          font-weight: 800;
           cursor: pointer;
           transition:
             background 180ms ease,
@@ -870,8 +1132,8 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-more-btn:hover:not(:disabled) {
-          background: #fff8eb;
-          border-color: rgba(167, 125, 31, 0.3);
+          background: #fff8e8;
+          border-color: rgba(255, 199, 44, 0.52);
           transform: translateY(-1px);
         }
 
@@ -881,51 +1143,102 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-selected {
-          margin: 18px 0 20px;
+          margin: 14px 0 12px;
           padding: 14px 16px;
           border-radius: 18px;
           background: #fbf5e9;
-          border: 1px solid rgba(167, 125, 31, 0.16);
+          border: 1px solid rgba(255, 199, 44, 0.28);
+          transition:
+            background 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease;
+        }
+
+        .gsv-book-selected.is-selected {
+          background: #eefaf2;
+          border-color: rgba(18, 135, 70, 0.28);
+          box-shadow: 0 10px 24px rgba(18, 135, 70, 0.08);
         }
 
         .gsv-book-selected-label {
           font-size: 11px;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: 0.16em;
-          color: #a77d1f;
+          color: #8f6a16;
           text-transform: uppercase;
           margin-bottom: 8px;
         }
 
+        .gsv-book-selected.is-selected .gsv-book-selected-label {
+          color: #0f7a3f;
+        }
+
         .gsv-book-selected-value {
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           color: #1e1e1e;
           line-height: 1.5;
         }
 
+        .gsv-book-lock-note {
+          margin: 0 0 14px;
+          padding: 12px 14px;
+          border-radius: 16px;
+          background: rgba(17, 24, 39, 0.05);
+          border: 1px dashed rgba(17, 24, 39, 0.18);
+          color: rgba(17, 24, 39, 0.72);
+          font-size: 13px;
+          font-weight: 800;
+          line-height: 1.45;
+        }
+
         .gsv-book-required-note {
-          margin: 2px 0 10px;
+          margin: 0 0 8px;
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 800;
           color: rgba(22, 22, 22, 0.58);
         }
 
         .gsv-required {
           color: #b42318;
-          font-weight: 800;
+          font-weight: 900;
         }
 
         .gsv-book-form {
           display: grid;
-          gap: 14px;
+          gap: 10px;
+          opacity: 1;
+          filter: none;
+          transform: translateY(0);
+          transition:
+            opacity 220ms ease,
+            filter 220ms ease,
+            transform 220ms ease;
+        }
+
+        .gsv-book-sticky.is-form-locked .gsv-book-form {
+          opacity: 0.42;
+          filter: grayscale(0.35);
+          pointer-events: none;
+          user-select: none;
+          transform: translateY(3px);
+        }
+
+        .gsv-book-sticky.is-form-locked .gsv-book-required-note,
+        .gsv-book-sticky.is-form-locked .gsv-book-note {
+          opacity: 0.45;
+          filter: grayscale(0.3);
+        }
+
+        .gsv-book-sticky.is-form-locked .gsv-book-field label {
+          color: rgba(39, 39, 39, 0.48);
         }
 
         .gsv-book-field label {
           display: block;
-          margin-bottom: 8px;
-          font-size: 13px;
-          font-weight: 700;
+          margin-bottom: 5px;
+          font-size: 12px;
+          font-weight: 800;
           color: #272727;
         }
 
@@ -936,9 +1249,20 @@ export default function BookConsultPage() {
           background: #fff;
           color: #161616;
           border-radius: 16px;
-          padding: 14px 14px;
+          padding: 12px 14px;
           outline: none;
           font: inherit;
+          transition:
+            border-color 180ms ease,
+            box-shadow 180ms ease,
+            background 180ms ease,
+            opacity 180ms ease;
+        }
+
+        .gsv-book-field input:disabled,
+        .gsv-book-field textarea:disabled {
+          cursor: not-allowed;
+          background: #f5f3ee;
         }
 
         .gsv-book-field input::placeholder,
@@ -948,34 +1272,49 @@ export default function BookConsultPage() {
 
         .gsv-book-field input:focus,
         .gsv-book-field textarea:focus {
-          border-color: rgba(167, 125, 31, 0.35);
-          box-shadow: 0 0 0 3px rgba(214, 168, 79, 0.12);
+          border-color: #ffc72c;
+          box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.18);
         }
 
         .gsv-book-submit {
-          margin-top: 4px;
-          border: none;
+          width: 100%;
+          margin-top: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 999px;
-          padding: 15px 18px;
+          padding: 16px 20px;
           font-size: 15px;
-          font-weight: 800;
-          color: #231906;
-          background: linear-gradient(180deg, #f0d28d 0%, #e0b655 100%);
+          font-weight: 950;
+          letter-spacing: 0.01em;
+          color: #ffffff !important;
+          background: #0d1b2a !important;
           cursor: pointer;
-          box-shadow: 0 10px 24px rgba(214, 168, 79, 0.18);
+          box-shadow: 0 16px 32px rgba(13, 27, 42, 0.28);
           transition:
             transform 180ms ease,
             box-shadow 180ms ease,
             opacity 180ms ease,
-            filter 180ms ease;
+            filter 180ms ease,
+            background 180ms ease,
+            border-color 180ms ease;
         }
 
         .gsv-book-submit:hover:not(:disabled) {
-          transform: translateY(-1px);
+          transform: translateY(-2px);
+          background: #14283d !important;
+          border-color: rgba(255, 199, 44, 0.55);
+          box-shadow: 0 20px 40px rgba(13, 27, 42, 0.34);
+        }
+
+        .gsv-book-submit:focus-visible {
+          outline: none;
+          border-color: #ffc72c;
+          box-shadow:
+            0 18px 36px rgba(13, 27, 42, 0.3),
+            0 0 0 3px rgba(255, 199, 44, 0.32);
         }
 
         .gsv-book-submit:disabled {
-          opacity: 0.48;
+          opacity: 0.42;
           cursor: not-allowed;
           box-shadow: none;
           filter: saturate(0.7);
@@ -984,6 +1323,68 @@ export default function BookConsultPage() {
         .gsv-book-note {
           margin-top: 14px;
           font-size: 13px;
+        }
+
+        .gsv-book-slot.is-muted {
+          opacity: 0.6;
+        }
+
+        button.gsv-book-slot.is-muted:hover {
+          opacity: 0.82;
+        }
+
+        .gsv-book-slot-disabled.is-muted,
+        .gsv-book-slot-disabled {
+          cursor: not-allowed;
+        }
+
+        .gsv-book-submit,
+        .gsv-book-submit:not(:disabled) {
+          color: #ffffff !important;
+          background: #111827 !important;
+          box-shadow: 0 14px 28px rgba(17, 24, 39, 0.22) !important;
+        }
+
+        .gsv-book-submit:hover:not(:disabled) {
+          background: #000000 !important;
+          color: #ffffff !important;
+          box-shadow: 0 16px 34px rgba(17, 24, 39, 0.3) !important;
+        }
+
+        .gsv-book-submit,
+        .gsv-book-submit:not(:disabled) {
+          color: #ffffff !important;
+          background: #0d1b2a !important;
+          border-color: rgba(255, 255, 255, 0.08) !important;
+          box-shadow: 0 16px 32px rgba(13, 27, 42, 0.28) !important;
+        }
+
+        .gsv-book-submit:hover:not(:disabled) {
+          color: #ffffff !important;
+          background: #14283d !important;
+          border-color: rgba(255, 199, 44, 0.55) !important;
+          box-shadow: 0 20px 40px rgba(13, 27, 42, 0.34) !important;
+        }
+
+        .gsv-book-main {
+          align-items: start;
+        }
+
+        .gsv-book-right .gsv-book-card {
+          padding-top: 20px;
+          padding-bottom: 20px;
+        }
+
+        .gsv-book-field textarea {
+          min-height: 118px;
+        }
+
+        .gsv-book-expect-inner {
+          justify-content: flex-start;
+        }
+
+        .gsv-book-callout strong {
+          white-space: normal;
         }
 
         @media (max-width: 1220px) {
@@ -1013,6 +1414,54 @@ export default function BookConsultPage() {
           }
         }
 
+        @media (max-width: 768px) {
+          .gsv-book-top,
+          .gsv-book-main {
+            grid-template-columns: 1fr;
+          }
+
+          .gsv-book-top {
+            display: grid;
+          }
+
+          .gsv-book-hero {
+            order: 1;
+          }
+
+          .gsv-book-expect {
+            order: 2;
+          }
+
+          .gsv-book-left {
+            order: 3;
+          }
+
+          .gsv-book-right {
+            order: 4;
+          }
+
+          .gsv-book-days {
+            grid-template-columns: 1fr;
+          }
+
+          .gsv-book-callouts {
+            grid-template-columns: 1fr;
+          }
+
+          .gsv-book-day {
+            max-height: none;
+          }
+
+          .gsv-book-sticky-wrap {
+            position: static;
+          }
+
+          .gsv-book-sticky {
+            max-height: none;
+            overflow: visible;
+          }
+        }
+
         @media (max-width: 640px) {
           .gsv-book-page {
             padding: 20px 14px 40px;
@@ -1027,6 +1476,14 @@ export default function BookConsultPage() {
 
           .gsv-book-days {
             grid-template-columns: 1fr;
+          }
+
+          .gsv-book-callouts {
+            grid-template-columns: 1fr;
+          }
+
+          .gsv-book-day {
+            max-height: none;
           }
 
           .gsv-book-hero h1 {
