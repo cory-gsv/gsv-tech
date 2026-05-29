@@ -1073,3 +1073,84 @@ section.gsv-section .gsv-contact-copy > .gsv-eyebrow::before {
 .gsv-modal-card .gsv-btn {
   min-width: 140px !important;
 }
+
+/* =========================================================
+   Header services dropdown
+   ========================================================= */
+
+.gsv-nav-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gsv-nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gsv-nav-dropdown-trigger::after {
+  content: "⌄";
+  font-size: 12px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.gsv-nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  z-index: 50;
+  min-width: 230px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 18px 40px rgba(20, 16, 10, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.gsv-nav-dropdown:hover .gsv-nav-dropdown-menu,
+.gsv-nav-dropdown:focus-within .gsv-nav-dropdown-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.gsv-nav-dropdown-menu a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #28231d;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.gsv-nav-dropdown-menu a:hover {
+  background: rgba(255, 199, 44, 0.14);
+  color: #111111;
+}
+
+@media (max-width: 760px) {
+  .gsv-nav-dropdown {
+    display: block;
+  }
+
+  .gsv-nav-dropdown-menu {
+    position: static;
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    margin-top: 8px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    box-shadow: none;
+  }
+}
