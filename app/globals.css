@@ -3610,3 +3610,300 @@ header.gsv-header {
     justify-content: center;
   }
 }
+
+/* =========================================================
+   Local service + city landing pages
+   /services/[service]/[city]
+   ========================================================= */
+
+.gsv-local-service-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(44px, 6vw, 78px);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+  color: #111111;
+  text-wrap: balance;
+}
+
+.gsv-local-service-hero .gsv-card p {
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+/* =========================================================
+   Local service + city landing pages
+   /services/[service]/[city]
+   ========================================================= */
+
+.gsv-local-service-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(44px, 6vw, 78px);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+  color: #111111;
+  text-wrap: balance;
+}
+
+.gsv-local-service-hero .gsv-card p {
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+/* =========================================================
+   Location hub pages
+   /locations/[city]
+   ========================================================= */
+
+.gsv-location-hub-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(44px, 6vw, 78px);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+  color: #111111;
+  text-wrap: balance;
+}
+
+.gsv-location-service-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.gsv-location-service-card p {
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 15px;
+  line-height: 1.62;
+}
+
+.gsv-location-service-card span {
+  display: inline-block;
+  margin-top: 16px;
+  color: #8f6a16;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+/* =========================================================
+   Homepage-style city hub pages
+   /locations/[city]
+   ========================================================= */
+
+.gsv-location-home-hero {
+  margin: 28px 0 72px;
+  padding: clamp(42px, 7vw, 78px);
+  border-radius: 42px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 199, 44, 0.16), transparent 34%),
+    linear-gradient(135deg, #211d17 0%, #111111 58%, #181512 100%);
+  box-shadow: 0 30px 90px rgba(17, 17, 17, 0.16);
+  overflow: hidden;
+}
+
+.gsv-location-home-hero-inner {
+  max-width: 980px;
+}
+
+.gsv-location-home-kicker {
+  margin-bottom: 28px;
+  color: #ffc72c;
+  font-size: clamp(13px, 1.4vw, 21px);
+  font-weight: 950;
+  letter-spacing: 0.22em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.gsv-location-home-hero h1 {
+  max-width: 780px;
+  margin: 0 0 28px;
+  color: #ffffff;
+  font-size: clamp(54px, 8vw, 104px);
+  line-height: 0.94;
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+}
+
+.gsv-location-home-hero p {
+  max-width: 980px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(20px, 2.1vw, 31px);
+  font-weight: 750;
+  line-height: 1.62;
+  letter-spacing: -0.035em;
+}
+
+.gsv-location-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  margin-top: 42px;
+}
+
+.gsv-location-secondary-btn {
+  min-height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 30px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  text-decoration: none;
+  font-weight: 950;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gsv-location-secondary-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 199, 44, 0.54);
+  box-shadow:
+    0 18px 38px rgba(17, 17, 17, 0.22),
+    0 0 0 4px rgba(255, 199, 44, 0.12);
+}
+
+.gsv-location-home-services {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .gsv-location-home-hero {
+    border-radius: 30px;
+    padding: 34px 24px;
+  }
+
+  .gsv-location-home-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gsv-location-home-actions .gsv-btn,
+  .gsv-location-secondary-btn {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   Homepage hero rack image
+   Replaces the old 4-card capability grid inside right hero panel
+   ========================================================= */
+
+.gsv-hero-rack-image-wrap {
+  width: 100%;
+  margin-top: 18px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 199, 44, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.gsv-hero-rack-image {
+  display: block;
+  width: 100%;
+  height: clamp(360px, 36vw, 560px);
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 900px) {
+  .gsv-hero-rack-image {
+    height: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-hero-rack-image {
+    height: 300px;
+  }
+}
+
+/* =========================================================
+   Homepage hero button position adjustment
+   Moves Book a Consult / Explore Services lower in hero card
+   ========================================================= */
+
+.gsv-hero .gsv-hero-actions {
+  margin-top: clamp(42px, 5vw, 82px) !important;
+}
+
+/* =========================================================
+   Menu button opacity refinement
+   Makes black menu pill feel lighter while keeping text/icon solid
+   ========================================================= */
+
+.gsv-nav-menu-only .gsv-services-menu summary {
+  background: rgba(17, 17, 17, 0.70) !important;
+  border-color: rgba(17, 17, 17, 0.70) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.gsv-nav-menu-only .gsv-services-menu summary:hover {
+  background: rgba(17, 17, 17, 0.82) !important;
+  border-color: rgba(255, 199, 44, 0.55) !important;
+}
+
+.gsv-nav-menu-only .gsv-services-menu[open] summary {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* =========================================================
+   Menu button black with yellow interior glow
+   ========================================================= */
+
+.gsv-nav-menu-only .gsv-services-menu summary {
+  background:
+    radial-gradient(circle at 72% 50%, rgba(255, 199, 44, 0.28), transparent 34%),
+    radial-gradient(circle at 18% 50%, rgba(255, 199, 44, 0.12), transparent 30%),
+    #111111 !important;
+  border-color: rgba(255, 199, 44, 0.38) !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 0 18px rgba(255, 199, 44, 0.20),
+    inset 0 0 0 1px rgba(255, 199, 44, 0.16),
+    0 16px 34px rgba(20, 16, 10, 0.16) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.gsv-nav-menu-only .gsv-services-menu summary::after {
+  color: #ffc72c !important;
+  text-shadow: 0 0 10px rgba(255, 199, 44, 0.65) !important;
+}
+
+.gsv-nav-menu-only .gsv-services-menu summary:hover {
+  background:
+    radial-gradient(circle at 72% 50%, rgba(255, 199, 44, 0.38), transparent 36%),
+    radial-gradient(circle at 18% 50%, rgba(255, 199, 44, 0.18), transparent 32%),
+    #111111 !important;
+  border-color: rgba(255, 199, 44, 0.72) !important;
+  box-shadow:
+    inset 0 0 24px rgba(255, 199, 44, 0.30),
+    inset 0 0 0 1px rgba(255, 199, 44, 0.28),
+    0 18px 38px rgba(20, 16, 10, 0.20),
+    0 0 0 4px rgba(255, 199, 44, 0.12) !important;
+}
+
+.gsv-nav-menu-only .gsv-services-menu[open] summary {
+  background:
+    radial-gradient(circle at 72% 50%, rgba(255, 199, 44, 0.34), transparent 36%),
+    radial-gradient(circle at 18% 50%, rgba(255, 199, 44, 0.16), transparent 32%),
+    #111111 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 199, 44, 0.80) !important;
+}

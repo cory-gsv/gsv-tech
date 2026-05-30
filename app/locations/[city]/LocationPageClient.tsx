@@ -4,7 +4,7 @@ import SiteFooter from "@/app/components/SiteFooter";
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import MenuInteractions from "./components/MenuInteractions";
+import MenuInteractions from "@/app/components/MenuInteractions";
 
 function BrandLogo() {
   return (
@@ -43,7 +43,7 @@ function ServiceCard({
   );
 }
 
-export default function HomePage() {
+export default function LocationPageClient({ city }: { city: { slug: string; city: string; state: string; region: string } }) {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactModalTitle, setContactModalTitle] = useState("Inquiry received.");
   const [contactModalMessage, setContactModalMessage] = useState(
@@ -130,7 +130,7 @@ export default function HomePage() {
                       <div className="gsv-services-mega-label">Business Solutions</div>
 
                       <div className="gsv-services-mega-grid">
-                        <a href="/services/managed-it" className="gsv-services-mega-card">
+                        <a href={`/services/managed-it/${city.slug}`} className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-managed" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -163,7 +163,7 @@ export default function HomePage() {
     <span className="gsv-menu-title">Managed IT Services</span>
    </a>
 
-                        <a href="/services/networks-security-systems" className="gsv-services-mega-card">
+                        <a href={`/services/networks-security-systems/${city.slug}`} className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-network-security" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -194,12 +194,12 @@ export default function HomePage() {
                       <div className="gsv-services-mega-label">Residential Solutions</div>
 
                       <div className="gsv-services-mega-grid">
-                        <a href="/services/smart-home-automation" className="gsv-services-mega-card">
+                        <a href={`/services/smart-home-automation/${city.slug}`} className="gsv-services-mega-card">
                           <span className="gsv-menu-icon">🏠</span>
                           <span className="gsv-menu-title">Smart Home Automation</span>
                         </a>
 
-                        <a href="/services/audio-video-surveillance" className="gsv-services-mega-card">
+                        <a href={`/services/audio-video-surveillance/${city.slug}`} className="gsv-services-mega-card">
                           <span className="gsv-menu-icon gsv-menu-icon-av">🎥</span>
                           <span className="gsv-menu-title">Audio, Video & Surveillance</span>
                         </a>
@@ -223,14 +223,14 @@ export default function HomePage() {
               Managed Business IT • Network Infrastructure • Smart Home Systems
             </div>
 
-            <h1>Full-Stack Technology for Modern Workplaces and Connected Homes</h1>
+            <h1>Full-Stack Technology for {city.city} Workplaces and Connected Homes</h1>
 
             <p>
-              Get reliable infrastructure engineered for both business efficiency and
-              premium residential living. Golden State Visions delivers comprehensive
-              IT support for small and medium-sized businesses, secure network
-              deployments, and cloud platform administration alongside fully integrated
-              smart home systems designed for long-term usability.
+              Golden State Visions delivers reliable infrastructure for businesses,
+              residences, and connected properties in {city.city}, {city.state}. From
+              managed IT and secure networks to smart home automation, audio/video, and
+              local surveillance, we build technology systems designed for long-term
+              usability.
             </p>
 
             <div className="gsv-hero-actions">
@@ -260,7 +260,8 @@ export default function HomePage() {
             <div className="gsv-hero-rack-image-wrap">
               <img
                 src="/assets/images/portfolio/infrastructure-cable-matrix.webp"
-                alt="Clean structured network cabling and braided rack wire management by Golden State Visions"
+                alt={`Clean structured network cabling and braided rack wire management for ${city.city}, ${city.state} technology projects by Golden State Visions`}
+                title={`Structured network cabling and rack infrastructure in ${city.city}, ${city.state}`}
                 className="gsv-hero-rack-image"
                 loading="eager"
               />
@@ -271,7 +272,7 @@ export default function HomePage() {
         <section id="services" className="gsv-section">
           <div className="gsv-section-head">
             <div className="gsv-eyebrow">Services</div>
-            <h2>Comprehensive IT, networking, and smart home solutions.</h2>
+            <h2>{city.city} IT, networking, and smart home solutions.</h2>
             <p>
               Golden State Visions supports small and medium-sized businesses with
               buildouts, ongoing support, scalable infrastructure, and cloud platform
@@ -454,7 +455,7 @@ export default function HomePage() {
           <div className="gsv-contact">
             <div className="gsv-contact-copy">
               <div className="gsv-eyebrow">Contact</div>
-              <h2>Let’s talk about your business or home technology needs.</h2>
+              <h2>Let’s talk about your {city.city} business or home technology needs.</h2>
               <p>
                 Whether you need IT support, a new network buildout, or a premium smart
                 home system, Golden State Visions is ready to help.
