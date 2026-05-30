@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import MenuAutoClose from "./components/MenuAutoClose";
 
 export const metadata: Metadata = {
   title: "Bespoke Technology Architecture & Management | Golden State Visions",
@@ -15,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}<MenuAutoClose /></body>
+      <body>{children}</body>
     </html>
   );
 }
