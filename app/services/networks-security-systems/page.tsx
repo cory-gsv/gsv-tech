@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Managed IT Services & Workspace Support | Lincoln, CA",
+  title: "Network Infrastructure & Business Security Systems | Lincoln, CA",
   description:
-    "Proactive enterprise-grade IT support, server architecture design, and cloud workforce provisioning. Scalable technology management engineered for modern offices.",
+    "Precision physical layer engineering, custom server rack deployments, and certified Cat6 cabling. Integrated with on-device AI edge surveillance networks.",
 };
 
 export default function ManagedITServicesPage() {
@@ -82,12 +82,12 @@ export default function ManagedITServicesPage() {
    </nav>
   </header>
 
-  <section id="managed-it-support" className="gsv-section">
+  <section id="managed-it-" className="gsv-section">
    <div className="gsv-section-head">
-   <div className="gsv-eyebrow">What We Manage</div>
-   <h2>Practical IT support for small and medium-sized businesses.</h2>
+   <div className="gsv-eyebrow">Network + Security Systems</div>
+   <h2>Precision infrastructure for business networks, surveillance, and access control.</h2>
    <p>
-    Our managed IT services are built around dependable support, clean
+    Our managed IT services are built around dependable , clean
     documentation, proactive monitoring, and scalable business infrastructure.
    </p>
    </div>
@@ -95,46 +95,43 @@ export default function ManagedITServicesPage() {
    <div className="gsv-card-grid">
    <div className="gsv-card">
     <div className="gsv-eyebrow">01</div>
-    <h3>User & Endpoint Management</h3>
+    <h3>Structured Cabling & Architecture</h3>
     <p>
-    Day-to-day support for employees, workstations, laptops, email,
-    identity, and business applications.
-    </p>
+                Clean, physical-layer engineering built for neat rack layouts, reliable data paths, and seamless hardware growth.
+              </p>
     <ul>
-    <li><strong>Desktop and laptop support</strong> for business users</li>
-    <li><strong>User onboarding and offboarding</strong> workflows</li>
-    <li><strong>Email and identity management</strong> for Microsoft 365 and Google Workspace</li>
-    <li><strong>Endpoint deployment</strong>, patch planning, and support coordination</li>
+    <li><strong>Cat6 and fiber optic structured cabling design and implementation</strong></li>
+    <li><strong>Precision server rack builds, vertical patch management, and clean cable tracing</strong></li>
+    <li><strong>Demarcation extensions, infrastructure labeling, and architectural pathway planning</strong></li>
+    <li><strong>Fluke testing, certification, and hardware lifecycle deployment documentation</strong>, </li>
     </ul>
    </div>
 
    <div className="gsv-card">
     <div className="gsv-eyebrow">02</div>
-    <h3>Network Infrastructure & Stability</h3>
+    <h3>Business Security & IP Surveillance</h3>
     <p>
-    Business-grade networks designed for secure connectivity, stable WiFi,
-    cloud access, cameras, phones, printers, and connected systems.
-    </p>
+                High-performance security ecosystems built around local storage networks to protect your data privacy and eliminate cloud subscription fees.
+              </p>
     <ul>
-    <li><strong>Gateway and firewall planning</strong> for secure operations</li>
-    <li><strong>Switching and WiFi support</strong> for offices and multi-device environments</li>
-    <li><strong>Network segmentation</strong> for staff, guest, POS, cameras, and devices</li>
-    <li><strong>Proactive network monitoring</strong> and vendor coordination</li>
+    <li><strong>High-definition IP security camera positioning, mounting, and lens optimization</strong></li>
+    <li><strong>Continuous network video recorder (NVR) installation and local storage array building</strong></li>
+    <li><strong>AI-powered smart surveillance featuring vehicle recognition and real-time perimeter alerts</strong> </li>
+    <li><strong>Secure remote viewing configuration via encrypted mobile and desktop client interfaces</strong> </li>
     </ul>
    </div>
 
    <div className="gsv-card">
     <div className="gsv-eyebrow">03</div>
-    <h3>Continuity & Compliance Support</h3>
+    <h3>Secure Wireless & Access Control</h3>
     <p>
-    Long-term planning for backup, disaster recovery, cybersecurity hygiene,
-    documentation, and lifecycle management.
-    </p>
+                Intelligent wireless coverage and electronic physical barriers designed to separate public access from your critical internal systems.
+              </p>
     <ul>
-    <li><strong>Cloud backup planning</strong> and recovery coordination</li>
-    <li><strong>Security software and endpoint protection</strong> support</li>
-    <li><strong>Documentation and lifecycle planning</strong> for critical systems</li>
-    <li><strong>Vendor coordination</strong> for internet, phones, printers, and software</li>
+    <li><strong>High-density business Wi-Fi planning, predictive RF mapping, and wireless coverage heatmaps</strong></li>
+    <li><strong>Smart access control, keyless door entry systems, and IP intercom implementation</strong></li>
+    <li><strong>Network segmentation dividing staff operations, guest access, point-of-sale systems, and IoT devices</strong> </li>
+    <li><strong>Gateway management, hardware firewall provisioning, and active network threat mitigation</strong> </li>
     </ul>
    </div>
    </div>
@@ -147,7 +144,7 @@ export default function ManagedITServicesPage() {
    </div>
 
         <p>
-      We <strong>design, install, and support</strong> the physical backbone of your
+      We <strong>design, install, and </strong> the physical backbone of your
       technology—from precision structured cabling to enterprise network racks [1].
       Your infrastructure is then paired with intelligent surveillance networks,
       using on-device AI for vehicle recognition, license plate tracking, and
@@ -160,7 +157,7 @@ export default function ManagedITServicesPage() {
    <div className="gsv-eyebrow">Local Service Area</div>
    <h2>Supporting businesses across Placer County and Northern California.</h2>
    <p>
-    Golden State Visions is based in Lincoln, CA and supports businesses
+    Golden State Visions is based in Lincoln, CA and s businesses
     across Lincoln, Rocklin, Roseville, Granite Bay, Folsom, Auburn, Truckee,
     Tahoe, Sunnyvale, San Jose, Mountain View, and surrounding areas.
    </p>
@@ -189,7 +186,7 @@ export default function ManagedITServicesPage() {
     <p>
     Schedule a focused 30-minute technology consultation. We’ll review your
     current setup, identify immediate opportunities, and help map the right
-    support path forward.
+     path forward.
     </p>
 
     <div className="gsv-contact-utility" aria-label="Contact details">

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import MenuAutoClose from "./components/MenuAutoClose";
 
 export const metadata: Metadata = {
-  title: "Managed IT Services & Smart Home Automation | Lincoln, CA",
+  title: "Bespoke Technology Architecture & Management | Golden State Visions",
   description:
-    "Golden State Visions provides managed IT services, business network infrastructure, UniFi deployments, smart home integration, and technology procurement for Lincoln, Roseville, Rocklin, Granite Bay, and the greater Sacramento region. Call (916) 432-3373.",
+    "We design, install, and support premium technology frameworks for luxury residences and modern businesses. Engineered for performance, security, and absolute privacy.",
 };
 
 export default function RootLayout({
@@ -14,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<MenuAutoClose /></body>
     </html>
   );
 }
