@@ -97,15 +97,12 @@ export default function ManagedITServicesPage() {
   <div className="gsv-card">
   <div className="gsv-eyebrow">01</div>
   <h3>User & Endpoint Management</h3>
-  <p>
-  Day-to-day support for employees, workstations, laptops, email,
-  identity, and business applications.
-  </p>
+  <p>Day-to-day proactive support for your employees, optimizing hardware performance, and securing user devices.</p>
   <ul>
-  <li><strong>Desktop and laptop support</strong> for business users</li>
-  <li><strong>User onboarding and offboarding</strong> workflows</li>
-  <li><strong>Email and identity management</strong> for Microsoft 365 and Google Workspace</li>
-  <li><strong>Endpoint deployment</strong>, patch planning, and support coordination</li>
+   <li>Proactive desktop and laptop monitoring, maintenance, and remote help desk support</li>
+   <li>Streamlined user onboarding and offboarding directory configuration</li>
+   <li>Automated cloud backups for individual client workstations and employee data protection</li>
+   <li>Mobile device management (MDM) deployment to secure endpoints outside the office</li>
   </ul>
   </div>
 
@@ -117,7 +114,7 @@ export default function ManagedITServicesPage() {
    <li>Microsoft 365 and Google Workspace tenant design, migration, and administration</li>
    <li>Centralized identity management, multi-factor authentication (MFA), and secure single sign-on</li>
    <li>Managed cloud storage layout, shared drive architecture, and permission governance</li>
-   <li>Business continuity planning featuring automated cloud-to-cloud backup configurations</li>
+   <li>Cloud-to-cloud backup architecture for email, shared drives, and collaboration data</li>
   </ul>
   </div>
 
@@ -128,8 +125,8 @@ export default function ManagedITServicesPage() {
   <ul>
    <li>Security baseline deployment, advanced anti-malware, and endpoint threat detection</li>
    <li>Server infrastructure design, virtualization management, and active storage optimization</li>
-   <li>Vendor coordination handling internet service providers, business software, and printing systems</li>
-   <li>Continuous network health monitoring, security audits, and lifecycle documentation</li>
+   <li>Disaster recovery engineering, on-site server backups, and data restoration planning</li>
+   <li>Continuous network health monitoring, compliance security audits, and lifecycle documentation</li>
   </ul>
   </div>
   </div>
