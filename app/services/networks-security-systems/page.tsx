@@ -1,3 +1,4 @@
+import SiteFooter from "@/app/components/SiteFooter";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -202,61 +203,7 @@ export default function ManagedITServicesPage() {
    </div>
    </div>
   </section>
-
-  <footer className="gsv-footer">
-   <div className="gsv-footer-main">
-   <div className="gsv-footer-brand">
-    <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-    <img
-     src="/images/gsv-logo.png"
-     alt="Golden State Visions Managed IT Services"
-     className="gsv-logo-img"
-    />
-    </a>
-
-    <p>
-    Business IT, secure networks, home camera systems, smart home integration,
-    and technology procurement built for long-term reliability.
-    </p>
-   </div>
-
-   <div className="gsv-footer-column">
-    <h4>Services</h4>
-    <a href="/services/managed-it">Managed IT Services</a>
-    <a href="/services/networks-security-systems">Networks & Security Systems</a>
-    <a href="/services/smart-home-automation">Smart Home Automation</a>
-    <a href="/services/audio-video-surveillance">Audio, Video & Surveillance</a>
-   </div>
-
-   <div className="gsv-footer-column">
-    <h4>Areas We Serve</h4>
-    <a href="/#contact">Lincoln, CA</a>
-    <a href="/#contact">Rocklin, CA</a>
-    <a href="/#contact">Roseville, CA</a>
-    <a href="/#contact">Granite Bay, CA</a>
-    <a href="/#contact">Folsom, CA</a>
-    <a href="/#contact">Auburn, CA</a>
-    <a href="/#contact">Truckee, CA</a>
-    <a href="/#contact">Tahoe, CA</a>
-    <a href="/#contact">Sunnyvale, CA</a>
-    <a href="/#contact">San Jose, CA</a>
-    <a href="/#contact">Mountain View, CA</a>
-   </div>
-
-   <div className="gsv-footer-column">
-    <h4>Next Step</h4>
-    <p>Ready to review your systems or plan a new project?</p>
-    <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
-    Book a Consult
-    </Link>
-   </div>
-   </div>
-
-   <div className="gsv-footer-bottom">
-   <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
-   <a href="#top">Back to top</a>
-   </div>
-  </footer>
+      <SiteFooter />
   </div>
  </main>
  );

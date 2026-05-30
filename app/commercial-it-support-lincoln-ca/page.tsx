@@ -1,3 +1,4 @@
+import SiteFooter from "@/app/components/SiteFooter";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -233,66 +234,7 @@ export default function CommercialITPage() {
             </div>
           </div>
         </section>
-
-        <footer className="gsv-footer">
-          <div className="gsv-footer-main">
-            <div className="gsv-footer-brand">
-              <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-                <img
-                  src="/images/gsv-logo.png"
-                  alt="Golden State Visions Managed IT Services"
-                  className="gsv-logo-img"
-                />
-              </a>
-
-              <p>
-                Managed IT services, secure networks, smart home integration, and
-                technology procurement for Lincoln, Roseville, Rocklin, Granite Bay,
-                and the greater Sacramento region.
-              </p>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Explore</h4>
-              <a href="/">Home</a>
-              <a href="/#services">Services</a>
-              <a href="/#why-us">Why Choose Us</a>
-              <a href="/#contact">Contact</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Services</h4>
-              <a href="/commercial-it-support-lincoln-ca">Commercial IT Support</a>
-              <a href="/#services">Networks & Infrastructure</a>
-              <a href="/#services">Smart Home Integration</a>
-              <a href="/#why-us">Procurement & Planning</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Location</h4>
-              <p>
-                Golden State Visions<br />
-                Lincoln, CA<br />
-                (916) 432-3373<br />
-                Serving Roseville, Rocklin, Loomis, Auburn, Granite Bay, Folsom,
-                El Dorado Hills, and the greater Sacramento region.
-              </p>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Next Step</h4>
-              <p>Ready to review your systems or plan a new project?</p>
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
-                Book a Consult
-              </Link>
-            </div>
-          </div>
-
-          <div className="gsv-footer-bottom">
-            <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
-            <a href="#top">Back to top</a>
-          </div>
-        </footer>
+      <SiteFooter />
       </div>
     </main>
   );

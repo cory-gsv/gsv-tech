@@ -1,5 +1,6 @@
 "use client";
 
+import SiteFooter from "@/app/components/SiteFooter";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -673,53 +674,7 @@ export default function BookConsultPage() {
             </div>
           </div>
         </section>
-        <footer className="gsv-footer">
-          <div className="gsv-footer-main">
-            <div className="gsv-footer-brand">
-              <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-                <img
-                  src="/images/gsv-logo.png"
-                  alt="Golden State Visions Managed IT Services"
-                  className="gsv-logo-img"
-                />
-              </a>
-
-              <p>
-                Business IT, secure networks, smart home integration, and procurement
-                built for long-term reliability.
-              </p>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Explore</h4>
-              <a href="/#services">Services</a>
-              <a href="/#how-we-work">How We Work</a>
-              <a href="/#why-us">Why Choose Us</a>
-              <a href="/#contact">Contact</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Services</h4>
-              <a href="/commercial-it-support-lincoln-ca">Commercial IT Support</a>
-              <a href="/commercial-it-support-lincoln-ca">Networks & Infrastructure</a>
-              <a href="/home-network-security-lincoln-ca">Home Networking & Cameras</a>
-              <a href="/home-network-security-lincoln-ca">Smart Home Integration</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Next Step</h4>
-              <p>Ready to review your systems or plan a new project?</p>
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
-                Book a Consult
-              </Link>
-            </div>
-          </div>
-
-          <div className="gsv-footer-bottom">
-            <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
-            <a href="#top">Back to top</a>
-          </div>
-        </footer>
+      <SiteFooter />
 
       </div>
 

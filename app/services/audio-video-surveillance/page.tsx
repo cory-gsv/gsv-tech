@@ -1,3 +1,4 @@
+import SiteFooter from "@/app/components/SiteFooter";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -210,61 +211,7 @@ export default function AudioVideoSurveillancePage() {
             </div>
           </div>
         </section>
-
-        <footer className="gsv-footer">
-          <div className="gsv-footer-main">
-            <div className="gsv-footer-brand">
-              <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-                <img
-                  src="/images/gsv-logo.png"
-                  alt="Golden State Visions Audio Video Surveillance"
-                  className="gsv-logo-img"
-                />
-              </a>
-
-              <p>
-                Business IT, secure networks, home camera systems, smart home integration,
-                and technology procurement built for long-term reliability.
-              </p>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Services</h4>
-              <a href="/services/managed-it">Managed IT Services</a>
-              <a href="/services/networks-security-systems">Networks & Security Systems</a>
-              <a href="/services/smart-home-automation">Smart Home Automation</a>
-              <a href="/services/audio-video-surveillance">Audio, Video & Surveillance</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Areas We Serve</h4>
-              <a href="/locations/lincoln-ca/audio-video-surveillance">Lincoln, CA</a>
-              <a href="/locations/rocklin-ca/audio-video-surveillance">Rocklin, CA</a>
-              <a href="/locations/roseville-ca/audio-video-surveillance">Roseville, CA</a>
-              <a href="/locations/granite-bay-ca/audio-video-surveillance">Granite Bay, CA</a>
-              <a href="/locations/folsom-ca/audio-video-surveillance">Folsom, CA</a>
-              <a href="/locations/auburn-ca/audio-video-surveillance">Auburn, CA</a>
-              <a href="/locations/truckee-ca/audio-video-surveillance">Truckee, CA</a>
-              <a href="/locations/tahoe-ca/audio-video-surveillance">Tahoe, CA</a>
-              <a href="/locations/sunnyvale-ca/audio-video-surveillance">Sunnyvale, CA</a>
-              <a href="/locations/san-jose-ca/audio-video-surveillance">San Jose, CA</a>
-              <a href="/locations/mountain-view-ca/audio-video-surveillance">Mountain View, CA</a>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Next Step</h4>
-              <p>Ready to review your systems or plan a new project?</p>
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
-                Book a Consult
-              </Link>
-            </div>
-          </div>
-
-          <div className="gsv-footer-bottom">
-            <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
-            <a href="#top">Back to top</a>
-          </div>
-        </footer>
+      <SiteFooter />
       </div>
     </main>
   );

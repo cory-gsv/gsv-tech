@@ -1,5 +1,6 @@
 "use client";
 
+import SiteFooter from "@/app/components/SiteFooter";
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -490,63 +491,7 @@ export default function HomePage() {
             </div>
           </div>
         ) : null}
-
-        <footer className="gsv-footer">
-          <div className="gsv-footer-main">
-            <div className="gsv-footer-brand">
-              <BrandLogo />
-
-              <p>
-                Bespoke technology architecture designed, installed, and supported for
-                modern businesses and luxury residences.
-              </p>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Services</h4>
-              <a href="/services/managed-it">Managed IT Services</a>
-              <a href="/services/networks-security-systems">Networks & Security Systems</a>
-              <a href="/services/smart-home-automation">Smart Home Automation</a>
-              <a href="/services/audio-video-surveillance">Audio, Video & Surveillance</a>
-            </div>
-
-            <div className="gsv-footer-column gsv-footer-areas">
-              <h4>Areas We Serve</h4>
-              <div className="gsv-footer-area-grid">
-                <a href="/locations/lincoln-ca">Lincoln, CA</a>
-                <a href="/locations/rocklin-ca">Rocklin, CA</a>
-                <a href="/locations/roseville-ca">Roseville, CA</a>
-                <a href="/locations/granite-bay-ca">Granite Bay, CA</a>
-                <a href="/locations/folsom-ca">Folsom, CA</a>
-                <a href="/locations/auburn-ca">Auburn, CA</a>
-                <a href="/locations/tahoe-ca">Tahoe, CA</a>
-                <a href="/locations/truckee-ca">Truckee, CA</a>
-                <a href="/locations/san-jose-ca">San Jose, CA</a>
-                <a href="/locations/mountain-view-ca">Mountain View, CA</a>
-              </div>
-            </div>
-
-            <div className="gsv-footer-column">
-              <h4>Next Step</h4>
-              <p>Ready to review your systems or plan a new architecture project?</p>
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
-                Book a Consult
-              </Link>
-            </div>
-          </div>
-
-          <div className="gsv-footer-bottom gsv-footer-bottom-utility">
-            <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
-
-            <div className="gsv-footer-utility-links">
-              <a href="/#how-we-work">How We Work</a>
-              <a href="/#why-us">Why Choose Us</a>
-              <a href="/#contact">Contact</a>
-            </div>
-
-            <a href="#top">Back to top</a>
-          </div>
-        </footer>
+      <SiteFooter />
       </div>
     </main>
   );
