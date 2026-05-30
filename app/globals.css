@@ -1724,3 +1724,1647 @@ a[href="/book-consult"].gsv-footer-btn,
 }
 
 
+
+/* =========================================================
+   Managed/service page CTA only — do not target homepage contact
+   ========================================================= */
+
+.gsv-service-contact-card {
+  align-items: center !important;
+}
+
+.gsv-service-contact-card > div:last-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+}
+
+/* =========================================================
+   Managed IT page-only spacing fixes
+   Does NOT target homepage contact block
+   ========================================================= */
+
+.gsv-managed-it-next-step-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.gsv-managed-it-next-step-card > div:last-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+}
+
+.gsv-managed-it-next-step-card .gsv-contact-utility {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px 32px !important;
+  align-items: center !important;
+}
+
+.gsv-area-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px 16px !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-it-next-step-card {
+    display: grid !important;
+    gap: 28px !important;
+  }
+
+  .gsv-managed-it-next-step-card > div:last-child {
+    justify-content: flex-start !important;
+  }
+
+  .gsv-area-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-area-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   Managed IT page dark banner only
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-it-banner {
+  position: relative !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1fr) !important;
+  gap: 36px !important;
+  align-items: center !important;
+  margin: 80px 0 !important;
+  padding: 64px clamp(28px, 4vw, 52px) !important;
+  border-radius: 32px !important;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 199, 44, 0.18), transparent 32%),
+    linear-gradient(135deg, #1c1914, #111111) !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.14) !important;
+}
+
+.gsv-managed-it-banner .gsv-eyebrow {
+  color: #ffc72c !important;
+}
+
+.gsv-managed-it-banner h2 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: clamp(34px, 4vw, 58px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.05em !important;
+}
+
+.gsv-managed-it-banner p {
+  margin: 0 !important;
+  max-width: 680px !important;
+  justify-self: end !important;
+  color: rgba(255, 255, 255, 0.76) !important;
+  font-size: 18px !important;
+  line-height: 1.65 !important;
+  text-align: left !important;
+}
+
+.gsv-managed-it-banner p strong {
+  color: #ffc72c !important;
+  font-weight: 950 !important;
+}
+
+@media (max-width: 1100px) {
+  .gsv-managed-it-banner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .gsv-managed-it-banner p {
+    justify-self: start !important;
+    max-width: none !important;
+  }
+}
+
+/* =========================================================
+   Managed IT page dark banner only
+   ========================================================= */
+
+.gsv-managed-it-banner {
+  position: relative !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1fr) !important;
+  gap: 36px !important;
+  align-items: center !important;
+  margin: 80px 0 !important;
+  padding: 64px clamp(28px, 4vw, 52px) !important;
+  border-radius: 32px !important;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 199, 44, 0.18), transparent 32%),
+    linear-gradient(135deg, #1c1914, #111111) !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.14) !important;
+}
+
+.gsv-managed-it-banner .gsv-eyebrow {
+  color: #ffc72c !important;
+}
+
+.gsv-managed-it-banner h2 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: clamp(34px, 4vw, 58px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.05em !important;
+}
+
+.gsv-managed-it-banner p {
+  margin: 0 !important;
+  max-width: 680px !important;
+  justify-self: end !important;
+  color: rgba(255, 255, 255, 0.76) !important;
+  font-size: 18px !important;
+  line-height: 1.65 !important;
+  text-align: left !important;
+}
+
+.gsv-managed-it-banner p strong {
+  color: #ffc72c !important;
+  font-weight: 950 !important;
+}
+
+@media (max-width: 1100px) {
+  .gsv-managed-it-banner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .gsv-managed-it-banner p {
+    justify-self: start !important;
+    max-width: none !important;
+  }
+}
+
+/* =========================================================
+   Managed IT location pills only
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-location-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px 16px !important;
+  margin-top: 32px !important;
+}
+
+.gsv-managed-location-pills a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 44px !important;
+  padding: 12px 24px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  color: #111111 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  box-shadow: 0 8px 22px rgba(20, 16, 10, 0.045) !important;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.gsv-managed-location-pills a:hover {
+  transform: translateY(-2px) !important;
+  background: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 14px 30px rgba(17, 17, 17, 0.16),
+    0 0 0 4px rgba(255, 199, 44, 0.10) !important;
+}
+
+@media (max-width: 640px) {
+  .gsv-managed-location-pills {
+    gap: 10px !important;
+  }
+
+  .gsv-managed-location-pills a {
+    width: 100% !important;
+  }
+}
+
+/* =========================================================
+   Managed IT location pills fixed sizing
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-location-pills {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-top: 32px !important;
+}
+
+.gsv-managed-location-pills a {
+  width: 100% !important;
+  min-height: 48px !important;
+  padding: 0 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  color: #111111 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  box-shadow: 0 8px 22px rgba(20, 16, 10, 0.045) !important;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.gsv-managed-location-pills a:hover {
+  transform: translateY(-2px) !important;
+  background: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 14px 30px rgba(17, 17, 17, 0.16),
+    0 0 0 4px rgba(255, 199, 44, 0.10) !important;
+}
+
+@media (max-width: 1000px) {
+  .gsv-managed-location-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-managed-location-pills {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Managed IT / service page area pills - equal sizing */
+.gsv-area-grid {
+  list-style: none !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin: 24px 0 0 !important;
+  padding: 22px !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.08) !important;
+}
+
+.gsv-area-grid li {
+  min-width: 0 !important;
+}
+
+.gsv-area-grid li a {
+  width: 100% !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+  background: #f3efe6 !important;
+  color: #28231d !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  text-align: center !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+.gsv-area-grid li a:hover {
+  background: #fff7df !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 199, 44, 0.45) !important;
+}
+
+@media (max-width: 1000px) {
+  .gsv-area-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-area-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   Managed IT service-area pills ONLY
+   ========================================================= */
+
+.gsv-managed-area-grid {
+  list-style: none !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin: 24px 0 0 !important;
+  padding: 22px !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.08) !important;
+}
+
+.gsv-managed-area-grid li {
+  display: flex !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.gsv-managed-area-grid li a {
+  width: 100% !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+  background: #f3efe6 !important;
+  color: #28231d !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.gsv-managed-area-grid li a:hover {
+  background: #fff7df !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 199, 44, 0.45) !important;
+}
+
+@media (max-width: 1000px) {
+  .gsv-managed-area-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-managed-area-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   Managed IT next step card only
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-next-step-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 32px !important;
+  align-items: center !important;
+  padding: 34px 36px !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.08) !important;
+}
+
+.gsv-managed-next-step-copy {
+  max-width: 820px !important;
+}
+
+.gsv-managed-next-step-copy h2 {
+  margin: 0 0 12px !important;
+  font-size: clamp(30px, 3vw, 46px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.gsv-managed-next-step-copy p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: #5f5a52 !important;
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+}
+
+.gsv-managed-next-step-utility {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px 28px !important;
+  align-items: center !important;
+  margin-top: 18px !important;
+  padding: 12px 16px !important;
+  border-radius: 999px !important;
+  background: rgba(17, 17, 17, 0.045) !important;
+  border: 1px solid rgba(17, 17, 17, 0.065) !important;
+  color: #4f4942 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+.gsv-managed-next-step-utility strong {
+  color: #111111 !important;
+  font-weight: 950 !important;
+}
+
+.gsv-managed-next-step-action {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+}
+
+.gsv-managed-next-step-action .gsv-btn {
+  white-space: nowrap !important;
+  min-width: 156px !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-next-step-card {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    padding: 30px 24px !important;
+  }
+
+  .gsv-managed-next-step-action {
+    justify-content: flex-start !important;
+  }
+
+  .gsv-managed-next-step-utility {
+    border-radius: 18px !important;
+  }
+}
+
+/* =========================================================
+   Managed IT Next Step card - hard scoped final fix
+   Targets only app/services/managed-it/page.tsx markup
+   ========================================================= */
+
+main .gsv-managed-next-step-card {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 32px !important;
+  align-items: center !important;
+  padding: 34px 36px !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 17, 17, 0.08) !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.08) !important;
+}
+
+main .gsv-managed-next-step-copy {
+  max-width: 820px !important;
+}
+
+main .gsv-managed-next-step-copy .gsv-eyebrow {
+  margin-bottom: 18px !important;
+}
+
+main .gsv-managed-next-step-copy h2 {
+  margin: 0 0 12px !important;
+  max-width: 720px !important;
+  font-size: clamp(30px, 3vw, 46px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.055em !important;
+}
+
+main .gsv-managed-next-step-copy p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: #5f5a52 !important;
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+}
+
+main .gsv-managed-next-step-utility {
+  width: fit-content !important;
+  max-width: 100% !important;
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px 28px !important;
+  align-items: center !important;
+  margin-top: 18px !important;
+  padding: 12px 18px !important;
+  border-radius: 999px !important;
+  background: rgba(17, 17, 17, 0.045) !important;
+  border: 1px solid rgba(17, 17, 17, 0.065) !important;
+  color: #4f4942 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+main .gsv-managed-next-step-utility strong {
+  color: #111111 !important;
+  font-weight: 950 !important;
+}
+
+main .gsv-managed-next-step-action {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+}
+
+main .gsv-managed-next-step-action .gsv-btn {
+  min-width: 156px !important;
+  min-height: 50px !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+  main .gsv-managed-next-step-card {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    padding: 30px 24px !important;
+  }
+
+  main .gsv-managed-next-step-action {
+    justify-content: flex-start !important;
+  }
+
+  main .gsv-managed-next-step-utility {
+    width: 100% !important;
+    border-radius: 18px !important;
+  }
+}
+
+/* =========================================================
+   Managed IT next step card — tighten spacing
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-card {
+  padding: 26px 30px !important;
+  border-radius: 22px !important;
+  gap: 26px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+main .gsv-managed-next-step-copy .gsv-eyebrow {
+  margin-bottom: 12px !important;
+  font-size: 11px !important;
+}
+
+main .gsv-managed-next-step-copy h2 {
+  max-width: none !important;
+  margin: 0 0 10px !important;
+  font-size: clamp(26px, 2.25vw, 34px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.055em !important;
+}
+
+main .gsv-managed-next-step-copy p {
+  max-width: 780px !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+main .gsv-managed-next-step-utility {
+  width: min(760px, 100%) !important;
+  margin-top: 14px !important;
+  padding: 9px 14px !important;
+  gap: 8px 24px !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+main .gsv-managed-next-step-action {
+  align-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+main .gsv-managed-next-step-action .gsv-btn {
+  min-width: 132px !important;
+  min-height: 42px !important;
+  padding: 12px 18px !important;
+  font-size: 12px !important;
+  border-radius: 999px !important;
+}
+
+/* Managed IT next step — let copy run wider */
+main .gsv-managed-next-step-card {
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+  gap: 22px !important;
+}
+
+main .gsv-managed-next-step-copy {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+main .gsv-managed-next-step-copy p {
+  max-width: 980px !important;
+}
+
+main .gsv-managed-next-step-utility {
+  width: min(920px, 100%) !important;
+}
+
+/* =========================================================
+   Managed IT next step — larger text + larger button
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-copy h2 {
+  font-size: clamp(32px, 2.75vw, 42px) !important;
+  line-height: 1 !important;
+}
+
+main .gsv-managed-next-step-copy p {
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+  max-width: 1040px !important;
+}
+
+main .gsv-managed-next-step-utility {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  padding: 11px 16px !important;
+}
+
+main .gsv-managed-next-step-action .gsv-btn {
+  min-width: 164px !important;
+  min-height: 54px !important;
+  padding: 15px 24px !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+}
+
+/* =========================================================
+   Managed IT next step — larger text + larger button
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-copy h2 {
+  font-size: clamp(32px, 2.75vw, 42px) !important;
+  line-height: 1 !important;
+}
+
+main .gsv-managed-next-step-copy p {
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+  max-width: 1040px !important;
+}
+
+main .gsv-managed-next-step-utility {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  padding: 11px 16px !important;
+}
+
+main .gsv-managed-next-step-action .gsv-btn {
+  min-width: 164px !important;
+  min-height: 54px !important;
+  padding: 15px 24px !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+}
+
+/* =========================================================
+   Managed IT next step — match section heading style
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-copy h2 {
+  font-size: clamp(40px, 4vw, 58px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.06em !important;
+  font-weight: 500 !important;
+  max-width: 760px !important;
+  margin: 0 0 18px !important;
+}
+
+main .gsv-managed-next-step-copy .gsv-eyebrow {
+  margin-bottom: 20px !important;
+}
+
+/* =========================================================
+   Managed IT next step — undo oversized heading + match eyebrow
+   Does not touch homepage contact
+   ========================================================= */
+
+/* Revert the main Next Step title back from the oversized section-heading test */
+main .gsv-managed-next-step-copy h2 {
+  font-size: clamp(32px, 2.75vw, 42px) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.055em !important;
+  font-weight: 500 !important;
+  max-width: 1040px !important;
+  margin: 0 0 12px !important;
+}
+
+/* Make the NEXT STEP eyebrow match the other section labels */
+main .gsv-managed-next-step-copy .gsv-eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 18px !important;
+  color: #111111 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase !important;
+}
+
+/* Fix typo if the rendered copy says STPE anywhere */
+
+/* =========================================================
+   Managed IT Next Step eyebrow — match other section labels
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-copy .gsv-eyebrow {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 0 24px !important;
+  padding: 0 0 14px !important;
+  color: #111111 !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.28em !important;
+  text-transform: uppercase !important;
+}
+
+main .gsv-managed-next-step-copy .gsv-eyebrow::before {
+  content: "" !important;
+  width: 10px !important;
+  height: 10px !important;
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  border-radius: 3px !important;
+  background: #ffc72c !important;
+}
+
+main .gsv-managed-next-step-copy .gsv-eyebrow::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 26px !important;
+  bottom: 0 !important;
+  width: 64px !important;
+  height: 3px !important;
+  border-radius: 999px !important;
+  background: #ffc72c !important;
+}
+
+/* =========================================================
+   Managed IT next step eyebrow outside card
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-section {
+  margin-top: 90px !important;
+}
+
+main .gsv-managed-next-step-head {
+  margin-bottom: 22px !important;
+}
+
+main .gsv-managed-next-step-head .gsv-eyebrow {
+  color: #111111 !important;
+}
+
+/* Since the eyebrow is now outside the card, keep the card content tight */
+main .gsv-managed-next-step-card {
+  padding-top: 30px !important;
+}
+
+main .gsv-managed-next-step-copy h2 {
+  margin-top: 0 !important;
+}
+
+/* =========================================================
+   Managed IT next step spacing tighten
+   Does not touch homepage contact
+   ========================================================= */
+
+main .gsv-managed-next-step-section {
+  margin-top: 54px !important;
+  padding-top: 0 !important;
+}
+
+main .gsv-managed-next-step-head {
+  margin-bottom: 14px !important;
+}
+
+main .gsv-managed-next-step-head .gsv-eyebrow {
+  margin-bottom: 0 !important;
+}
+
+main .gsv-managed-next-step-card {
+  margin-top: 0 !important;
+}
+
+/* =========================================================
+   Managed IT Next Step vertical spacing - hard override
+   Only targets Managed IT next-step section
+   ========================================================= */
+
+main section.gsv-section.gsv-managed-next-step-section {
+  margin-top: 34px !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+main section.gsv-section.gsv-managed-next-step-section .gsv-managed-next-step-head,
+main section.gsv-section.gsv-managed-next-step-section .gsv-section-head.gsv-managed-next-step-head {
+  margin: 0 0 12px 0 !important;
+  padding: 0 !important;
+}
+
+main section.gsv-section.gsv-managed-next-step-section .gsv-managed-next-step-head .gsv-eyebrow {
+  margin: 0 !important;
+  padding-bottom: 14px !important;
+}
+
+main section.gsv-section.gsv-managed-next-step-section .gsv-managed-next-step-card {
+  margin-top: 0 !important;
+}
+
+/* =========================================================
+   Managed IT final polish — dark banner paragraph alignment
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-local-banner p,
+.gsv-managed-it-banner p {
+  text-align: left !important;
+}
+
+/* =========================================================
+   Managed IT final polish — remove gray strip before Next Step
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-area-grid {
+  margin-bottom: 0 !important;
+}
+
+.gsv-managed-area-grid,
+.gsv-area-grid.gsv-managed-area-grid {
+  background: #ffffff !important;
+}
+
+section.gsv-section:has(.gsv-managed-area-grid) {
+  margin-bottom: 56px !important;
+  padding-bottom: 0 !important;
+}
+
+section.gsv-section.gsv-managed-next-step-section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background: transparent !important;
+}
+
+/* =========================================================
+   Hide local Next.js dev indicator only
+   ========================================================= */
+
+nextjs-portal,
+[data-nextjs-dev-overlay],
+[data-nextjs-toast],
+.__next-dev-overlay,
+.__next-build-watcher {
+  display: none !important;
+}
+
+/* =========================================================
+   Managed IT service area final polish
+   Does not touch homepage contact
+   ========================================================= */
+
+.gsv-managed-service-area-section {
+  background: transparent !important;
+  padding-bottom: 48px !important;
+  margin-bottom: 0 !important;
+}
+
+.gsv-managed-service-area-section + .gsv-managed-next-step-section {
+  margin-top: 0 !important;
+}
+
+.gsv-managed-area-grid {
+  list-style: none !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin: 24px 0 0 !important;
+  padding: 22px !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(20, 16, 10, 0.08) !important;
+}
+
+.gsv-managed-area-grid li {
+  display: flex !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.gsv-managed-area-grid li a {
+  width: 100% !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+  background: #f3efe6 !important;
+  color: #28231d !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.gsv-managed-area-grid li a:hover {
+  background: #fff7df !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 199, 44, 0.45) !important;
+}
+
+@media (max-width: 1000px) {
+  .gsv-managed-area-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gsv-managed-area-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   Clean shared site footer
+   Single source of truth for all pages
+   ========================================================= */
+
+.gsv-site-footer-inner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 64px;
+}
+
+.gsv-site-footer-grid {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 250px 350px 260px;
+  column-gap: 46px;
+  align-items: start;
+}
+
+.gsv-site-footer-brand {
+  width: 280px;
+  max-width: 280px;
+}
+
+.gsv-site-footer-brand p,
+.gsv-site-footer-column p,
+.gsv-site-footer-column a,
+.gsv-site-footer-location-grid a {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.gsv-site-footer-brand p {
+  max-width: 270px;
+  margin: 28px 0 0;
+}
+
+.gsv-site-footer-column {
+  min-width: 0;
+}
+
+.gsv-site-footer-column h4 {
+  margin: 0 0 26px;
+  color: #ffc72c;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.gsv-site-footer-column > a {
+  display: block;
+  margin: 0 0 13px;
+  text-decoration: none;
+}
+
+.gsv-site-footer-column > a:hover,
+.gsv-site-footer-location-grid a:hover {
+  color: #ffffff;
+}
+
+.gsv-site-footer-location-grid {
+  display: grid;
+  grid-template-columns: 150px 150px;
+  column-gap: 34px;
+  row-gap: 8px;
+  width: 334px;
+}
+
+.gsv-site-footer-location-grid a {
+  display: block;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gsv-site-footer-next p {
+  max-width: 240px;
+  margin: 0 0 24px;
+}
+
+.gsv-site-footer-bottom {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 1300px) {
+  .gsv-site-footer-inner {
+    padding: 0 40px;
+  }
+
+  .gsv-site-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 44px;
+  }
+
+  .gsv-site-footer-brand,
+  .gsv-site-footer-next p {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .gsv-site-footer-inner {
+    padding: 0 24px;
+  }
+
+  .gsv-site-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gsv-site-footer-location-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   Footer shell reset — component now controls inner spacing
+   ========================================================= */
+
+.gsv-footer {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+/* =========================================================
+   FINAL CLEAN FOOTER LAYOUT
+   Uses unique classes and centers the full footer content group
+   ========================================================= */
+
+.gsv-footer {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow: hidden !important;
+}
+
+.gsv-footer-clean-inner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 96px;
+}
+
+.gsv-footer-clean-grid {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px 270px 390px 300px;
+  column-gap: 34px;
+  align-items: start;
+}
+
+.gsv-footer-clean-brand {
+  width: 300px;
+  max-width: 300px;
+}
+
+.gsv-footer-clean-logo-link {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.gsv-footer-clean-logo {
+  display: block;
+  width: 245px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 28px;
+}
+
+.gsv-footer-clean-brand p,
+.gsv-footer-clean-column p,
+.gsv-footer-clean-column a,
+.gsv-footer-clean-location-grid a {
+  color: rgba(255, 255, 255, 0.66) !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.gsv-footer-clean-brand p {
+  max-width: 290px;
+  margin: 0;
+}
+
+.gsv-footer-clean-column h4 {
+  margin: 0 0 26px;
+  color: #ffc72c;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.gsv-footer-clean-column > a {
+  display: block;
+  margin: 0 0 13px;
+  font-weight: 600 !important;
+}
+
+.gsv-footer-clean-column > a:hover,
+.gsv-footer-clean-location-grid a:hover {
+  color: #ffffff !important;
+}
+
+.gsv-footer-clean-location-grid {
+  display: grid;
+  grid-template-columns: 170px 170px;
+  column-gap: 28px;
+  row-gap: 8px;
+  width: 368px;
+}
+
+.gsv-footer-clean-location-grid a {
+  display: block;
+  white-space: nowrap;
+}
+
+.gsv-footer-clean-next {
+  width: 300px;
+  max-width: 300px;
+}
+
+.gsv-footer-clean-next p {
+  max-width: 280px;
+  margin: 0 0 24px;
+}
+
+.gsv-footer-clean-next .gsv-footer-btn {
+  min-width: 200px;
+  white-space: nowrap;
+}
+
+.gsv-footer-clean-bottom {
+  max-width: 1360px !important;
+  margin: 52px auto 0 !important;
+}
+
+@media (max-width: 1300px) {
+  .gsv-footer-clean-inner {
+    padding: 0 40px;
+  }
+
+  .gsv-footer-clean-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 44px;
+  }
+}
+
+@media (max-width: 700px) {
+  .gsv-footer-clean-inner {
+    padding: 0 24px;
+  }
+
+  .gsv-footer-clean-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gsv-footer-clean-location-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   Footer responsive spacing correction
+   Keeps content away from edges and prevents CTA stretch
+   ========================================================= */
+
+.gsv-footer .gsvsf-inner {
+  box-sizing: border-box !important;
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: clamp(48px, 6vw, 96px) !important;
+  padding-right: clamp(48px, 6vw, 96px) !important;
+}
+
+.gsv-footer .gsvsf-grid {
+  max-width: 1240px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.gsv-footer .gsvsf-button {
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 180px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  align-self: flex-start !important;
+}
+
+/* Tablet / narrower desktop */
+@media (max-width: 1220px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 56px !important;
+    padding-right: 56px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 64px !important;
+    row-gap: 52px !important;
+  }
+
+  .gsv-footer .gsvsf-next {
+    max-width: 360px !important;
+  }
+
+  .gsv-footer .gsvsf-next p {
+    max-width: 320px !important;
+  }
+
+  .gsv-footer .gsvsf-button {
+    width: auto !important;
+    max-width: max-content !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 42px !important;
+  }
+
+  .gsv-footer .gsvsf-button {
+    width: auto !important;
+    max-width: max-content !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* =========================================================
+   Footer responsive spacing correction
+   Keeps content away from edges and prevents CTA stretch
+   ========================================================= */
+
+.gsv-footer .gsvsf-inner {
+  box-sizing: border-box !important;
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: clamp(48px, 6vw, 96px) !important;
+  padding-right: clamp(48px, 6vw, 96px) !important;
+}
+
+.gsv-footer .gsvsf-grid {
+  max-width: 1240px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.gsv-footer .gsvsf-button {
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 180px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  align-self: flex-start !important;
+}
+
+/* Tablet / narrower desktop */
+@media (max-width: 1220px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 56px !important;
+    padding-right: 56px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 64px !important;
+    row-gap: 52px !important;
+  }
+
+  .gsv-footer .gsvsf-next {
+    max-width: 360px !important;
+  }
+
+  .gsv-footer .gsvsf-next p {
+    max-width: 320px !important;
+  }
+
+  .gsv-footer .gsvsf-button {
+    width: auto !important;
+    max-width: max-content !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 42px !important;
+  }
+
+  .gsv-footer .gsvsf-button {
+    width: auto !important;
+    max-width: max-content !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* Footer CTA button only */
+.gsv-footer .gsvsf-button {
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 180px !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 24px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: flex-start !important;
+  line-height: 1 !important;
+}
+
+/* =========================================================
+   Footer contained layout lock
+   Footer stays inside page/container width — no viewport breakout
+   ========================================================= */
+
+.gsv-footer {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Desktop contained layout */
+.gsv-footer .gsvsf-inner {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: 64px !important;
+  padding-right: 64px !important;
+  box-sizing: border-box !important;
+}
+
+.gsv-footer .gsvsf-grid {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: 260px 240px 340px 250px !important;
+  column-gap: 36px !important;
+  justify-content: space-between !important;
+  align-items: start !important;
+}
+
+.gsv-footer .gsvsf-bottom {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Keep button normal */
+.gsv-footer .gsvsf-button {
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 180px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 24px !important;
+}
+
+/* Tablet */
+@media (max-width: 1220px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 56px !important;
+    padding-right: 56px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 64px !important;
+    row-gap: 52px !important;
+    justify-content: stretch !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .gsv-footer .gsvsf-inner {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 42px !important;
+  }
+
+  .gsv-footer .gsvsf-city-grid {
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    max-width: 360px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .gsv-footer .gsvsf-city-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   FOOTER CENTER FIX — final
+   Keep footer contained, center the column group, stop space-between spread
+   ========================================================= */
+
+.gsv-footer .gsvsf-inner {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.gsv-footer .gsvsf-grid {
+  display: grid !important;
+  grid-template-columns: 260px 240px 340px 250px !important;
+  column-gap: 36px !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  justify-content: center !important;
+  align-items: start !important;
+}
+
+.gsv-footer .gsvsf-bottom {
+  width: min(100%, 1198px) !important;
+  max-width: 1198px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Keep the button normal */
+.gsv-footer .gsvsf-button {
+  width: auto !important;
+  max-width: max-content !important;
+  min-width: 180px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: flex-start !important;
+}
+
+/* Tablet */
+@media (max-width: 1220px) {
+  .gsv-footer .gsvsf-grid {
+    width: 100% !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 64px !important;
+    row-gap: 52px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .gsv-footer .gsvsf-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 42px !important;
+  }
+}
+
+/* Managed IT dark banner body alignment only */
+.gsv-managed-it-banner p,
+.gsv-local-banner.gsv-managed-it-banner p {
+  text-align: left !important;
+}
+
+/* =========================================================
+   Managed IT / service page header top spacing
+   Restores breathing room above logo and menu
+   ========================================================= */
+
+.gsv-header,
+header.gsv-header {
+  padding-top: 24px !important;
+}
+
+/* =========================================================
+   Final service page top header spacing
+   Keeps logo/menu off browser edge
+   ========================================================= */
+
+.gsv-page > .gsv-shell > .gsv-header {
+  padding-top: 24px !important;
+  margin-top: 0 !important;
+}
