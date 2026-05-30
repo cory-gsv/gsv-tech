@@ -137,43 +137,53 @@ export default function AudioVideoSurveillancePage() {
   <p>Golden State Visions designs, installs, and supports bespoke media architecture and smart security infrastructure. From custom home theaters to whole-home high-fidelity sound and local AI surveillance networks, we blend precision AV engineering with your home’s unique interior design across Lincoln, Roseville, Rocklin, Granite Bay, and the greater Sacramento region.</p>
   </div>
 
-  <div className="gsv-card-grid gsv-av-card-grid">
-      <div className="gsv-card">
+  <div className="gsv-card-grid">
+    <div className="gsv-card">
   <div className="gsv-eyebrow">01</div>
-  <h3>Intelligent Network &amp; Custom Audio Systems</h3>
-  <p>High-throughput network routing and distributed high-fidelity sound engineered to deliver seamless, zero-latency acoustic performance across your entire property.</p>
+  <h3>Home Network &amp; Core Infrastructure</h3>
+  <p>High-performance, enterprise-grade routing and wireless backbones engineered to seamlessly handle dense data traffic across all connected subsystems.</p>
   <ul>
-   <li><strong>Proactive local routing engines</strong> featuring high-throughput traffic management to drive high-resolution streaming audio across the property without dropping frames</li>
-   <li><strong>Next-generation wireless access points</strong> strategically mapped across interior and outdoor living spaces to handle dense smart home data demands</li>
-   <li><strong>Premium multi-room distribution</strong> featuring high-performance hardware architectures from Russound, Marantz, Leon, and AudioControl</li>
-   <li><strong>High-capacity Power over Ethernet (PoE+)</strong> to drive centralized power straight to ceiling-mounted access points, architectural audio zones, and in-wall touch panels</li>
-   <li><strong>High-resolution streaming arrays</strong> driven by Bluesound wireless zones, keeping Sonos environments completely optimized and supported</li>
+   <li><strong>Proactive local routing engines</strong> featuring high-throughput processing to protect, inspect, and route data at maximum fiber-optic speeds</li>
+   <li><strong>Next-generation wireless access points</strong> strategically mapped across the property to provide seamless, high-speed Wi-Fi coverage across interior spaces and outdoor living areas</li>
+   <li><strong>Dedicated hardware isolation</strong> separating your core data network from smart appliances, audio matrix units, and video distribution systems to ensure zero interference</li>
+   <li><strong>High-capacity Power over Ethernet (PoE+) architecture</strong> driving centralized power straight to ceiling access points, touch panels, and surveillance systems over a single cable</li>
   </ul>
   </div>
 
   <div className="gsv-card">
   <div className="gsv-eyebrow">02</div>
-  <h3>Dedicated Movie Theater &amp; Media Rooms</h3>
-  <p>Private cinematic environments tailored with precise viewing angles, structural acoustic treatments, and high-performance, network-optimized projection systems.</p>
+  <h3>Whole-Home Custom Audio Systems</h3>
+  <p>Distributed high-fidelity sound engineered to deliver seamless acoustic performance throughout your property without visible equipment clutter.</p>
   <ul>
-   <li><strong>Bespoke home theater layout planning</strong>, room scaling, acoustic treatment orchestration, and seating alignment engineering</li>
-   <li><strong>High-definition 4K laser projection setups</strong> paired with acoustically transparent woven micro-perforated screens</li>
-   <li><strong>Dedicated high-bandwidth network pipelines</strong> to seamlessly feed uncompressed 4K video streams to centralized media matrices without buffering or lag</li>
-   <li><strong>Dolby Atmos spatial surround sound tuning</strong> for rich, studio-grade cinematic immersion and object-based audio tracking</li>
-   <li><strong>One-touch environment automation</strong> to lower projection screens, dim architectural lighting scenes, and activate audio-visual feeds instantly</li>
+   <li><strong>Premium multi-room distribution</strong> featuring high-performance architectures from Russound, Marantz, Leon, AudioControl, and McIntosh</li>
+   <li><strong>High-resolution streaming arrays</strong> driven by Bluesound wireless zones, keeping Sonos environments seamlessly supported but fully optimized</li>
+   <li><strong>Precision architectural speaker installation</strong> utilizing flush, paintable, or entirely invisible in-wall drivers from Bowers &amp; Wilkins and Focal</li>
+   <li><strong>Centralized hardware rack layout</strong> to eliminate clunky receivers from sitting in your living spaces</li>
+   <li><strong>Intuitive streaming zone configuration</strong> for instant playback controls across your phones and tablets</li>
   </ul>
   </div>
 
   <div className="gsv-card">
   <div className="gsv-eyebrow">03</div>
-  <h3>Advanced AI Surveillance &amp; Private Recording</h3>
-  <p>Secure, privacy-first camera grids built on dedicated, isolated local networks to remove monthly subscription fees and protect your data.</p>
+  <h3>Dedicated Movie Theater &amp; Media Rooms</h3>
+  <p>Private cinematic environments tailored with precise viewing angles, structural acoustic treatments, and high-performance projection systems.</p>
   <ul>
-   <li><strong>Dedicated network hardware isolation</strong> separating your security grid from main property Wi-Fi to guarantee 100% uptime and zero cross-device interference</li>
-   <li><strong>High-definition security camera positioning</strong>, weatherproof architectural mounting, and lens field-of-view optimization</li>
-   <li><strong>Continuous local network video recording (NVR)</strong> utilizing high-capacity secure storage arrays running entirely on-premises</li>
-   <li><strong>Edge-AI processing</strong> featuring intelligent vehicle detection, license plate tracking, and facial recognition without relying on vulnerable cloud servers</li>
-   <li><strong>Encrypted local remote-access clients</strong> for secure, real-time tracking on your personal mobile devices from anywhere in the world</li>
+   <li><strong>Bespoke home theater layout planning</strong>, room scaling, and seating alignment engineering</li>
+   <li><strong>High-definition 4K laser projection setups</strong> paired with acoustically transparent woven screens</li>
+   <li><strong>Dolby Atmos spatial surround sound tuning</strong> for rich, studio-grade cinematic immersion</li>
+   <li><strong>One-touch environment automation</strong> to lower screens, dim architectural lighting, and start the film</li>
+  </ul>
+  </div>
+
+  <div className="gsv-card">
+  <div className="gsv-eyebrow">04</div>
+  <h3>Advanced AI Surveillance &amp; Local Recordings</h3>
+  <p>Secure, privacy-first camera grids built on local storage networks to remove monthly fees and protect your data from public cloud breaches.</p>
+  <ul>
+   <li><strong>High-definition security camera positioning</strong>, architectural mounting, and lens optimization</li>
+   <li><strong>Continuous local network video recording (NVR)</strong> utilizing high-capacity secure storage arrays</li>
+   <li><strong>Edge-AI processing</strong> featuring intelligent vehicle detection, license plate tracking, and facial recognition</li>
+   <li><strong>Encrypted remote viewing client setups</strong> for private, real-time tracking on your personal devices</li>
   </ul>
   </div>
   </div>
@@ -189,9 +199,8 @@ export default function AudioVideoSurveillancePage() {
    <strong>We design, install, and support</strong> your home's entertainment, network,
    and safety infrastructure. We combine high-performance local routing engines with
    premium audio architectures like Russound and Marantz, masterfully calibrated media
-   rooms, and isolated smart surveillance arrays. The result is a unified, secure
-   ecosystem that delivers pristine audio-visual immersion over an ultra-stable,
-   private network.
+   rooms, and smart surveillance arrays. The result is a unified, secure ecosystem that
+   delivers pristine audio-visual immersion over an ultra-stable, private network.
   </p>
  </section>
 
@@ -233,7 +242,7 @@ export default function AudioVideoSurveillancePage() {
    <div className="gsv-managed-next-step-copy">
     <h2>Design your custom media and surveillance infrastructure.</h2>
 
-    <p>Schedule a dedicated 30-minute residential technology consultation. We'll review your property layout, evaluate your entertainment preferences, audit your home network coverage, discuss security requirements, and map a clear structural path for enterprise routing, whole-home audio, dedicated theaters, and localized AI surveillance grids.</p>
+    <p>Schedule a dedicated 30-minute residential technology consultation. We'll review your property layout, evaluate your entertainment preferences, evaluate your home network coverage, discuss security requirements, and map a clear structural path for enterprise routing, whole-home audio, dedicated theaters, and localized AI surveillance grids.</p>
 
     <div className="gsv-managed-next-step-utility">
      <span><strong>Hours:</strong> Mon – Fri: 8:00 AM – 6:00 PM</span>

@@ -3383,6 +3383,77 @@ header.gsv-header {
   height: 24px;
 }
 
+/* =========================================================
+   Premium services menu dropdown animation
+   Applies globally to all pages using .gsv-services-menu
+   ========================================================= */
+
+.gsv-services-menu {
+  position: relative !important;
+}
+
+/* Closed state */
+.gsv-services-menu .gsv-services-mega {
+  opacity: 0 !important;
+  transform: translateY(-10px) scale(0.985) !important;
+  transform-origin: top right !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0ms linear 220ms !important;
+}
+
+/* Open state */
+.gsv-services-menu[open] .gsv-services-mega {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transition:
+    opacity 160ms ease,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0ms linear 0ms !important;
+}
+
+/* Slightly animate the inner content for a softer reveal */
+.gsv-services-menu .gsv-services-mega-inner {
+  transform: translateY(-4px) !important;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gsv-services-menu[open] .gsv-services-mega-inner {
+  transform: translateY(0) !important;
+}
+
+/* Respect reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .gsv-services-menu .gsv-services-mega,
+  .gsv-services-menu .gsv-services-mega-inner {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================
+   FINAL menu open animation
+   Uses keyframes so the native details menu visibly animates
+   ========================================================= */
+
+@keyframes gsvMenuDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.975);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
 
 .gsv-services-menu[open] .gsv-services-mega,
 .gsv-nav-menu-only .gsv-services-menu[open] .gsv-services-mega {
@@ -3403,41 +3474,6 @@ header.gsv-header {
 @media (prefers-reduced-motion: reduce) {
   .gsv-services-menu[open] .gsv-services-mega,
   .gsv-nav-menu-only .gsv-services-menu[open] .gsv-services-mega {
-    animation: none !important;
-  }
-}
-
-/* =========================================================
-   Menu dropdown animation — corrected target
-   The visible white card is .gsv-services-mega-inner
-   ========================================================= */
-
-@keyframes gsvMenuInnerDrop {
-  0% {
-    opacity: 0;
-    transform: translateY(-24px) scale(0.96);
-    filter: blur(6px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-.gsv-services-menu .gsv-services-mega {
-  transform-origin: top right !important;
-}
-
-.gsv-services-menu[open] .gsv-services-mega-inner {
-  animation: gsvMenuInnerDrop 360ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
-  transform-origin: top right !important;
-  will-change: transform, opacity, filter !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gsv-services-menu[open] .gsv-services-mega-inner {
     animation: none !important;
   }
 }
