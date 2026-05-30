@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bespoke Technology Architecture & Management | Golden State Visions",
-  description:
-    "We design, install, and support premium technology frameworks for luxury residences and modern businesses. Engineered for performance, security, and absolute privacy.",
+  title: "Managed IT Services & Smart Home Automation | Golden State Visions",
+  description: "Managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for businesses and homes in Northern California.",
 };
 
 export default function RootLayout({
