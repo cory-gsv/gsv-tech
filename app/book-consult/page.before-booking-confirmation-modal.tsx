@@ -168,10 +168,7 @@ function buildDailyDisplaySlots(day: Day): DisplaySlot[] {
 }
 
 export default function BookConsultPage() {
-  
-  const [bookingConfirmationOpen, setBookingConfirmationOpen] = useState(false);
-  const [bookingConfirmationDetails, setBookingConfirmationDetails] = useState<ConfirmationPayload | null>(null);
-const router = useRouter();
+  const router = useRouter();
 
   const [days, setDays] = useState<Day[]>([]);
   const [loadedWeeks, setLoadedWeeks] = useState(1);
@@ -339,7 +336,8 @@ const router = useRouter();
       });
 
       const confirmation: ConfirmationPayload | undefined = result?.confirmation;
-      setBookingConfirmationDetails({
+
+      const params = new URLSearchParams({
         name: confirmation?.name || name.trim(),
         email: confirmation?.email || email.trim(),
         phone: confirmation?.phone || phone.trim(),
@@ -352,8 +350,7 @@ const router = useRouter();
         calendarHtmlLink: confirmation?.calendarHtmlLink || "",
       });
 
-      setBookingConfirmationOpen(true);
-      setStatus("");
+      router.push(`/book-consult/confirmed?${params.toString()}`);
     } catch (err: any) {
       setStatus("");
       setError(err?.message || "Booking failed");
@@ -677,114 +674,6 @@ const router = useRouter();
             </div>
           </div>
         </section>
-      {bookingConfirmationOpen ? (
-        <div
-          className="gsv-book-confirm-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="booking-confirmation-title"
-        >
-          <div className="gsv-book-confirm-modal">
-            <button
-              type="button"
-              className="gsv-book-confirm-close"
-              aria-label="Close booking confirmation"
-              onClick={() => {
-                setBookingConfirmationOpen(false);
-                window.location.href = "/";
-              }}
-            >
-              ×
-            </button>
-
-            <div className="gsv-book-eyebrow">BOOKING CONFIRMED</div>
-
-            <h2 id="booking-confirmation-title">You’re all set.</h2>
-
-            <p>
-              Your consultation request has been received. A confirmation email has been sent,
-              and we’ll follow up with the next steps.
-            </p>
-
-            {bookingConfirmationDetails ? (
-              <div className="gsv-book-confirm-details">
-                <div>
-                  <span>Name</span>
-                  <strong>{bookingConfirmationDetails.name}</strong>
-                </div>
-
-                <div>
-                  <span>Email</span>
-                  <strong>{bookingConfirmationDetails.email}</strong>
-                </div>
-
-                <div>
-                  <span>Phone</span>
-                  <strong>{bookingConfirmationDetails.phone}</strong>
-                </div>
-
-                <div>
-                  <span>Company</span>
-                  <strong>{bookingConfirmationDetails.company}</strong>
-                </div>
-
-                <div>
-                  <span>Start</span>
-                  <strong>{formatSelectedTimePT(bookingConfirmationDetails.start)}</strong>
-                </div>
-
-                <div>
-                  <span>End</span>
-                  <strong>{formatSelectedTimePT(bookingConfirmationDetails.end)}</strong>
-                </div>
-
-                {bookingConfirmationDetails.zoomPasscode ? (
-                  <div>
-                    <span>Passcode</span>
-                    <strong>{bookingConfirmationDetails.zoomPasscode}</strong>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="gsv-book-confirm-actions">
-              {bookingConfirmationDetails?.calendarHtmlLink ? (
-                <a
-                  href={bookingConfirmationDetails.calendarHtmlLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="gsv-btn gsv-btn-primary"
-                >
-                  Add to Calendar
-                </a>
-              ) : null}
-
-              {bookingConfirmationDetails?.zoomJoinUrl ? (
-                <a
-                  href={bookingConfirmationDetails.zoomJoinUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="gsv-btn gsv-btn-secondary"
-                >
-                  Join Zoom
-                </a>
-              ) : null}
-
-              <button
-                type="button"
-                className="gsv-btn gsv-btn-primary"
-                onClick={() => {
-                  setBookingConfirmationOpen(false);
-                  window.location.href = "/";
-                }}
-              >
-                Back to Home
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       <SiteFooter />
 
       </div>
@@ -1041,13 +930,14 @@ const router = useRouter();
           display: flex;
           flex-direction: column;
           min-width: 0;
-          max-height: none;
-          overflow: visible;
-          overscroll-behavior: auto;
+          max-height: 560px;
+          overflow: auto;
+          overscroll-behavior: contain;
         }
 
         .gsv-book-day-head {
-          position: relative;
+          position: sticky;
+          top: 0;
           z-index: 2;
           padding-bottom: 12px;
           margin-bottom: 12px;
@@ -1131,31 +1021,23 @@ const router = useRouter();
 
         button.gsv-book-slot:focus-visible {
           outline: none;
-          border-color: #ffc72c;
-          box-shadow:
-            0 0 0 3px rgba(255, 199, 44, 0.34),
-            0 0 22px rgba(255, 199, 44, 0.42);
+          border-color: #111827;
+          box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.34);
         }
 
         .gsv-book-slot.is-active {
-          background: #111111;
-          border-color: #ffc72c;
+          background: #111827;
+          border-color: #111827;
           color: #ffffff;
-          box-shadow:
-            0 12px 26px rgba(17, 17, 17, 0.22),
-            0 0 0 3px rgba(255, 199, 44, 0.18),
-            0 0 24px rgba(255, 199, 44, 0.38);
+          box-shadow: 0 10px 22px rgba(17, 24, 39, 0.22);
         }
 
         button.gsv-book-slot.is-active:hover {
           background: #000000;
-          border-color: #ffc72c;
+          border-color: #000000;
           color: #ffffff;
           transform: translateY(-2px);
-          box-shadow:
-            0 16px 32px rgba(17, 17, 17, 0.26),
-            0 0 0 4px rgba(255, 199, 44, 0.22),
-            0 0 32px rgba(255, 199, 44, 0.52);
+          box-shadow: 0 14px 26px rgba(17, 24, 39, 0.28);
         }
 
         .gsv-book-slot-disabled {
@@ -1434,21 +1316,16 @@ const router = useRouter();
         .gsv-book-submit,
         .gsv-book-submit:not(:disabled) {
           color: #ffffff !important;
-          background: #111111 !important;
-          border-color: rgba(255, 199, 44, 0.42) !important;
-          box-shadow:
-            0 16px 32px rgba(17, 17, 17, 0.24),
-            0 0 0 3px rgba(255, 199, 44, 0.12) !important;
+          background: #0d1b2a !important;
+          border-color: rgba(255, 255, 255, 0.08) !important;
+          box-shadow: 0 16px 32px rgba(13, 27, 42, 0.28) !important;
         }
 
         .gsv-book-submit:hover:not(:disabled) {
           color: #ffffff !important;
-          background: #000000 !important;
-          border-color: #ffc72c !important;
-          box-shadow:
-            0 20px 40px rgba(17, 17, 17, 0.30),
-            0 0 0 4px rgba(255, 199, 44, 0.20),
-            0 0 34px rgba(255, 199, 44, 0.50) !important;
+          background: #14283d !important;
+          border-color: rgba(255, 199, 44, 0.55) !important;
+          box-shadow: 0 20px 40px rgba(13, 27, 42, 0.34) !important;
         }
 
         .gsv-book-main {
