@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
+import MenuInteractions from "./components/MenuInteractions";
 
 function BrandLogo() {
   return (
@@ -101,14 +102,69 @@ export default function HomePage() {
   return (
     <main id="top" className="gsv-page">
       <div className="gsv-shell">
+        <MenuInteractions />
         <header className="gsv-header">
           <BrandLogo />
 
-          <nav className="gsv-nav">
-            <a href="#services">Services</a>
-            <a href="#how-we-work">How We Work</a>
-            <a href="#why-us">Why Choose Us</a>
-            <a href="#contact">Contact</a>
+          <nav className="gsv-nav gsv-nav-menu-only">
+            <details className="gsv-services-menu">
+              <summary>Menu</summary>
+
+              <div className="gsv-services-mega">
+                <div className="gsv-services-mega-inner">
+                  <div className="gsv-services-mega-head">
+                    <div className="gsv-services-mega-explore">
+                      <span className="gsv-services-mega-label">Explore</span>
+
+                      <div className="gsv-services-mega-toplinks">
+                        <a href="/#how-we-work">How We Work</a>
+                        <a href="/#why-us">Why Choose Us</a>
+                        <a href="/#contact">Contact</a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="gsv-services-mega-groups">
+                    <div className="gsv-services-mega-section">
+                      <div className="gsv-services-mega-label">Business Solutions</div>
+
+                      <div className="gsv-services-mega-grid">
+                        <a href="/services/managed-it" className="gsv-services-mega-card">
+                          <span className="gsv-menu-icon">💼</span>
+                          <span className="gsv-menu-title">Managed IT Services</span>
+                        </a>
+
+                        <a href="/services/networks-security-systems" className="gsv-services-mega-card">
+                          <span className="gsv-menu-icon">📹</span>
+                          <span className="gsv-menu-title">Networks & Security Systems</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="gsv-services-mega-section">
+                      <div className="gsv-services-mega-label">Residential Solutions</div>
+
+                      <div className="gsv-services-mega-grid">
+                        <a href="/services/smart-home-automation" className="gsv-services-mega-card">
+                          <span className="gsv-menu-icon">🏠</span>
+                          <span className="gsv-menu-title">Smart Home Automation</span>
+                        </a>
+
+                        <a href="/services/audio-video-surveillance" className="gsv-services-mega-card">
+                          <span className="gsv-menu-icon gsv-menu-icon-av">🎥</span>
+                          <span className="gsv-menu-title">Audio, Video & Surveillance</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="gsv-services-mega-footer">
+                    <a href="/#services">View all services</a>
+                    <a href="/book-consult">Book a consult</a>
+                  </div>
+                </div>
+              </div>
+            </details>
           </nav>
         </header>
 
@@ -441,38 +497,53 @@ export default function HomePage() {
               <BrandLogo />
 
               <p>
-                Business IT, secure networks, home camera systems, smart home integration, and procurement
-                built for long-term reliability.
+                Bespoke technology architecture designed, installed, and supported for
+                modern businesses and luxury residences.
               </p>
             </div>
 
             <div className="gsv-footer-column">
-              <h4>Explore</h4>
-              <a href="#services">Services</a>
-              <a href="#how-we-work">How We Work</a>
-              <a href="#why-us">Why Choose Us</a>
-              <a href="#contact">Contact</a>
+              <h4>Services</h4>
+              <a href="/services/managed-it">Managed IT Services</a>
+              <a href="/services/networks-security-systems">Networks & Security Systems</a>
+              <a href="/services/smart-home-automation">Smart Home Automation</a>
+              <a href="/services/audio-video-surveillance">Audio, Video & Surveillance</a>
             </div>
 
-            <div className="gsv-footer-column">
-              <h4>Services</h4>
-              <a href="/commercial-it-support-lincoln-ca">Business IT & Support</a>
-              <a href="#services">Networks & Infrastructure</a>
-              <a href="/home-network-security-lincoln-ca">Smart Home Integration</a>
-              <a href="#why-us">Procurement & Planning</a>
+            <div className="gsv-footer-column gsv-footer-areas">
+              <h4>Areas We Serve</h4>
+              <div className="gsv-footer-area-grid">
+                <a href="/locations/lincoln-ca">Lincoln, CA</a>
+                <a href="/locations/rocklin-ca">Rocklin, CA</a>
+                <a href="/locations/roseville-ca">Roseville, CA</a>
+                <a href="/locations/granite-bay-ca">Granite Bay, CA</a>
+                <a href="/locations/folsom-ca">Folsom, CA</a>
+                <a href="/locations/auburn-ca">Auburn, CA</a>
+                <a href="/locations/tahoe-ca">Tahoe, CA</a>
+                <a href="/locations/truckee-ca">Truckee, CA</a>
+                <a href="/locations/san-jose-ca">San Jose, CA</a>
+                <a href="/locations/mountain-view-ca">Mountain View, CA</a>
+              </div>
             </div>
 
             <div className="gsv-footer-column">
               <h4>Next Step</h4>
-              <p>Ready to review your systems or plan a new project?</p>
+              <p>Ready to review your systems or plan a new architecture project?</p>
               <Link href="/book-consult" className="gsv-btn gsv-btn-primary gsv-footer-btn">
                 Book a Consult
               </Link>
             </div>
           </div>
 
-          <div className="gsv-footer-bottom">
+          <div className="gsv-footer-bottom gsv-footer-bottom-utility">
             <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
+
+            <div className="gsv-footer-utility-links">
+              <a href="/#how-we-work">How We Work</a>
+              <a href="/#why-us">Why Choose Us</a>
+              <a href="/#contact">Contact</a>
+            </div>
+
             <a href="#top">Back to top</a>
           </div>
         </footer>

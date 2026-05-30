@@ -263,9 +263,9 @@ export default function CommercialITPage() {
             <div className="gsv-footer-column">
               <h4>Services</h4>
               <a href="/commercial-it-support-lincoln-ca">Commercial IT Support</a>
-              <a href="/commercial-it-support-lincoln-ca">Network Infrastructure</a>
-              <a href="/home-network-security-lincoln-ca">Home Networking & Cameras</a>
-              <a href="/home-network-security-lincoln-ca">Smart Home Integration</a>
+              <a href="/#services">Networks & Infrastructure</a>
+              <a href="/#services">Smart Home Integration</a>
+              <a href="/#why-us">Procurement & Planning</a>
             </div>
 
             <div className="gsv-footer-column">
