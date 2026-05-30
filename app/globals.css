@@ -3907,3 +3907,338 @@ header.gsv-header {
   color: #ffffff !important;
   border-color: rgba(255, 199, 44, 0.80) !important;
 }
+
+/* =========================================================
+   Managed IT dark banner bottom image
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 38px;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 199, 44, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.gsv-managed-banner-image {
+  display: block;
+  width: 100%;
+  height: clamp(240px, 28vw, 430px);
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.92;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-banner-image-wrap {
+    margin-top: 28px;
+    border-radius: 18px;
+  }
+
+  .gsv-managed-banner-image {
+    height: 260px;
+  }
+}
+
+/* =========================================================
+   Managed IT banner image refinement
+   Prevents vertical cropping and blends image into dark card
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  margin-top: 44px !important;
+  padding: 0 !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 199, 44, 0.14) !important;
+  background:
+    radial-gradient(circle at center, rgba(255, 199, 44, 0.08), transparent 56%),
+    linear-gradient(180deg, rgba(255, 199, 44, 0.05), rgba(0, 0, 0, 0.18)),
+    #070707 !important;
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.24),
+    inset 0 0 42px rgba(255, 199, 44, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035) !important;
+}
+
+.gsv-managed-banner-image {
+  display: block !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.82 !important;
+  filter: saturate(0.95) contrast(1.05) brightness(0.88) !important;
+}
+
+/* Soft dark blend over the image edges */
+.gsv-managed-banner-image-wrap {
+  position: relative !important;
+}
+
+.gsv-managed-banner-image-wrap::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  background:
+    linear-gradient(90deg, rgba(7, 7, 7, 0.38), transparent 18%, transparent 82%, rgba(7, 7, 7, 0.38)),
+    linear-gradient(180deg, rgba(7, 7, 7, 0.24), transparent 28%, rgba(7, 7, 7, 0.30)) !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-banner-image {
+    aspect-ratio: 16 / 10 !important;
+  }
+}
+
+/* =========================================================
+   Managed IT banner image refinement
+   Prevents vertical cropping and blends image into dark card
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  margin-top: 44px !important;
+  padding: 0 !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 199, 44, 0.14) !important;
+  background:
+    radial-gradient(circle at center, rgba(255, 199, 44, 0.08), transparent 56%),
+    linear-gradient(180deg, rgba(255, 199, 44, 0.05), rgba(0, 0, 0, 0.18)),
+    #070707 !important;
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.24),
+    inset 0 0 42px rgba(255, 199, 44, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035) !important;
+}
+
+.gsv-managed-banner-image {
+  display: block !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.82 !important;
+  filter: saturate(0.95) contrast(1.05) brightness(0.88) !important;
+}
+
+/* Soft dark blend over the image edges */
+.gsv-managed-banner-image-wrap {
+  position: relative !important;
+}
+
+.gsv-managed-banner-image-wrap::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  border-radius: inherit !important;
+  background:
+    linear-gradient(90deg, rgba(7, 7, 7, 0.38), transparent 18%, transparent 82%, rgba(7, 7, 7, 0.38)),
+    linear-gradient(180deg, rgba(7, 7, 7, 0.24), transparent 28%, rgba(7, 7, 7, 0.30)) !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-banner-image {
+    aspect-ratio: 16 / 10 !important;
+  }
+}
+
+/* =========================================================
+   Managed IT banner image size refinement
+   Keeps image smaller and centered inside the dark banner
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  width: min(100%, 1080px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.gsv-managed-banner-image {
+  aspect-ratio: 16 / 7 !important;
+}
+
+/* =========================================================
+   Managed IT banner image final size / border cleanup
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  width: min(100%, 820px) !important;
+  margin-top: 34px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+.gsv-managed-banner-image-wrap::after {
+  display: none !important;
+  content: none !important;
+}
+
+.gsv-managed-banner-image {
+  aspect-ratio: 16 / 7.5 !important;
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.82 !important;
+  filter: saturate(0.95) contrast(1.04) brightness(0.86) !important;
+}
+
+/* =========================================================
+   Managed IT banner 2400x900 image final override
+   ========================================================= */
+
+.gsv-managed-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 920px) !important;
+  margin: 34px auto 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+
+.gsv-managed-banner-image-wrap::after {
+  display: none !important;
+  content: none !important;
+}
+
+.gsv-managed-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.86 !important;
+  filter: saturate(0.96) contrast(1.04) brightness(0.88) !important;
+}
+
+/* =========================================================
+   FINAL Managed IT banner image blend
+   Softly blends 2400x900 graphic into dark banner
+   ========================================================= */
+
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 880px) !important;
+  margin: 40px auto 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap::before,
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap::after {
+  display: none !important;
+  content: none !important;
+}
+
+.gsv-managed-it-banner .gsv-managed-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.88 !important;
+  filter: saturate(0.96) contrast(1.04) brightness(0.86) !important;
+
+  -webkit-mask-image:
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 1) 58%,
+      rgba(0, 0, 0, 0.72) 76%,
+      rgba(0, 0, 0, 0) 100%
+    ) !important;
+  mask-image:
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 1) 58%,
+      rgba(0, 0, 0, 0.72) 76%,
+      rgba(0, 0, 0, 0) 100%
+    ) !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-it-banner .gsv-managed-banner-image-wrap {
+    width: min(100%, 720px) !important;
+    margin-top: 30px !important;
+  }
+}
+
+/* =========================================================
+   FINAL Managed IT transparent PNG banner image
+   Removes previous JPG mask/blend treatment
+   ========================================================= */
+
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 760px) !important;
+  margin: 30px auto 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap::before,
+.gsv-managed-it-banner .gsv-managed-banner-image-wrap::after {
+  display: none !important;
+  content: none !important;
+}
+
+.gsv-managed-it-banner .gsv-managed-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 0.94 !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-managed-it-banner .gsv-managed-banner-image-wrap {
+    width: min(100%, 620px) !important;
+    margin-top: 26px !important;
+  }
+}
+
+/* =========================================================
+   Managed/service dark banner rounding refinement
+   Matches bento card corner radius
+   ========================================================= */
+
+.gsv-local-banner.gsv-managed-it-banner {
+  border-radius: 28px !important;
+}

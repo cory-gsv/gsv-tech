@@ -193,6 +193,15 @@ export default function ManagedITServicesPage() {
    ecosystem that simplifies your workflows while maintaining absolute data privacy
    and threat protection.
   </p>
+
+  <div className="gsv-managed-banner-image-wrap">
+   <img
+    src="/assets/images/portfolio/transparent-managed-services.png"
+    alt="Managed IT services, secure cloud infrastructure, cybersecurity, and business support systems by Golden State Visions"
+    className="gsv-managed-banner-image"
+    loading="lazy"
+   />
+  </div>
  </section>
 
  <section className="gsv-section gsv-managed-service-area-section">
