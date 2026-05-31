@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const footerLocations = [
@@ -183,9 +184,11 @@ export default function SiteFooter() {
         <div className="gsvsf-grid">
           <div className="gsvsf-brand">
             <Link href="/" aria-label="Golden State Visions home">
-              <img
+              <Image
                 src="/images/gsv-logo.png"
                 alt="Golden State Visions Managed IT Services"
+                width={1798}
+                height={877}
                 className="gsvsf-logo"
               />
             </Link>

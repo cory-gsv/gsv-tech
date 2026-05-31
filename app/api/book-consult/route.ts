@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 
 const FUNCTION_NAME = "gcal-sync";
 
+function getResponseMessage(data: unknown, key: "error" | "message") {
+  if (!data || typeof data !== "object" || !(key in data)) return "";
+
+  const value = (data as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : "";
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -39,7 +46,7 @@ export async function POST(request: Request) {
 
     const text = await res.text();
 
-    let data: any = {};
+    let data: unknown = {};
 
     try {
       data = text ? JSON.parse(text) : {};
@@ -51,8 +58,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            data?.error ||
-            data?.message ||
+            getResponseMessage(data, "error") ||
+            getResponseMessage(data, "message") ||
             `Supabase function failed with ${res.status}`,
           details: data,
         },

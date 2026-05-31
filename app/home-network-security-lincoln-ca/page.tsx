@@ -1,4 +1,5 @@
 import SiteFooter from "@/app/components/SiteFooter";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -13,26 +14,29 @@ export default function HomeNetworkSecurityPage() {
     <main id="top" className="gsv-page">
       <div className="gsv-shell">
         <header className="gsv-header">
-          <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-            <img
+          <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+            <Image
               src="/images/gsv-logo.png"
               alt="Golden State Visions Managed IT Services"
+              width={1798}
+              height={877}
               className="gsv-logo-img"
+              priority
             />
-          </a>
+          </Link>
 
           <nav className="gsv-nav">
             <div className="gsv-nav-dropdown">
-              <a href="/#services" className="gsv-nav-dropdown-trigger">Services</a>
+              <Link href="/#services" className="gsv-nav-dropdown-trigger">Services</Link>
               <div className="gsv-nav-dropdown-menu">
-                <a href="/commercial-it-support-lincoln-ca">Commercial IT Support</a>
-                <a href="/home-network-security-lincoln-ca">Home Networking & Cameras</a>
-                <a href="/#services">All Services</a>
+                <Link href="/commercial-it-support-lincoln-ca">Commercial IT Support</Link>
+                <Link href="/home-network-security-lincoln-ca">Home Networking & Cameras</Link>
+                <Link href="/#services">All Services</Link>
               </div>
             </div>
-            <a href="/#how-we-work">How We Work</a>
-            <a href="/#why-us">Why Choose Us</a>
-            <a href="/#contact">Contact</a>
+            <Link href="/#how-we-work">How We Work</Link>
+            <Link href="/#why-us">Why Choose Us</Link>
+            <Link href="/#contact">Contact</Link>
           </nav>
         </header>
 

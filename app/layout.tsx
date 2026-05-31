@@ -7,11 +7,21 @@ const socialImage = "/assets/images/portfolio/infrastructure-cable-matrix.webp";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: "Golden State Visions",
   title: "Managed IT Services & Smart Home Automation | Golden State Visions",
   description:
     "Golden State Visions delivers managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for businesses and homes in Northern California.",
   alternates: {
     canonical: "/",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.png", type: "image/png", sizes: "96x96" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+    shortcut: ["/favicon.ico"],
   },
   openGraph: {
     title: "Managed IT Services & Smart Home Automation | Golden State Visions",

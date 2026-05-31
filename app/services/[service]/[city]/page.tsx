@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteFooter from "@/app/components/SiteFooter";
@@ -59,7 +60,14 @@ export default async function LocalServicePage({
       <div className="gsv-shell">
         <header className="gsv-header">
           <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-            <img src="/images/gsv-logo.png" alt="Golden State Visions" className="gsv-logo-img" />
+            <Image
+              src="/images/gsv-logo.png"
+              alt="Golden State Visions"
+              width={1798}
+              height={877}
+              className="gsv-logo-img"
+              priority
+            />
           </Link>
         </header>
 

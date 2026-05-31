@@ -10,9 +10,28 @@ export default function MenuInteractions() {
 
     if (!menus.length) return;
 
+    const closeTimers = new Map<HTMLDetailsElement, ReturnType<typeof setTimeout>>();
+
+    function closeMenu(menu: HTMLDetailsElement) {
+      if (!menu.open || menu.classList.contains("is-menu-closing")) return;
+
+      menu.classList.add("is-menu-closing");
+
+      const existingTimer = closeTimers.get(menu);
+      if (existingTimer) clearTimeout(existingTimer);
+
+      const timer = setTimeout(() => {
+        menu.open = false;
+        menu.classList.remove("is-menu-closing");
+        closeTimers.delete(menu);
+      }, 380);
+
+      closeTimers.set(menu, timer);
+    }
+
     function closeAllMenus(except?: HTMLDetailsElement) {
       menus.forEach((menu) => {
-        if (menu !== except) menu.open = false;
+        if (menu !== except) closeMenu(menu);
       });
     }
 
@@ -22,7 +41,7 @@ export default function MenuInteractions() {
 
       menus.forEach((menu) => {
         if (menu.open && !menu.contains(target)) {
-          menu.open = false;
+          closeMenu(menu);
         }
       });
     }
@@ -47,7 +66,7 @@ export default function MenuInteractions() {
       const links = Array.from(menu.querySelectorAll<HTMLAnchorElement>("a"));
       links.forEach((link) => {
         const closeOnClick = () => {
-          menu.open = false;
+          closeMenu(menu);
         };
 
         link.addEventListener("click", closeOnClick);
@@ -76,6 +95,7 @@ export default function MenuInteractions() {
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      closeTimers.forEach((timer) => clearTimeout(timer));
       document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
       document.removeEventListener("keydown", handleKeyDown);
       cleanupFns.forEach((cleanup) => cleanup());

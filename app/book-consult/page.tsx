@@ -1,8 +1,8 @@
 "use client";
 
 import SiteFooter from "@/app/components/SiteFooter";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 type Slot = {
@@ -35,6 +35,30 @@ type ConfirmationPayload = {
   calendarHtmlLink: string | null;
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getResponseString(data: unknown, key: "error" | "message") {
+  if (!data || typeof data !== "object" || !(key in data)) return "";
+
+  const value = (data as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : "";
+}
+
+function isDay(value: unknown): value is Day {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<Day>;
+  return typeof candidate.date === "string" && Array.isArray(candidate.slots);
+}
+
+function getConfirmationPayload(value: unknown) {
+  return value && typeof value === "object"
+    ? (value as Partial<ConfirmationPayload>)
+    : undefined;
+}
+
 function getStartOfWeek(date: Date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -53,17 +77,6 @@ function addDays(date: Date, days: number) {
 function formatTimePT(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Los_Angeles",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function formatDateTimePT(iso: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    weekday: "long",
-    month: "long",
-    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(iso));
@@ -168,10 +181,8 @@ function buildDailyDisplaySlots(day: Day): DisplaySlot[] {
 }
 
 export default function BookConsultPage() {
-  
   const [bookingConfirmationOpen, setBookingConfirmationOpen] = useState(false);
   const [bookingConfirmationDetails, setBookingConfirmationDetails] = useState<ConfirmationPayload | null>(null);
-const router = useRouter();
 
   const [days, setDays] = useState<Day[]>([]);
   const [loadedWeeks, setLoadedWeeks] = useState(1);
@@ -207,7 +218,7 @@ const router = useRouter();
     );
   }, [selectedSlot, name, email, emailIsValid, phone, company, questions]);
 
-  async function invokeFunction(body: unknown) {
+  const invokeFunction = useCallback(async (body: unknown) => {
     const res = await fetch("/api/book-consult", {
       method: "POST",
       headers: {
@@ -217,7 +228,7 @@ const router = useRouter();
     });
 
     const text = await res.text();
-    let data: any = {};
+    let data: unknown = {};
 
     try {
       data = text ? JSON.parse(text) : {};
@@ -226,13 +237,17 @@ const router = useRouter();
     }
 
     if (!res.ok) {
-      throw new Error(data?.error || data?.message || `Request failed with ${res.status}`);
+      throw new Error(
+        getResponseString(data, "error") ||
+          getResponseString(data, "message") ||
+          `Request failed with ${res.status}`,
+      );
     }
 
     return data;
-  }
+  }, []);
 
-  async function loadWeek(weekOffset: number, append = false) {
+  const loadWeek = useCallback(async (weekOffset: number, append = false) => {
     const weekStart = addDays(baseWeekStart, weekOffset * 7);
     const weekEnd = addDays(weekStart, 7);
 
@@ -242,7 +257,14 @@ const router = useRouter();
       end: weekEnd.toISOString(),
     });
 
-    const incomingDays = (Array.isArray(data.days) ? data.days : []).filter((day: Day) => {
+    const rawDays = data && typeof data === "object"
+      ? (data as Record<string, unknown>).days
+      : undefined;
+    const daysPayload: unknown[] = Array.isArray(rawDays) ? rawDays : [];
+
+    const incomingDays = daysPayload.filter((day): day is Day => {
+      if (!isDay(day)) return false;
+
       const weekday = new Date(`${day.date}T00:00:00`).getDay();
       return weekday !== 0 && weekday !== 6;
     });
@@ -260,7 +282,7 @@ const router = useRouter();
 
       return merged;
     });
-  }
+  }, [baseWeekStart, invokeFunction]);
 
   useEffect(() => {
     (async () => {
@@ -268,13 +290,13 @@ const router = useRouter();
         setLoadingInitial(true);
         setError("");
         await loadWeek(0, false);
-      } catch (err: any) {
-        setError(err?.message || "Failed to load availability");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Failed to load availability"));
       } finally {
         setLoadingInitial(false);
       }
     })();
-  }, [baseWeekStart]);
+  }, [loadWeek]);
 
   async function handleShowMore() {
     if (loadedWeeks >= 3) return;
@@ -284,8 +306,8 @@ const router = useRouter();
       setError("");
       await loadWeek(loadedWeeks, true);
       setLoadedWeeks((v) => v + 1);
-    } catch (err: any) {
-      setError(err?.message || "Failed to load more availability");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load more availability"));
     } finally {
       setLoadingMore(false);
     }
@@ -338,7 +360,10 @@ const router = useRouter();
         end: selectedSlot.end,
       });
 
-      const confirmation: ConfirmationPayload | undefined = result?.confirmation;
+      const resultObject =
+        result && typeof result === "object" ? (result as Record<string, unknown>) : {};
+      const confirmation = getConfirmationPayload(resultObject.confirmation);
+
       setBookingConfirmationDetails({
         name: confirmation?.name || name.trim(),
         email: confirmation?.email || email.trim(),
@@ -354,9 +379,9 @@ const router = useRouter();
 
       setBookingConfirmationOpen(true);
       setStatus("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("");
-      setError(err?.message || "Booking failed");
+      setError(getErrorMessage(err, "Booking failed"));
     }
   }
 
@@ -382,26 +407,29 @@ const router = useRouter();
     <main id="top" className="gsv-book-page">
       <div className="gsv-book-shell">
         <header className="gsv-header">
-          <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-            <img
+          <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+            <Image
               src="/images/gsv-logo.png"
               alt="Golden State Visions Managed IT Services"
+              width={1798}
+              height={877}
               className="gsv-logo-img"
+              priority
             />
-          </a>
+          </Link>
 
           <nav className="gsv-nav">
             <div className="gsv-nav-dropdown">
-              <a href="/#services" className="gsv-nav-dropdown-trigger">Services</a>
+              <Link href="/#services" className="gsv-nav-dropdown-trigger">Services</Link>
               <div className="gsv-nav-dropdown-menu">
-                <a href="/commercial-it-support-lincoln-ca">Commercial IT Support</a>
-                <a href="/home-network-security-lincoln-ca">Home Networking & Cameras</a>
-                <a href="/#services">All Services</a>
+                <Link href="/commercial-it-support-lincoln-ca">Commercial IT Support</Link>
+                <Link href="/home-network-security-lincoln-ca">Home Networking & Cameras</Link>
+                <Link href="/#services">All Services</Link>
               </div>
             </div>
-            <a href="/#how-we-work">How We Work</a>
-            <a href="/#why-us">Why Choose Us</a>
-            <a href="/#contact">Contact</a>
+            <Link href="/#how-we-work">How We Work</Link>
+            <Link href="/#why-us">Why Choose Us</Link>
+            <Link href="/#contact">Contact</Link>
           </nav>
         </header>
 

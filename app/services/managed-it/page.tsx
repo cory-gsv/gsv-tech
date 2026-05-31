@@ -1,4 +1,5 @@
 import SiteFooter from "@/app/components/SiteFooter";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -13,13 +14,16 @@ export default function ManagedITServicesPage() {
  <main id="top" className="gsv-page">
  <div className="gsv-shell">
  <header className="gsv-header">
-  <a href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-  <img
+  <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
+  <Image
   src="/images/gsv-logo.png"
   alt="Golden State Visions Managed IT Services"
+  width={1798}
+  height={877}
   className="gsv-logo-img"
+  priority
   />
-  </a>
+  </Link>
 
   <nav className="gsv-nav gsv-nav-menu-only">
   <details className="gsv-services-menu">
@@ -32,9 +36,9 @@ export default function ManagedITServicesPage() {
    <span className="gsv-services-mega-label">Explore</span>
 
    <div className="gsv-services-mega-toplinks">
-   <a href="/#how-we-work">How We Work</a>
-   <a href="/#why-us">Why Choose Us</a>
-   <a href="/#contact">Contact</a>
+   <Link href="/#how-we-work">How We Work</Link>
+   <Link href="/#why-us">Why Choose Us</Link>
+   <Link href="/#contact">Contact</Link>
    </div>
    </div>
    </div>
@@ -44,7 +48,7 @@ export default function ManagedITServicesPage() {
    <div className="gsv-services-mega-label">Business Solutions</div>
 
    <div className="gsv-services-mega-grid">
-   <a href="/services/managed-it" className="gsv-services-mega-card">
+   <Link href="/services/managed-it" className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-managed" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -75,9 +79,9 @@ export default function ManagedITServicesPage() {
      </svg>
     </span>
     <span className="gsv-menu-title">Managed IT Services</span>
-   </a>
+   </Link>
 
-   <a href="/services/networks-security-systems" className="gsv-services-mega-card">
+   <Link href="/services/networks-security-systems" className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-network-security" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +104,7 @@ export default function ManagedITServicesPage() {
      </svg>
     </span>
     <span className="gsv-menu-title">Networks & Security Systems</span>
-   </a>
+   </Link>
    </div>
    </div>
 
@@ -108,22 +112,22 @@ export default function ManagedITServicesPage() {
    <div className="gsv-services-mega-label">Residential Solutions</div>
 
    <div className="gsv-services-mega-grid">
-   <a href="/services/smart-home-automation" className="gsv-services-mega-card">
+   <Link href="/services/smart-home-automation" className="gsv-services-mega-card">
     <span className="gsv-menu-icon">🏠</span>
     <span className="gsv-menu-title">Smart Home Automation</span>
-   </a>
+   </Link>
 
-   <a href="/services/audio-video-surveillance" className="gsv-services-mega-card">
+   <Link href="/services/audio-video-surveillance" className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-av">🎥</span>
     <span className="gsv-menu-title">Audio, Video & Surveillance</span>
-   </a>
+   </Link>
    </div>
    </div>
    </div>
 
    <div className="gsv-services-mega-footer">
-   <a href="/#services">View all services</a>
-   <a href="/book-consult">Book a consult</a>
+   <Link href="/#services">View all services</Link>
+   <Link href="/book-consult">Book a consult</Link>
    </div>
   </div>
   </div>
@@ -195,9 +199,11 @@ export default function ManagedITServicesPage() {
   </p>
 
   <div className="gsv-managed-banner-image-wrap">
-   <img
+   <Image
     src="/assets/images/portfolio/transparent-managed-services.png"
     alt="Managed IT services, secure cloud infrastructure, cybersecurity, and business support systems by Golden State Visions"
+    width={1288}
+    height={585}
     className="gsv-managed-banner-image"
     loading="lazy"
    />
@@ -214,22 +220,22 @@ export default function ManagedITServicesPage() {
   </div>
 
   <ul className="gsv-area-grid gsv-managed-area-grid">
-   <li><a href="/locations/lincoln-ca">Lincoln, CA</a></li>
-   <li><a href="/locations/rocklin-ca">Rocklin, CA</a></li>
-   <li><a href="/locations/roseville-ca">Roseville, CA</a></li>
-   <li><a href="/locations/granite-bay-ca">Granite Bay, CA</a></li>
-   <li><a href="/locations/folsom-ca">Folsom, CA</a></li>
-   <li><a href="/locations/auburn-ca">Auburn, CA</a></li>
-   <li><a href="/locations/truckee-ca">Truckee, CA</a></li>
-   <li><a href="/locations/tahoe-ca">Tahoe, CA</a></li>
-   <li><a href="/locations/sugar-bowl-ca">Sugar Bowl, CA</a></li>
-   <li><a href="/locations/sunnyvale-ca">Sunnyvale, CA</a></li>
-   <li><a href="/locations/mountain-view-ca">Mountain View, CA</a></li>
-   <li><a href="/locations/palo-alto-ca">Palo Alto, CA</a></li>
-   <li><a href="/locations/santa-clara-ca">Santa Clara, CA</a></li>
-   <li><a href="/locations/cupertino-ca">Cupertino, CA</a></li>
-   <li><a href="/locations/los-altos-ca">Los Altos, CA</a></li>
-   <li><a href="/locations/san-jose-ca">San Jose, CA</a></li>
+   <li><Link href="/locations/lincoln-ca">Lincoln, CA</Link></li>
+   <li><Link href="/locations/rocklin-ca">Rocklin, CA</Link></li>
+   <li><Link href="/locations/roseville-ca">Roseville, CA</Link></li>
+   <li><Link href="/locations/granite-bay-ca">Granite Bay, CA</Link></li>
+   <li><Link href="/locations/folsom-ca">Folsom, CA</Link></li>
+   <li><Link href="/locations/auburn-ca">Auburn, CA</Link></li>
+   <li><Link href="/locations/truckee-ca">Truckee, CA</Link></li>
+   <li><Link href="/locations/tahoe-ca">Tahoe, CA</Link></li>
+   <li><Link href="/locations/sugar-bowl-ca">Sugar Bowl, CA</Link></li>
+   <li><Link href="/locations/sunnyvale-ca">Sunnyvale, CA</Link></li>
+   <li><Link href="/locations/mountain-view-ca">Mountain View, CA</Link></li>
+   <li><Link href="/locations/palo-alto-ca">Palo Alto, CA</Link></li>
+   <li><Link href="/locations/santa-clara-ca">Santa Clara, CA</Link></li>
+   <li><Link href="/locations/cupertino-ca">Cupertino, CA</Link></li>
+   <li><Link href="/locations/los-altos-ca">Los Altos, CA</Link></li>
+   <li><Link href="/locations/san-jose-ca">San Jose, CA</Link></li>
   </ul>
  </section>
 
@@ -255,9 +261,9 @@ export default function ManagedITServicesPage() {
    </div>
 
    <div className="gsv-managed-next-step-action">
-    <a href="/book-consult" className="gsv-btn gsv-btn-primary">
+    <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
      Book a Consult
-    </a>
+    </Link>
    </div>
   </div>
  </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import SiteFooter from "@/app/components/SiteFooter";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -9,10 +10,13 @@ import MenuInteractions from "@/app/components/MenuInteractions";
 function BrandLogo() {
   return (
     <a href="#top" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-      <img
+      <Image
         src="/images/gsv-logo.png"
         alt="Golden State Visions Managed IT Services"
+        width={1798}
+        height={877}
         className="gsv-logo-img"
+        priority
       />
     </a>
   );
@@ -118,9 +122,9 @@ export default function LocationPageClient({ city }: { city: { slug: string; cit
                       <span className="gsv-services-mega-label">Explore</span>
 
                       <div className="gsv-services-mega-toplinks">
-                        <a href="/#how-we-work">How We Work</a>
-                        <a href="/#why-us">Why Choose Us</a>
-                        <a href="/#contact">Contact</a>
+                        <Link href="/#how-we-work">How We Work</Link>
+                        <Link href="/#why-us">Why Choose Us</Link>
+                        <Link href="/#contact">Contact</Link>
                       </div>
                     </div>
                   </div>
@@ -208,8 +212,8 @@ export default function LocationPageClient({ city }: { city: { slug: string; cit
                   </div>
 
                   <div className="gsv-services-mega-footer">
-                    <a href="/#services">View all services</a>
-                    <a href="/book-consult">Book a consult</a>
+                    <Link href="/#services">View all services</Link>
+                    <Link href="/book-consult">Book a consult</Link>
                   </div>
                 </div>
               </div>
@@ -258,12 +262,14 @@ export default function LocationPageClient({ city }: { city: { slug: string; cit
             </a>
 
             <div className="gsv-hero-rack-image-wrap">
-              <img
+              <Image
                 src="/assets/images/portfolio/infrastructure-cable-matrix.webp"
                 alt={`Clean structured network cabling and braided rack wire management for ${city.city}, ${city.state} technology projects by Golden State Visions`}
                 title={`Structured network cabling and rack infrastructure in ${city.city}, ${city.state}`}
+                width={2624}
+                height={3280}
                 className="gsv-hero-rack-image"
-                loading="eager"
+                priority
               />
             </div>
           </div>

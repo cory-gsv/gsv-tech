@@ -1,6 +1,7 @@
 "use client";
 
 import SiteFooter from "@/app/components/SiteFooter";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -9,10 +10,13 @@ import MenuInteractions from "./components/MenuInteractions";
 function BrandLogo() {
   return (
     <a href="#top" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-      <img
+      <Image
         src="/images/gsv-logo.png"
         alt="Golden State Visions Managed IT Services"
+        width={1798}
+        height={877}
         className="gsv-logo-img"
+        priority
       />
     </a>
   );
@@ -118,9 +122,9 @@ export default function HomePage() {
                       <span className="gsv-services-mega-label">Explore</span>
 
                       <div className="gsv-services-mega-toplinks">
-                        <a href="/#how-we-work">How We Work</a>
-                        <a href="/#why-us">Why Choose Us</a>
-                        <a href="/#contact">Contact</a>
+                        <Link href="/#how-we-work">How We Work</Link>
+                        <Link href="/#why-us">Why Choose Us</Link>
+                        <Link href="/#contact">Contact</Link>
                       </div>
                     </div>
                   </div>
@@ -130,7 +134,7 @@ export default function HomePage() {
                       <div className="gsv-services-mega-label">Business Solutions</div>
 
                       <div className="gsv-services-mega-grid">
-                        <a href="/services/managed-it" className="gsv-services-mega-card">
+                        <Link href="/services/managed-it" className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-managed" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -161,9 +165,9 @@ export default function HomePage() {
      </svg>
     </span>
     <span className="gsv-menu-title">Managed IT Services</span>
-   </a>
+   </Link>
 
-                        <a href="/services/networks-security-systems" className="gsv-services-mega-card">
+                        <Link href="/services/networks-security-systems" className="gsv-services-mega-card">
     <span className="gsv-menu-icon gsv-menu-icon-network-security" aria-hidden="true">
      <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +190,7 @@ export default function HomePage() {
      </svg>
     </span>
     <span className="gsv-menu-title">Networks & Security Systems</span>
-   </a>
+   </Link>
                       </div>
                     </div>
 
@@ -194,22 +198,22 @@ export default function HomePage() {
                       <div className="gsv-services-mega-label">Residential Solutions</div>
 
                       <div className="gsv-services-mega-grid">
-                        <a href="/services/smart-home-automation" className="gsv-services-mega-card">
+                        <Link href="/services/smart-home-automation" className="gsv-services-mega-card">
                           <span className="gsv-menu-icon">🏠</span>
                           <span className="gsv-menu-title">Smart Home Automation</span>
-                        </a>
+                        </Link>
 
-                        <a href="/services/audio-video-surveillance" className="gsv-services-mega-card">
+                        <Link href="/services/audio-video-surveillance" className="gsv-services-mega-card">
                           <span className="gsv-menu-icon gsv-menu-icon-av">🎥</span>
                           <span className="gsv-menu-title">Audio, Video & Surveillance</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
 
                   <div className="gsv-services-mega-footer">
-                    <a href="/#services">View all services</a>
-                    <a href="/book-consult">Book a consult</a>
+                    <Link href="/#services">View all services</Link>
+                    <Link href="/book-consult">Book a consult</Link>
                   </div>
                 </div>
               </div>
@@ -258,11 +262,13 @@ export default function HomePage() {
             </a>
 
             <div className="gsv-hero-rack-image-wrap">
-              <img
+              <Image
                 src="/assets/images/portfolio/infrastructure-cable-matrix.webp"
                 alt="Clean structured network cabling and braided rack wire management by Golden State Visions"
+                width={2624}
+                height={3280}
                 className="gsv-hero-rack-image"
-                loading="eager"
+                priority
               />
             </div>
           </div>
