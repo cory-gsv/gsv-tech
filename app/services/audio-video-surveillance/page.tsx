@@ -6,12 +6,35 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
  title: "Audio, Video & Surveillance Systems | Golden State Visions",
  description: "Custom whole-home audio, dedicated media rooms, home theater systems, AI surveillance, local NVR recording, and secure residential AV infrastructure across Northern California.",
+ openGraph: {
+  title: "Audio, Video & Surveillance Systems | Golden State Visions",
+  description:
+   "Custom whole-home audio, dedicated media rooms, home theater systems, AI surveillance, local NVR recording, and secure residential AV infrastructure.",
+  url: "/services/audio-video-surveillance",
+  siteName: "Golden State Visions",
+  type: "website",
+  images: [
+   {
+    url: "/assets/images/portfolio/audio-video-surveillance-banner.png",
+    width: 1847,
+    height: 851,
+    alt: "Audio video and surveillance smart home theater illustration with connected lighting, projection, speakers, control, and security systems",
+   },
+  ],
+ },
+ twitter: {
+  card: "summary_large_image",
+  title: "Audio, Video & Surveillance Systems | Golden State Visions",
+  description:
+   "Whole-home audio, media rooms, home theater systems, AI surveillance, local NVR recording, and secure residential AV infrastructure.",
+  images: ["/assets/images/portfolio/audio-video-surveillance-banner.png"],
+ },
 };
 
 export default function AudioVideoSurveillancePage() {
  return (
- <main id="top" className="gsv-page">
- <div className="gsv-shell">
+  <main id="top" className="gsv-page">
+   <div className="gsv-shell">
  <header className="gsv-header">
   <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
   <Image
@@ -197,6 +220,18 @@ export default function AudioVideoSurveillancePage() {
    ecosystem that delivers pristine audio-visual immersion over an ultra-stable,
    private network.
   </p>
+
+  <div className="gsv-av-banner-image-wrap">
+   <Image
+    src="/assets/images/portfolio/audio-video-surveillance-banner.png"
+    alt="Audio video and surveillance smart home theater illustration with connected lighting, projection, speakers, control, and security systems"
+    width={1847}
+    height={851}
+    className="gsv-av-banner-image"
+    loading="lazy"
+    unoptimized
+   />
+  </div>
  </section>
 
  <section className="gsv-section gsv-managed-service-area-section">

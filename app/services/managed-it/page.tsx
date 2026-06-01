@@ -7,6 +7,29 @@ export const metadata: Metadata = {
  title: "Managed IT Services & Workspace Support | Lincoln, CA",
  description:
   "Proactive enterprise-grade IT support, server architecture design, and cloud workforce provisioning. Scalable technology management engineered for modern offices.",
+ openGraph: {
+  title: "Managed IT Services & Workspace Support | Golden State Visions",
+  description:
+   "Managed IT support, secure cloud workspaces, endpoint protection, and business infrastructure support for Northern California organizations.",
+  url: "/services/managed-it",
+  siteName: "Golden State Visions",
+  type: "website",
+  images: [
+   {
+    url: "/assets/images/portfolio/managed-it-infrastructure-illustration-transparent-tight.png",
+    width: 1460,
+    height: 658,
+    alt: "Managed IT infrastructure illustration showing cloud servers, security, support, automation, and always-on technology management by Golden State Visions",
+   },
+  ],
+ },
+ twitter: {
+  card: "summary_large_image",
+  title: "Managed IT Services & Workspace Support | Golden State Visions",
+  description:
+   "Managed IT support, secure cloud workspaces, endpoint protection, and business infrastructure support for Northern California organizations.",
+  images: ["/assets/images/portfolio/managed-it-infrastructure-illustration-transparent-tight.png"],
+ },
 };
 
 export default function ManagedITServicesPage() {
@@ -200,10 +223,10 @@ export default function ManagedITServicesPage() {
 
   <div className="gsv-managed-banner-image-wrap">
    <Image
-    src="/assets/images/portfolio/transparent-managed-services.png"
-    alt="Managed IT services, secure cloud infrastructure, cybersecurity, and business support systems by Golden State Visions"
-    width={1288}
-    height={585}
+    src="/assets/images/portfolio/managed-it-infrastructure-illustration-transparent-tight.png"
+    alt="Managed IT infrastructure illustration showing cloud servers, security, support, automation, and always-on technology management by Golden State Visions"
+    width={1460}
+    height={658}
     className="gsv-managed-banner-image"
     loading="lazy"
    />

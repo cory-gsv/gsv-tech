@@ -3802,7 +3802,7 @@ header.gsv-header {
 
 .gsv-hero-rack-image-wrap {
   width: 100%;
-  margin-top: 18px;
+  margin-top: -8px;
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid rgba(255, 199, 44, 0.22);
@@ -3815,20 +3815,20 @@ header.gsv-header {
 .gsv-hero-rack-image {
   display: block;
   width: 100%;
-  height: clamp(360px, 36vw, 560px);
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   object-position: center;
 }
 
 @media (max-width: 900px) {
   .gsv-hero-rack-image {
-    height: 360px;
+    height: auto;
   }
 }
 
 @media (max-width: 640px) {
   .gsv-hero-rack-image {
-    height: 300px;
+    height: auto;
   }
 }
 
@@ -4198,7 +4198,7 @@ header.gsv-header {
 .gsv-managed-it-banner .gsv-managed-banner-image-wrap {
   grid-column: 1 / -1 !important;
   width: min(100%, 760px) !important;
-  margin: 30px auto 0 !important;
+  margin: -2px auto -18px !important;
   padding: 0 !important;
   border: none !important;
   box-shadow: none !important;
@@ -4230,7 +4230,7 @@ header.gsv-header {
 @media (max-width: 900px) {
   .gsv-managed-it-banner .gsv-managed-banner-image-wrap {
     width: min(100%, 620px) !important;
-    margin-top: 26px !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -4241,6 +4241,100 @@ header.gsv-header {
 
 .gsv-local-banner.gsv-managed-it-banner {
   border-radius: 28px !important;
+}
+
+.gsv-network-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 920px) !important;
+  margin: 18px auto -18px !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  aspect-ratio: 16 / 6.6 !important;
+}
+
+.gsv-network-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 60% !important;
+  opacity: 0.96 !important;
+  filter: saturate(1.04) contrast(1.06) brightness(0.96) !important;
+}
+
+.gsv-smart-home-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 920px) !important;
+  margin: 18px auto -18px !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+  aspect-ratio: 16 / 6.4 !important;
+}
+
+.gsv-smart-home-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 52% !important;
+  opacity: 0.96 !important;
+  filter: saturate(1.04) contrast(1.06) brightness(0.96) !important;
+}
+
+.gsv-av-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 920px) !important;
+  margin: 4px auto -34px !important;
+  overflow: visible !important;
+  position: relative !important;
+  border-radius: 0 !important;
+  aspect-ratio: 16 / 7.25 !important;
+  background: transparent !important;
+}
+
+.gsv-av-banner-image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center 50% !important;
+  opacity: 0.96 !important;
+  filter: saturate(1.04) contrast(1.06) brightness(0.96) !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+.gsv-av-banner-image-wrap::after {
+  display: none !important;
+  content: none !important;
+}
+
+.gsv-local-service-banner-image-wrap {
+  grid-column: 1 / -1 !important;
+  width: min(100%, 420px) !important;
+  margin: 18px auto -12px !important;
+  overflow: hidden !important;
+  border-radius: 22px !important;
+}
+
+.gsv-local-service-banner-image-wrap .gsv-hero-rack-image {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+@media (max-width: 900px) {
+  .gsv-smart-home-banner-image-wrap {
+    margin: 12px auto -12px !important;
+  }
+
+  .gsv-av-banner-image-wrap {
+    margin: 12px auto -12px !important;
+  }
+
+  .gsv-network-banner-image-wrap {
+    margin: 12px auto -12px !important;
+  }
 }
 
 /* =========================================================

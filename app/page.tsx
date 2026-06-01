@@ -261,12 +261,12 @@ export default function HomePage() {
               </p>
             </a>
 
-            <div className="gsv-hero-rack-image-wrap">
+            <div className="gsv-hero-rack-image-wrap" style={{ marginTop: "-8px" }}>
               <Image
-                src="/assets/images/portfolio/infrastructure-cable-matrix.webp"
-                alt="Clean structured network cabling and braided rack wire management by Golden State Visions"
-                width={2624}
-                height={3280}
+                src="/assets/images/portfolio/network-services-infographic-even.png"
+                alt="Golden State Visions network services infographic connecting home networks, office networks, surveillance, cloud backup, security hubs, and procurement"
+                width={1178}
+                height={1425}
                 className="gsv-hero-rack-image"
                 priority
               />

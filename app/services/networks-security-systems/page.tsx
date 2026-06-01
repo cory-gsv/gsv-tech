@@ -5,7 +5,30 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
  title: "Networks & Security Systems | Golden State Visions",
- description: "Structured cabling, secure business networks, IP surveillance, NVR systems, wireless coverage, and access control planning for businesses and properties in Northern California.",
+ description: "Structured cabling, secure business networks, IP surveillance, NVR systems, wireless coverage, and access control systems for businesses and properties in Northern California.",
+ openGraph: {
+  title: "Networks & Security Systems | Golden State Visions",
+  description:
+   "Structured cabling, secure business networks, IP surveillance, NVR systems, wireless coverage, and access control systems for Northern California properties.",
+  url: "/services/networks-security-systems",
+  siteName: "Golden State Visions",
+  type: "website",
+  images: [
+   {
+    url: "/assets/images/portfolio/network-security-servers-transparent.png",
+    width: 1643,
+    height: 957,
+    alt: "Golden network server corridor representing secure enterprise infrastructure and high-performance network systems",
+   },
+  ],
+ },
+ twitter: {
+  card: "summary_large_image",
+  title: "Networks & Security Systems | Golden State Visions",
+  description:
+   "Structured cabling, secure business networks, IP surveillance, NVR systems, wireless coverage, and access control systems.",
+  images: ["/assets/images/portfolio/network-security-servers-transparent.png"],
+ },
 };
 
 export default function NetworksSecuritySystemsPage() {
@@ -168,7 +191,7 @@ export default function NetworksSecuritySystemsPage() {
 
  <div className="gsv-card">
  <div className="gsv-eyebrow">03</div>
- <h3>Secure Wireless & Access Control Planning</h3>
+ <h3>Secure Wireless & Access Control</h3>
  <p>Intelligent wireless coverage and electronic physical barriers designed to separate public access from your critical internal systems.</p>
  <ul>
   <li>High-density business Wi-Fi deployment, predictive RF mapping, and wireless heatmaps</li>
@@ -189,10 +212,42 @@ export default function NetworksSecuritySystemsPage() {
  <p>
   <strong>We design, install, and support</strong> robust physical layer networks, from
   high-density structured cabling to precision enterprise server racks. By unifying
-  your core networking components with advanced surveillance hardware, we deliver
+ your core networking components with advanced surveillance hardware, we deliver
   high-performance ecosystems engineered for maximum speed, security, and long-term
   operational uptime.
  </p>
+
+ <style>{`
+  .gsv-network-banner-image-cropped {
+   object-position: center 60% !important;
+  }
+ `}</style>
+
+ <div
+  className="gsv-network-banner-image-wrap"
+  style={{
+   gridColumn: "1 / -1",
+   width: "100%",
+   maxWidth: "920px",
+   margin: "18px auto -18px",
+  }}
+ >
+  <Image
+   src="/assets/images/portfolio/network-security-servers-transparent.png"
+   alt="Golden network server corridor representing secure enterprise infrastructure and high-performance network systems"
+   width={1643}
+   height={957}
+   className="gsv-network-banner-image gsv-network-banner-image-cropped"
+   style={{
+    display: "block",
+    width: "100%",
+    height: "auto",
+    objectFit: "cover",
+    objectPosition: "center 60%",
+   }}
+   loading="lazy"
+  />
+ </div>
  </section>
 
  <section className="gsv-section gsv-managed-service-area-section">

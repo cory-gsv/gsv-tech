@@ -3,7 +3,7 @@ import "./globals.css";
 import MenuAutoClose from "./components/MenuAutoClose";
 
 const siteUrl = "https://tech.gsvisions.com";
-const socialImage = "/assets/images/portfolio/infrastructure-cable-matrix.webp";
+const socialImage = "/assets/images/portfolio/network-services-infographic-even.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

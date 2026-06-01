@@ -6,6 +6,29 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
  title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
  description: "Smart home automation, Lutron lighting and shades, Control4, Home Assistant, media rooms, whole-home audio, and local surveillance systems across Lincoln, Roseville, Rocklin, Granite Bay, and Northern California.",
+ openGraph: {
+  title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
+  description:
+   "Smart home automation, Lutron lighting and shades, whole-home control, media rooms, audio, and local surveillance systems across Northern California.",
+  url: "/services/smart-home-automation",
+  siteName: "Golden State Visions",
+  type: "website",
+  images: [
+   {
+    url: "/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png",
+    width: 1655,
+    height: 797,
+    alt: "Smart home automation circuit board illustration showing connected lighting, climate, security, audio, energy, and control systems",
+   },
+  ],
+ },
+ twitter: {
+  card: "summary_large_image",
+  title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
+  description:
+   "Smart home automation, Lutron lighting and shades, whole-home control, audio, and local surveillance systems.",
+  images: ["/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png"],
+ },
 };
 
 export default function SmartHomeAutomationPage() {
@@ -193,6 +216,17 @@ export default function SmartHomeAutomationPage() {
    that simplifies your daily routines while maintaining complete network privacy and physical
    security.
   </p>
+
+  <div className="gsv-smart-home-banner-image-wrap">
+   <Image
+    src="/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png"
+    alt="Smart home automation circuit board illustration showing connected lighting, climate, security, audio, energy, and control systems"
+    width={1655}
+    height={797}
+    className="gsv-smart-home-banner-image"
+    loading="lazy"
+   />
+  </div>
  </section>
 
  <section className="gsv-section gsv-managed-service-area-section">
