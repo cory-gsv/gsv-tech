@@ -1,4 +1,4 @@
-const fallbackSiteUrl = "https://gsvisions.com";
+const fallbackSiteUrl = "https://gsvstack.com";
 
 function normalizeSiteUrl(url: string) {
   return url.replace(/\/+$/, "");

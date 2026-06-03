@@ -183,10 +183,10 @@ export default function SiteFooter() {
       <div className="gsvsf-inner">
         <div className="gsvsf-grid">
           <div className="gsvsf-brand">
-            <Link href="/" aria-label="Golden State Visions home">
+            <Link href="/" aria-label="GSV Stack home">
               <Image
                 src="/images/gsv-logo.png"
-                alt="Golden State Visions Managed IT Services"
+                alt="GSV Stack Managed IT Services"
                 width={1798}
                 height={877}
                 className="gsvsf-logo"
@@ -194,8 +194,8 @@ export default function SiteFooter() {
             </Link>
 
             <p className="gsvsf-brand-text">
-              Business IT, secure networks, home camera systems, smart home integration,
-              and technology procurement built for long-term reliability.
+              Managed IT, secure networks, cloud workspaces, endpoint protection,
+              procurement, and business automation built for long-term reliability.
             </p>
           </div>
 
@@ -203,8 +203,8 @@ export default function SiteFooter() {
             <h4>Services</h4>
             <Link href="/services/managed-it">Managed IT Services</Link>
             <Link href="/services/networks-security-systems">Networks &amp; Security Systems</Link>
-            <Link href="/services/smart-home-automation">Smart Home Automation</Link>
-            <Link href="/services/audio-video-surveillance">Audio, Video &amp; Surveillance</Link>
+            <Link href="/#services">Business Automation</Link>
+            <Link href="/book-consult">Technology Planning</Link>
           </div>
 
           <div className="gsvsf-column">
@@ -229,7 +229,7 @@ export default function SiteFooter() {
         </div>
 
         <div className="gsv-footer-bottom gsvsf-bottom">
-          <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} GSV Stack. All rights reserved.</span>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <Link href="/sms-terms">SMS Terms</Link>
           <a href="#top">Back to top</a>
