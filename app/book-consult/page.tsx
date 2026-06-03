@@ -199,6 +199,7 @@ export default function BookConsultPage() {
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [questions, setQuestions] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
 
   const baseWeekStart = useMemo(() => getStartOfWeek(new Date()), []);
 
@@ -214,9 +215,10 @@ export default function BookConsultPage() {
       emailIsValid &&
       phone.trim().length > 0 &&
       company.trim().length > 0 &&
-      questions.trim().length > 0
+      questions.trim().length > 0 &&
+      smsConsent
     );
-  }, [selectedSlot, name, email, emailIsValid, phone, company, questions]);
+  }, [selectedSlot, name, email, emailIsValid, phone, company, questions, smsConsent]);
 
   const invokeFunction = useCallback(async (body: unknown) => {
     const res = await fetch("/api/book-consult", {
@@ -345,6 +347,11 @@ export default function BookConsultPage() {
       return;
     }
 
+    if (!smsConsent) {
+      setError("Please consent to SMS/text message communications before booking.");
+      return;
+    }
+
     setStatus("Booking your consultation...");
     setError("");
 
@@ -356,6 +363,9 @@ export default function BookConsultPage() {
         phone: phone.trim(),
         company: company.trim(),
         questions: questions.trim(),
+        smsConsent,
+        smsConsentText:
+          "I consent to receive conversational SMS messages from Golden State Visions related to my inquiry, appointment, service coordination, support request, and follow-up conversations. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.",
         start: selectedSlot.start,
         end: selectedSlot.end,
       });
@@ -687,6 +697,31 @@ export default function BookConsultPage() {
                       onChange={(e) => setQuestions(e.target.value)}
                     />
                   </div>
+
+                  <label className="gsv-book-consent" htmlFor="smsConsent">
+                    <input
+                      id="smsConsent"
+                      name="smsConsent"
+                      type="checkbox"
+                      required
+                      disabled={formLocked}
+                      checked={smsConsent}
+                      onChange={(e) => setSmsConsent(e.target.checked)}
+                    />
+                    <span>
+                      <strong>
+                        I consent to receive conversational SMS/text messages from Golden
+                        State Visions. <span className="gsv-required">*</span>
+                      </strong>
+                      <small>
+                        Messages may relate to inquiries, appointment scheduling,
+                        confirmations, service coordination, support requests, and follow-up
+                        conversations. Message frequency varies. Message and data rates may
+                        apply. Reply STOP to opt out or HELP for help. See our{" "}
+                        <Link href="/privacy-policy">Privacy Policy</Link>.
+                      </small>
+                    </span>
+                  </label>
 
                   <button
                     type="submit"
@@ -1380,6 +1415,60 @@ export default function BookConsultPage() {
 
         .gsv-book-field input:focus,
         .gsv-book-field textarea:focus {
+          border-color: #ffc72c;
+          box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.18);
+        }
+
+        .gsv-book-consent {
+          display: grid;
+          grid-template-columns: 18px minmax(0, 1fr);
+          gap: 10px;
+          align-items: start;
+          margin-top: 2px;
+          padding: 12px 14px;
+          border: 1px solid rgba(22, 22, 22, 0.1);
+          border-radius: 16px;
+          background: #fbfaf7;
+          color: #272727;
+          cursor: pointer;
+        }
+
+        .gsv-book-consent input {
+          width: 18px;
+          height: 18px;
+          margin: 2px 0 0;
+          accent-color: #111111;
+          cursor: pointer;
+        }
+
+        .gsv-book-consent input:disabled {
+          cursor: not-allowed;
+        }
+
+        .gsv-book-consent strong {
+          display: block;
+          color: #272727;
+          font-size: 12px;
+          line-height: 1.45;
+          font-weight: 900;
+        }
+
+        .gsv-book-consent small {
+          display: block;
+          margin-top: 5px;
+          color: rgba(22, 22, 22, 0.66);
+          font-size: 12px;
+          line-height: 1.55;
+        }
+
+        .gsv-book-consent a {
+          color: #111111;
+          font-weight: 900;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        .gsv-book-consent:focus-within {
           border-color: #ffc72c;
           box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.18);
         }
