@@ -365,7 +365,7 @@ export default function BookConsultPage() {
         questions: questions.trim(),
         smsConsent,
         smsConsentText:
-          "I consent to receive conversational SMS messages from Golden State Visions related to my inquiry, appointment, service coordination, support request, and follow-up conversations. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.",
+          "I consent to receive conversational SMS messages from Golden State Visions related to my inquiry, appointment, service coordination, support request, and follow-up conversations. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. I agree to the SMS Terms & Conditions at https://gsvisions.com/sms-terms and acknowledge the Privacy Policy at https://gsvisions.com/privacy-policy.",
         start: selectedSlot.start,
         end: selectedSlot.end,
       });
@@ -718,7 +718,8 @@ export default function BookConsultPage() {
                         confirmations, service coordination, support requests, and follow-up
                         conversations. Message frequency varies. Message and data rates may
                         apply. Reply STOP to opt out or HELP for help. See our{" "}
-                        <Link href="/privacy-policy">Privacy Policy</Link>.
+                        <Link href="/privacy-policy">Privacy Policy</Link> and{" "}
+                        <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.
                       </small>
                     </span>
                   </label>

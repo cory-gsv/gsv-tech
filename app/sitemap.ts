@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/services/audio-video-surveillance",
     "/book-consult",
     "/privacy-policy",
+    "/sms-terms",
     "/commercial-it-support-lincoln-ca",
     "/home-network-security-lincoln-ca",
   ].map((route) => ({
