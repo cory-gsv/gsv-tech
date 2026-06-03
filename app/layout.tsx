@@ -7,10 +7,10 @@ const socialImage = "/assets/images/portfolio/network-services-infographic-even.
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  applicationName: "GSV Stack",
-  title: "Managed IT Services & Business Infrastructure | GSV Stack",
+  applicationName: "Golden State Visions",
+  title: "Managed IT Services & Smart Home Automation | Golden State Visions",
   description:
-    "GSV Stack delivers managed IT support, secure business networks, cloud workspace administration, endpoint protection, and business automation for Northern California organizations.",
+    "Golden State Visions delivers managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for businesses and homes in Northern California.",
   alternates: {
     canonical: "/",
   },
@@ -24,26 +24,26 @@ export const metadata: Metadata = {
     shortcut: ["/favicon.ico"],
   },
   openGraph: {
-    title: "Managed IT Services & Business Infrastructure | GSV Stack",
+    title: "Managed IT Services & Smart Home Automation | Golden State Visions",
     description:
-      "Managed IT support, secure network deployments, cloud workspace administration, endpoint protection, procurement, and business automation built for long-term reliability.",
+      "Comprehensive IT support, enterprise-grade network deployments, premium smart home integration, audio video systems, and surveillance solutions built for long-term reliability.",
     url: "/",
-    siteName: "GSV Stack",
+    siteName: "Golden State Visions",
     type: "website",
     images: [
       {
         url: socialImage,
         width: 1200,
         height: 1600,
-        alt: "Structured network cabling and rack infrastructure by GSV Stack",
+        alt: "Structured network cabling and rack infrastructure by Golden State Visions",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Managed IT Services & Business Infrastructure | GSV Stack",
+    title: "Managed IT Services & Smart Home Automation | Golden State Visions",
     description:
-      "Managed IT support, secure business networks, cloud workspace administration, endpoint protection, and business automation for Northern California.",
+      "Managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for Northern California.",
     images: [socialImage],
   },
 };

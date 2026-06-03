@@ -7,7 +7,7 @@ type ContactPayload = {
   message?: string;
 };
 
-const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL || "info@gsvisions.com";
+const CONTACT_TO_EMAIL = "info@gsvisions.com";
 
 export async function POST(request: Request) {
   try {
@@ -36,12 +36,12 @@ export async function POST(request: Request) {
 
     const fromEmail =
       process.env.CONTACT_FROM_EMAIL ||
-      "GSV Stack <info@gsvisions.com>";
+      "Golden State Visions <info@gsvisions.com>";
 
-    const subject = `New GSV Stack inquiry from ${name}`;
+    const subject = `New website inquiry from ${name}`;
 
     const text = `
-New GSV Stack inquiry
+New website inquiry
 
 Name: ${name}
 Email: ${email}
