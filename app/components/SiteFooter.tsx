@@ -230,6 +230,7 @@ export default function SiteFooter() {
 
         <div className="gsv-footer-bottom gsvsf-bottom">
           <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
+          <Link href="/privacy-policy">Privacy Policy</Link>
           <a href="#top">Back to top</a>
         </div>
       </div>

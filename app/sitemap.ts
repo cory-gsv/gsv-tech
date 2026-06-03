@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/app/config/site";
 import { localCities, localServices } from "@/app/data/localSeo";
-
-const siteUrl = "https://tech.gsvisions.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -14,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/services/smart-home-automation",
     "/services/audio-video-surveillance",
     "/book-consult",
+    "/privacy-policy",
     "/commercial-it-support-lincoln-ca",
     "/home-network-security-lincoln-ca",
   ].map((route) => ({

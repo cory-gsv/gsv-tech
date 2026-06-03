@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import MenuAutoClose from "./components/MenuAutoClose";
+import { siteUrl } from "./config/site";
 
-const siteUrl = "https://tech.gsvisions.com";
 const socialImage = "/assets/images/portfolio/network-services-infographic-even.png";
 
 export const metadata: Metadata = {
