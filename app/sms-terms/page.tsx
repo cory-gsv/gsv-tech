@@ -87,7 +87,7 @@ const sections = [
         <p>
           Phone: <a href="tel:+19164323373">(916) 432-3373</a>
           <br />
-          Email: <a href="mailto:bookings@gsvisions.com">bookings@gsvisions.com</a>
+          Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
         </p>
       </>
     ),
@@ -405,7 +405,7 @@ export default function SmsTermsPage() {
                 <br />
                 Phone: <a href="tel:+19164323373">(916) 432-3373</a>
                 <br />
-                Email: <a href="mailto:bookings@gsvisions.com">bookings@gsvisions.com</a>
+                Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
                 <br />
                 Website: <a href="https://gsvisions.com">https://gsvisions.com</a>
               </p>
