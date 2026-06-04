@@ -365,7 +365,7 @@ export default function BookConsultPage() {
         questions: questions.trim(),
         smsConsent,
         smsConsentText:
-          "I consent to receive conversational SMS messages from Golden State Visions related to my inquiry, appointment, service coordination, support request, and follow-up conversations. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. I agree to the SMS Terms & Conditions at https://gsvisions.com/sms-terms and acknowledge the Privacy Policy at https://gsvisions.com/privacy-policy.",
+          "I consent to receive conversational SMS/text messages from Golden State Visions. Messages may relate to inquiries, appointment scheduling, confirmations, service coordination, support requests, and follow-up conversations. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Phone numbers and SMS opt-in information are not shared with third parties for marketing purposes. See our Privacy Policy at https://gsvisions.com/privacy-policy and SMS Terms & Conditions at https://gsvisions.com/sms-terms.",
         start: selectedSlot.start,
         end: selectedSlot.end,
       });
@@ -711,15 +711,18 @@ export default function BookConsultPage() {
                     <span>
                       <strong>
                         I consent to receive conversational SMS/text messages from Golden
-                        State Visions. <span className="gsv-required">*</span>
+                        State Visions.
                       </strong>
                       <small>
                         Messages may relate to inquiries, appointment scheduling,
                         confirmations, service coordination, support requests, and follow-up
                         conversations. Message frequency varies. Message and data rates may
-                        apply. Reply STOP to opt out or HELP for help. See our{" "}
+                        apply. Reply STOP to opt out or HELP for help. Phone numbers and
+                        SMS opt-in information are not shared with third parties for
+                        marketing purposes. See our{" "}
                         <Link href="/privacy-policy">Privacy Policy</Link> and{" "}
-                        <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.
+                        <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.{" "}
+                        <span className="gsv-required">*</span>
                       </small>
                     </span>
                   </label>
