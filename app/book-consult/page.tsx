@@ -708,12 +708,13 @@ export default function BookConsultPage() {
                       checked={smsConsent}
                       onChange={(e) => setSmsConsent(e.target.checked)}
                     />
-                    <span>
-                      <strong>
+                    <span className="gsv-book-consent-copy">
+                      <p className="gsv-book-consent-lead">
                         I consent to receive conversational SMS/text messages from Golden
                         State Visions.
-                      </strong>
-                      <small>
+                      </p>
+                      {"\n\n"}
+                      <p className="gsv-book-consent-details">
                         Messages may relate to inquiries, appointment scheduling,
                         confirmations, service coordination, support requests, and follow-up
                         conversations. Message frequency varies. Message and data rates may
@@ -721,9 +722,12 @@ export default function BookConsultPage() {
                         SMS opt-in information are not shared with third parties for
                         marketing purposes. See our{" "}
                         <Link href="/privacy-policy">Privacy Policy</Link> and{" "}
-                        <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.{" "}
-                        <span className="gsv-required">*</span>
-                      </small>
+                        <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.
+                      </p>
+                      {"\n\n"}
+                      <span className="gsv-book-consent-required" aria-hidden="true">
+                        *
+                      </span>
                     </span>
                   </label>
 
@@ -1449,20 +1453,37 @@ export default function BookConsultPage() {
           cursor: not-allowed;
         }
 
-        .gsv-book-consent strong {
+        .gsv-book-consent-copy {
           display: block;
+          min-width: 0;
+        }
+
+        .gsv-book-consent p {
+          margin: 0;
+        }
+
+        .gsv-book-consent-lead {
           color: #272727;
           font-size: 12px;
           line-height: 1.45;
           font-weight: 900;
         }
 
-        .gsv-book-consent small {
+        .gsv-book-consent-details {
           display: block;
           margin-top: 5px;
           color: rgba(22, 22, 22, 0.66);
           font-size: 12px;
           line-height: 1.55;
+        }
+
+        .gsv-book-consent-required {
+          display: block;
+          margin-top: 6px;
+          color: #b42318;
+          font-size: 12px;
+          line-height: 1;
+          font-weight: 900;
         }
 
         .gsv-book-consent a {
