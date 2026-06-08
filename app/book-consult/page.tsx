@@ -727,6 +727,10 @@ export default function BookConsultPage() {
                     </span>
                   </label>
 
+                  <span className="gsv-book-review-separator" aria-hidden="true">
+                    {" "}
+                  </span>
+
                   <button
                     type="submit"
                     className="gsv-book-submit"
@@ -1478,6 +1482,13 @@ export default function BookConsultPage() {
           font-weight: 900;
           text-decoration: underline;
           text-underline-offset: 2px;
+        }
+
+        .gsv-book-review-separator {
+          display: block;
+          width: 0;
+          height: 0;
+          overflow: hidden;
         }
 
         .gsv-book-consent:focus-within {
