@@ -436,7 +436,7 @@ export default function PrivacyPolicyPage() {
                 <br />
                 Phone: <a href="tel:+19164323373">(916) 432-3373</a>
                 <br />
-                Email: <a href="mailto:info@gsvisions.com">info@gsvisions.com</a>
+                Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
                 <br />
                 Website: <a href="https://gsvisions.com">gsvisions.com</a>
               </p>
