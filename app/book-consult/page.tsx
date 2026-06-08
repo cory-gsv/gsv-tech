@@ -724,14 +724,8 @@ export default function BookConsultPage() {
                         <Link href="/privacy-policy">Privacy Policy</Link> and{" "}
                         <Link href="/sms-terms">SMS Terms &amp; Conditions</Link>.
                       </p>
-                      {"\n\n"}
-                      <span className="gsv-book-consent-required" aria-hidden="true">
-                        *
-                      </span>
                     </span>
                   </label>
-
-                  {"\n\n"}
 
                   <button
                     type="submit"
@@ -1477,15 +1471,6 @@ export default function BookConsultPage() {
           color: rgba(22, 22, 22, 0.66);
           font-size: 12px;
           line-height: 1.55;
-        }
-
-        .gsv-book-consent-required {
-          display: block;
-          margin-top: 6px;
-          color: #b42318;
-          font-size: 12px;
-          line-height: 1;
-          font-weight: 900;
         }
 
         .gsv-book-consent a {
