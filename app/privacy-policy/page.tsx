@@ -438,7 +438,7 @@ export default function PrivacyPolicyPage() {
                 <br />
                 Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
                 <br />
-                Website: <a href="https://gsvisions.com">gsvisions.com</a>
+                Website: <a href="https://gsvisions.com">https://gsvisions.com</a>
               </p>
             </div>
           </section>
