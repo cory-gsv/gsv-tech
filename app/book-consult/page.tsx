@@ -215,10 +215,9 @@ export default function BookConsultPage() {
       emailIsValid &&
       phone.trim().length > 0 &&
       company.trim().length > 0 &&
-      questions.trim().length > 0 &&
-      smsConsent
+      questions.trim().length > 0
     );
-  }, [selectedSlot, name, email, emailIsValid, phone, company, questions, smsConsent]);
+  }, [selectedSlot, name, email, emailIsValid, phone, company, questions]);
 
   const invokeFunction = useCallback(async (body: unknown) => {
     const res = await fetch("/api/book-consult", {
@@ -344,11 +343,6 @@ export default function BookConsultPage() {
 
     if (!emailIsValid) {
       setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (!smsConsent) {
-      setError("Please consent to SMS/text message communications before booking.");
       return;
     }
 
@@ -703,12 +697,12 @@ export default function BookConsultPage() {
                       id="smsConsent"
                       name="smsConsent"
                       type="checkbox"
-                      required
                       disabled={formLocked}
                       checked={smsConsent}
                       onChange={(e) => setSmsConsent(e.target.checked)}
                     />
                     <span className="gsv-book-consent-copy">
+                      <span className="gsv-book-consent-kicker">Optional SMS Consent</span>
                       <p className="gsv-book-consent-lead">
                         I consent to receive conversational SMS/text messages from Golden
                         State Visions.
@@ -1460,6 +1454,16 @@ export default function BookConsultPage() {
 
         .gsv-book-consent p {
           margin: 0;
+        }
+
+        .gsv-book-consent-kicker {
+          display: block;
+          margin-bottom: 5px;
+          color: rgba(22, 22, 22, 0.54);
+          font-size: 10px;
+          font-weight: 950;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
         }
 
         .gsv-book-consent-lead {
