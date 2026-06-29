@@ -16,6 +16,17 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Billing Hub
+
+The private billing tool lives at `/billing`.
+
+Set these environment variables in Vercel before using it:
+
+- `BILLING_HUB_PASSWORD`: password required to open the Billing Hub.
+- `BILLING_HUB_SESSION_SECRET`: long random value used to sign the login session.
+
+The Billing Hub currently stores working invoice, quote, payment, and Microsoft 365 audit data in the browser after login. Use the built-in backup button before changing browsers or machines.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

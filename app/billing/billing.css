@@ -1,0 +1,112 @@
+.gsv-billing-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #0b0b0b;
+  color: #1f2933;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.gsv-billing-login__card {
+  width: min(440px, 100%);
+  background: #ffffff;
+  border: 1px solid rgba(255, 199, 44, .35);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .45);
+  padding: 34px;
+}
+
+.gsv-billing-login__card img {
+  display: block;
+  width: 230px;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 22px;
+}
+
+.gsv-billing-login__card h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.gsv-billing-login__card p {
+  margin: 0 0 24px;
+  color: #52616f;
+  line-height: 1.45;
+}
+
+.gsv-billing-login__card form {
+  display: grid;
+  gap: 10px;
+}
+
+.gsv-billing-login__card label {
+  font-weight: 800;
+}
+
+.gsv-billing-login__card input {
+  min-height: 46px;
+  border: 1px solid #b9c4d0;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.gsv-billing-login__card button,
+.gsv-billing-shell__logout {
+  min-height: 44px;
+  border: 1px solid #1f2933;
+  background: #1f2933;
+  color: #fff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.gsv-billing-login__error {
+  color: #9f2f22;
+  font-weight: 900;
+}
+
+.gsv-billing-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #f4f6f8;
+}
+
+.gsv-billing-shell__bar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #d9e1ea;
+  background: #ffffff;
+  color: #1f2933;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.gsv-billing-shell__bar strong {
+  display: block;
+  font-size: 16px;
+}
+
+.gsv-billing-shell__bar span {
+  display: block;
+  margin-top: 2px;
+  color: #52616f;
+  font-size: 13px;
+}
+
+.gsv-billing-shell__logout {
+  padding: 0 14px;
+}
+
+.gsv-billing-shell__frame {
+  width: 100%;
+  min-height: calc(100vh - 58px);
+  border: 0;
+  background: #fff;
+}

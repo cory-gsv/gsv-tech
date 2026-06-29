@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSV Billing Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/gsv-logo.png" alt="Golden State Visions">
+      <div>
+        <strong>Billing Hub</strong>
+        <span>Checks, quotes, MSP invoices</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-link active" data-view="dashboard">Dashboard</button>
+      <button class="nav-link" data-view="clients">Clients</button>
+      <button class="nav-link" data-view="audit365">365 Audit</button>
+      <button class="nav-link" data-view="invoices">Invoices</button>
+      <button class="nav-link" data-view="quotes">Quotes</button>
+      <button class="nav-link" data-view="payments">Payments</button>
+      <button class="nav-link" data-view="exports">Year-End Export</button>
+    </nav>
+    <div class="sidebar-footer">
+      <form action="/api/billing-logout" method="post" target="_top">
+        <button class="ghost" type="submit">Log Out</button>
+      </form>
+      <button id="save-snapshot" class="ghost">Download Backup</button>
+      <label class="ghost file-button">
+        Restore Backup
+        <input id="restore-snapshot" type="file" accept="application/json">
+      </label>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Golden State Visions</p>
+        <h1 id="view-title">Dashboard</h1>
+      </div>
+      <div class="actions">
+        <button id="new-quote">New Quote</button>
+        <button id="new-invoice" class="primary">New Invoice</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="view active">
+      <div class="metric-grid">
+        <article class="metric">
+          <span>Open Invoices</span>
+          <strong id="metric-open">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Paid This Year</span>
+          <strong id="metric-paid">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Current Month MSP</span>
+          <strong id="metric-msp">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Draft Quotes</span>
+          <strong id="metric-quotes">0</strong>
+        </article>
+      </div>
+      <div class="split">
+        <section>
+          <div class="section-head">
+            <h2>Receivables</h2>
+            <button data-view-jump="invoices" class="ghost">View all</button>
+          </div>
+          <div id="dashboard-invoices" class="stack"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <h2>Recent Activity</h2>
+            <button data-view-jump="payments" class="ghost">Payments</button>
+          </div>
+          <div id="dashboard-activity" class="stack"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="clients" class="view">
+      <div class="section-head">
+        <h2>Clients</h2>
+        <button id="add-client" class="primary">Add Client</button>
+      </div>
+      <div id="client-list" class="grid-list"></div>
+    </section>
+
+    <section id="audit365" class="view">
+      <div class="section-head">
+        <h2>Microsoft 365 License Audit</h2>
+        <div class="toolbar">
+          <select id="audit-client"></select>
+          <input id="audit-month" type="month">
+          <label class="file-button primary-button">
+            Import CSV
+            <input id="audit-csv" type="file" accept=".csv,text/csv">
+          </label>
+        </div>
+      </div>
+      <div class="metric-grid">
+        <article class="metric">
+          <span>Full Users</span>
+          <strong id="audit-full">0</strong>
+        </article>
+        <article class="metric">
+          <span>Light Users</span>
+          <strong id="audit-light">0</strong>
+        </article>
+        <article class="metric">
+          <span>Service Accounts</span>
+          <strong id="audit-service">0</strong>
+        </article>
+        <article class="metric">
+          <span>Invoice Total</span>
+          <strong id="audit-total">$0</strong>
+        </article>
+      </div>
+      <div class="split">
+        <section>
+          <div class="section-head">
+            <h2>Audit Summary</h2>
+            <button id="audit-create-invoice" class="primary">Create Invoice From Audit</button>
+          </div>
+          <div id="audit-summary" class="stack"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <h2>Review Needed</h2>
+          </div>
+          <div id="audit-review" class="stack"></div>
+        </section>
+      </div>
+      <div class="section-head table-heading">
+        <h2>Classified Users</h2>
+      </div>
+      <div id="audit-users" class="table-card"></div>
+    </section>
+
+    <section id="invoices" class="view">
+      <div class="section-head">
+        <h2>Invoices</h2>
+        <div class="toolbar">
+          <select id="invoice-filter">
+            <option value="all">All invoices</option>
+            <option value="draft">Draft</option>
+            <option value="sent">Sent</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+          </select>
+          <button id="generate-monthly" class="primary">Invoice Latest 365 Audit</button>
+        </div>
+      </div>
+      <div id="invoice-list" class="table-card"></div>
+    </section>
+
+    <section id="quotes" class="view">
+      <div class="section-head">
+        <h2>Quotes</h2>
+        <button id="add-quote" class="primary">Add Quote</button>
+      </div>
+      <div id="quote-list" class="table-card"></div>
+    </section>
+
+    <section id="payments" class="view">
+      <div class="section-head">
+        <h2>Check Payments</h2>
+        <button id="record-payment" class="primary">Record Payment</button>
+      </div>
+      <div id="payment-list" class="table-card"></div>
+    </section>
+
+    <section id="exports" class="view">
+      <div class="section-head">
+        <h2>Year-End Export</h2>
+      </div>
+      <div class="export-panel">
+        <p>Export invoice and check-payment history for QuickBooks, your accountant, or year-end records.</p>
+        <div class="export-actions">
+          <button id="export-invoices" class="primary">Export Invoices CSV</button>
+          <button id="export-payments">Export Payments CSV</button>
+          <button id="export-summary">Export Revenue Summary CSV</button>
+        </div>
+      </div>
+      <div id="export-preview" class="table-card"></div>
+    </section>
+  </main>
+
+  <dialog id="editor">
+    <form method="dialog" id="editor-form">
+      <div class="modal-head">
+        <h2 id="editor-title">Edit</h2>
+        <button value="cancel" class="icon">×</button>
+      </div>
+      <div id="editor-fields" class="form-grid"></div>
+      <div class="modal-actions">
+        <button value="cancel">Cancel</button>
+        <button id="editor-save" value="default" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="document-preview">
+    <div class="modal-head">
+      <h2 id="document-title">Invoice</h2>
+      <button id="close-preview" class="icon">×</button>
+    </div>
+    <div id="document-body"></div>
+    <div class="modal-actions">
+      <button id="print-document" class="primary">Print / Save PDF</button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
