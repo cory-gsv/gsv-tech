@@ -6,6 +6,16 @@ type BillingPageProps = {
   searchParams?: Promise<{ error?: string }>
 }
 
+function errorMessage(error?: string) {
+  if (error === "missing") {
+    return "The server cannot see BILLING_HUB_PASSWORD yet. Redeploy after saving the Vercel variable."
+  }
+  if (error === "wrong") {
+    return "That password did not work."
+  }
+  return ""
+}
+
 export default async function BillingPage({ searchParams }: BillingPageProps) {
   const cookieStore = await cookies()
   const isAuthed = await verifyBillingSession(
@@ -14,6 +24,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
 
   if (!isAuthed) {
     const params = await searchParams
+    const message = errorMessage(params?.error)
     return (
       <main className="gsv-billing-login">
         <section className="gsv-billing-login__card">
@@ -29,9 +40,9 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
               autoComplete="current-password"
               required
             />
-            {params?.error ? (
+            {message ? (
               <div className="gsv-billing-login__error">
-                That password did not work.
+                {message}
               </div>
             ) : null}
             <button type="submit">Log In</button>

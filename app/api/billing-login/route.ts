@@ -6,12 +6,18 @@ import {
 
 export async function POST(request: NextRequest) {
   const form = await request.formData()
-  const password = String(form.get("password") || "")
+  const password = String(form.get("password") || "").trim()
   const expected =
-    process.env.BILLING_HUB_PASSWORD || process.env.GSV_BILLING_PASSWORD || ""
+    (process.env.BILLING_HUB_PASSWORD || process.env.GSV_BILLING_PASSWORD || "").trim()
 
-  if (!expected || password !== expected) {
-    return NextResponse.redirect(new URL("/billing?error=1", request.url), {
+  if (!expected) {
+    return NextResponse.redirect(new URL("/billing?error=missing", request.url), {
+      status: 303,
+    })
+  }
+
+  if (password !== expected) {
+    return NextResponse.redirect(new URL("/billing?error=wrong", request.url), {
       status: 303,
     })
   }
