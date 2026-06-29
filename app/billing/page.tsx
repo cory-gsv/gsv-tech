@@ -8,7 +8,7 @@ type BillingPageProps = {
 
 function errorMessage(error?: string) {
   if (error === "missing") {
-    return "The server cannot see BILLING_HUB_PASSWORD yet. Redeploy after saving the Vercel variable."
+    return "The server cannot see the Billing Hub environment variables yet. Redeploy after saving the Vercel variables."
   }
   if (error === "wrong") {
     return "That password did not work."

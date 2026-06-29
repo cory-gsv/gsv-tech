@@ -8,12 +8,20 @@ export async function POST(request: NextRequest) {
   const form = await request.formData()
   const password = String(form.get("password") || "").trim()
   const expected =
-    (process.env.BILLING_HUB_PASSWORD || process.env.GSV_BILLING_PASSWORD || "").trim()
+    (
+      process.env.BILLING_HUB_PASSWORD ||
+      process.env.GSV_BILLING_PASSWORD ||
+      process.env.BILLING_HUB_SESSION_SECRET ||
+      ""
+    ).trim()
 
   if (!expected) {
-    return NextResponse.redirect(new URL("/billing?error=missing", request.url), {
-      status: 303,
-    })
+    return NextResponse.redirect(
+      new URL("/billing?error=missing", request.url),
+      {
+        status: 303,
+      }
+    )
   }
 
   if (password !== expected) {
