@@ -5,17 +5,22 @@ import {
 } from "../../billing/billingAuth"
 
 export async function POST(request: NextRequest) {
-  const form = await request.formData()
+  let form: FormData
+  try {
+    form = await request.formData()
+  } catch {
+    form = new FormData()
+  }
   const password = String(form.get("password") || "").trim()
-  const expected =
-    (
-      process.env.BILLING_HUB_PASSWORD ||
-      process.env.GSV_BILLING_PASSWORD ||
-      process.env.BILLING_HUB_SESSION_SECRET ||
-      ""
-    ).trim()
+  const validPasswords = [
+    process.env.BILLING_HUB_PASSWORD,
+    process.env.GSV_BILLING_PASSWORD,
+    process.env.BILLING_HUB_SESSION_SECRET,
+  ]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
 
-  if (!expected) {
+  if (!validPasswords.length) {
     return NextResponse.redirect(
       new URL("/billing?error=missing", request.url),
       {
@@ -24,7 +29,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  if (password !== expected) {
+  if (!validPasswords.includes(password)) {
     return NextResponse.redirect(new URL("/billing?error=wrong", request.url), {
       status: 303,
     })
