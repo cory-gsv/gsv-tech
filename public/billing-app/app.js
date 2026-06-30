@@ -15,12 +15,16 @@ const defaultData = {
       status: "active",
       m365TenantKey: "default",
       pax8CompanyId: "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
+      ninjaOneOrgId: 3,
       mspRates: {
         fullUser: 70,
         lightUser: 20,
         serviceAccount: 10,
         copilot: 30
       },
+      ninjaOnePricing: [
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true }
+      ],
       internalCosts: [],
       notes: "Pays by check."
     },
@@ -35,16 +39,21 @@ const defaultData = {
       licenseAuditBilling: false,
       m365TenantKey: "nyssco",
       pax8CompanyId: "6e6399cf-8808-4c9c-bcce-19e6386e6589",
+      ninjaOneOrgId: 2,
       mspRates: {
         fullUser: 0,
         lightUser: 0,
         serviceAccount: 0,
         copilot: 0
       },
+      ninjaOnePricing: [
+        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 10, unitCost: 7.1, active: true },
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "fixed", qty: 18, unitCost: 4.6, active: true },
+        { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
+        { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
+        { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
+      ],
       internalCosts: [
-        { name: "NinjaOne endpoint management", source: "NinjaOne", qty: 0, unitCost: 0, active: true },
-        { name: "Antivirus endpoint protection", source: "Security", qty: 0, unitCost: 0, active: true },
-        { name: "NinjaOne data backup", source: "NinjaOne", qty: 0, unitCost: 0, active: true },
         { name: "Domain registration/service", source: "Domain", qty: 0, unitCost: 0, active: true }
       ],
       notes: "Microsoft 365 audit is visibility only for this client, not invoice generation. Ship/contact from June invoice: Pasquale Bitonti, pasquale@newyorkstylesausage.com."
@@ -104,7 +113,8 @@ const defaultData = {
   quotes: [],
   payments: [],
   audits365: [],
-  pax8Costs: []
+  pax8Costs: [],
+  ninjaOneAudits: []
 };
 
 let state = loadState();
@@ -138,9 +148,9 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "licenseAuditBilling", "internalCosts"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
-            existing[field] = record[field];
+            existing[field] = structuredClone(record[field]);
             changed = true;
           }
         }
@@ -151,6 +161,10 @@ function migrateDefaultRecords() {
     state.pax8Costs = [];
     changed = true;
   }
+  if (!Array.isArray(state.ninjaOneAudits)) {
+    state.ninjaOneAudits = [];
+    changed = true;
+  }
   const pax8CompanyIdFixes = {
     "1933729": "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
     "1933703": "6e6399cf-8808-4c9c-bcce-19e6386e6589"
@@ -158,6 +172,15 @@ function migrateDefaultRecords() {
   state.clients.forEach(client => {
     if (pax8CompanyIdFixes[client.pax8CompanyId]) {
       client.pax8CompanyId = pax8CompanyIdFixes[client.pax8CompanyId];
+      changed = true;
+    }
+    const defaults = defaultData.clients.find(defaultClient => defaultClient.id === client.id);
+    if (defaults?.ninjaOnePricing && (!Array.isArray(client.ninjaOnePricing) || !client.ninjaOnePricing.length)) {
+      client.ninjaOnePricing = structuredClone(defaults.ninjaOnePricing);
+      changed = true;
+    }
+    if (defaults?.ninjaOneOrgId && !client.ninjaOneOrgId) {
+      client.ninjaOneOrgId = defaults.ninjaOneOrgId;
       changed = true;
     }
   });
@@ -226,14 +249,20 @@ function manualCostTotal(clientId) {
   return activeClientCosts(clientId).reduce((sum, cost) => sum + cost.amount, 0);
 }
 
-function ninjaOneCostTotal(clientId) {
-  return activeClientCosts(clientId)
-    .filter(cost => /ninja/i.test(`${cost.source} ${cost.name}`))
-    .reduce((sum, cost) => sum + cost.amount, 0);
+function ninjaOneAuditRows(clientId, month = today.slice(0, 7)) {
+  const audit = latestNinjaOneAudit(clientId, month);
+  if (audit?.pricingRows?.length) return audit.pricingRows;
+  return activeClientCosts(clientId).filter(cost => /ninja/i.test(`${cost.source} ${cost.name}`));
+}
+
+function ninjaOneCostTotal(clientId, month = today.slice(0, 7)) {
+  return ninjaOneAuditRows(clientId, month).reduce((sum, row) => sum + Number(row.amount || 0), 0);
 }
 
 function otherManualCostTotal(clientId) {
-  return manualCostTotal(clientId) - ninjaOneCostTotal(clientId);
+  return activeClientCosts(clientId)
+    .filter(cost => !/ninja/i.test(`${cost.source} ${cost.name}`))
+    .reduce((sum, cost) => sum + cost.amount, 0);
 }
 
 function pax8CostTotal(clientId, month = today.slice(0, 7)) {
@@ -320,7 +349,8 @@ function renderDashboard() {
   document.getElementById("metric-paid").textContent = money.format(paid);
   document.getElementById("metric-msp").textContent = money.format(msp);
   document.getElementById("metric-pax8").textContent = costMoney.format(pax8);
-  document.getElementById("metric-vendor-costs").textContent = costMoney.format(ninjaOne + vendorCosts);
+  document.getElementById("metric-ninjaone").textContent = costMoney.format(ninjaOne);
+  document.getElementById("metric-vendor-costs").textContent = costMoney.format(vendorCosts);
   document.getElementById("metric-quotes").textContent = draftQuotes;
 
   document.getElementById("dashboard-invoices").innerHTML = invoices
@@ -402,6 +432,7 @@ function clientDetailDashboard(client) {
   const month = today.slice(0, 7);
   const audit = latestAudit(client.id, month);
   const pax8 = latestPax8Costs(client.id, month);
+  const ninjaOne = latestNinjaOneAudit(client.id, month);
   const costs = activeClientCosts(client.id);
   const recentInvoices = clientInvoices(client.id).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   return `
@@ -429,7 +460,7 @@ function clientDetailDashboard(client) {
           <div class="stack">
             <div class="item"><div class="item-line"><span>Microsoft 365 users</span><strong>${audit ? audit.rows.length : "Not pulled"}</strong></div></div>
             <div class="item"><div class="item-line"><span>Pax8 subscriptions</span><strong>${pax8 ? (pax8.rows || []).length : "Not pulled"}</strong></div></div>
-            <div class="item"><div class="item-line"><span>NinjaOne</span><strong>${costs.some(cost => /ninja/i.test(cost.source + cost.name)) ? "Tracked manually" : "Ready to add"}</strong></div></div>
+            <div class="item"><div class="item-line"><span>NinjaOne devices</span><strong>${ninjaOne ? `${ninjaOne.totals.devices} found` : client.ninjaOneOrgId ? "Not pulled" : "Add org ID"}</strong></div></div>
           </div>
         </section>
         <section>
@@ -452,13 +483,35 @@ function clientDetailDashboard(client) {
             ${(pax8?.rows || []).slice(0, 8).map(row => `
               <tr><td>${escapeHtml(row.productName)}</td><td>Pax8</td><td class="num">${row.quantity}</td><td class="num">${costMoney.format(row.unitPartnerCost || 0)}</td><td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td></tr>
             `).join("")}
-            ${costs.map(cost => `
+            ${ninjaOneAuditRows(client.id, month).map(row => `
+              <tr><td>${escapeHtml(row.name)}</td><td>NinjaOne</td><td class="num">${row.qty}</td><td class="num">${costMoney.format(row.unitCost)}</td><td class="num">${costMoney.format(row.amount)}</td></tr>
+            `).join("")}
+            ${costs.filter(cost => !/ninja/i.test(`${cost.source} ${cost.name}`)).map(cost => `
               <tr><td>${escapeHtml(cost.name)}</td><td>${escapeHtml(cost.source)}</td><td class="num">${cost.qty}</td><td class="num">${costMoney.format(cost.unitCost)}</td><td class="num">${costMoney.format(cost.amount)}</td></tr>
             `).join("")}
             ${!(pax8?.rows || []).length && !costs.length ? `<tr><td colspan="5">No costs tracked yet. Edit the client to add NinjaOne, antivirus, backup, or domain costs.</td></tr>` : ""}
           </tbody>
         </table>
       </div>
+      ${ninjaOne ? `
+        <div class="section-head table-heading"><h2>NinjaOne Devices Found</h2></div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Device</th><th>Class</th><th>Policy</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody>
+              ${(ninjaOne.rows || []).map(row => `
+                <tr>
+                  <td>${escapeHtml(row.name)}</td>
+                  <td>${escapeHtml(row.nodeClass)}</td>
+                  <td>${escapeHtml(row.policyName || row.rolePolicyId || "")}</td>
+                  <td>${escapeHtml(row.category)}</td>
+                  <td>${row.offline ? "Offline" : "Online"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
     </section>
   `;
 }
@@ -546,6 +599,39 @@ function latestPax8Costs(clientId, month = "") {
     .filter(cost => (!clientId || cost.clientId === clientId) && (!month || cost.month === month))
     .slice()
     .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
+}
+
+function latestNinjaOneAudit(clientId, month = "") {
+  return (state.ninjaOneAudits || [])
+    .filter(audit => (!clientId || audit.clientId === clientId) && (!month || audit.month === month))
+    .slice()
+    .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
+}
+
+function ninjaOneQtyForRule(rule, audit) {
+  const source = rule.qtySource || "fixed";
+  if (source === "api:endpoints") return Number(audit?.totals?.endpoints || 0);
+  if (source === "api:servers") return Number(audit?.totals?.servers || 0);
+  if (source === "api:devices") return Number(audit?.totals?.devices || 0);
+  if (source === "api:other") return Number(audit?.totals?.other || 0);
+  return Number(rule.qty || 0);
+}
+
+function priceNinjaOneRows(client, audit) {
+  return (client?.ninjaOnePricing || [])
+    .filter(rule => rule.active !== false)
+    .map(rule => {
+      const qty = ninjaOneQtyForRule(rule, audit);
+      const unitCost = Number(rule.unitCost || 0);
+      return {
+        name: rule.name || "NinjaOne service",
+        source: "NinjaOne",
+        qty,
+        qtySource: rule.qtySource || "fixed",
+        unitCost,
+        amount: qty * unitCost
+      };
+    });
 }
 
 function normalizedProductName(value) {
@@ -948,6 +1034,7 @@ function editorFields(mode, item) {
       ${field("terms", "Terms", item.terms || "Net 15")}
       ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
       ${field("pax8CompanyId", "Pax8 Company ID", item.pax8CompanyId || "")}
+      ${field("ninjaOneOrgId", "NinjaOne Organization ID", item.ninjaOneOrgId || "", "number")}
       ${checkbox("licenseAuditBilling", "Use Microsoft 365 audit to generate monthly invoice", item.licenseAuditBilling !== false)}
       <div class="field full pricing-editor">
         <h3>Monthly MSP License Pricing</h3>
@@ -960,8 +1047,13 @@ function editorFields(mode, item) {
         <p class="subtle">New 365 audits and generated invoices use these rates. Existing invoices keep their saved line-item prices.</p>
       </div>
       <div class="field full pricing-editor">
+        <h3>NinjaOne Internal Cost Pricing</h3>
+        <p class="subtle">This tracks what GSV pays per customer. It does not bill the customer. One row per service: name | quantity source | quantity | unit cost. Quantity source can be fixed, api:endpoints, api:servers, api:devices, or api:other.</p>
+        <textarea id="ninjaOnePricingText" name="ninjaOnePricingText">${escapeHtml(ninjaOnePricingToText(item.ninjaOnePricing || []))}</textarea>
+      </div>
+      <div class="field full pricing-editor">
         <h3>Internal Vendor Costs</h3>
-        <p class="subtle">One row per service: name | source | qty | unit cost. Use this for NinjaOne, antivirus, backup, domains, and other non-Pax8 costs until an API is connected.</p>
+        <p class="subtle">One row per service: name | source | qty | unit cost. Use this for domains and other non-Pax8, non-NinjaOne costs.</p>
         <textarea id="internalCostsText" name="internalCostsText">${escapeHtml(costsToText(item.internalCosts || []))}</textarea>
       </div>
       ${textarea("billTo", "Bill To", item.billTo || "", true)}
@@ -1130,6 +1222,23 @@ function costsToText(costs) {
   return (costs || []).map(cost => `${cost.name || ""} | ${cost.source || ""} | ${cost.qty ?? 1} | ${cost.unitCost ?? 0}`).join("\n");
 }
 
+function ninjaOnePricingToText(rows) {
+  return (rows || []).map(row => `${row.name || ""} | ${row.qtySource || "fixed"} | ${row.qty ?? 0} | ${row.unitCost ?? 0}`).join("\n");
+}
+
+function textToNinjaOnePricing(text) {
+  return text.split("\n").map(line => line.trim()).filter(Boolean).map(line => {
+    const [name, qtySource, qty, unitCost] = line.split("|").map(part => part.trim());
+    return {
+      name,
+      qtySource: qtySource || "fixed",
+      qty: Number(qty || 0),
+      unitCost: Number(unitCost || 0),
+      active: true
+    };
+  });
+}
+
 function textToCosts(text) {
   return text.split("\n").map(line => line.trim()).filter(Boolean).map(line => {
     const [name, source, qty, unitCost] = line.split("|").map(part => part.trim());
@@ -1153,7 +1262,7 @@ function saveEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
   if (editing.mode === "client") {
-    const client = {
+      const client = {
       id: editing.id || id("client"),
       name: data.name,
       status: data.status || "active",
@@ -1162,6 +1271,7 @@ function saveEditor() {
       terms: data.terms,
       m365TenantKey: data.m365TenantKey || "default",
       pax8CompanyId: data.pax8CompanyId || "",
+      ninjaOneOrgId: Number(data.ninjaOneOrgId || 0),
       licenseAuditBilling: data.licenseAuditBilling === "on",
       mspRates: {
         fullUser: Number(data.rateFullUser || 0),
@@ -1169,6 +1279,7 @@ function saveEditor() {
         serviceAccount: Number(data.rateServiceAccount || 0),
         copilot: Number(data.rateCopilot || 0)
       },
+      ninjaOnePricing: textToNinjaOnePricing(data.ninjaOnePricingText || ""),
       internalCosts: textToCosts(data.internalCostsText || ""),
       billTo: data.billTo,
       notes: data.notes
@@ -1649,6 +1760,38 @@ async function pullPax8CostsForClient(clientId, month) {
   return cost;
 }
 
+async function pullNinjaOneAuditForClient(clientId, month) {
+  const client = clientById(clientId);
+  if (!client?.ninjaOneOrgId) return null;
+  const response = await fetch(`/api/ninjaone-audit?organizationId=${encodeURIComponent(client.ninjaOneOrgId)}`, { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error(`${client?.name || "Client"} NinjaOne: ${data.error || "pull failed"}`);
+
+  const auditDraft = {
+    clientId,
+    month,
+    organizationId: data.organizationId,
+    rows: data.rows || [],
+    totals: data.totals || {}
+  };
+  const pricingRows = priceNinjaOneRows(client, auditDraft);
+  const audit = {
+    id: id("ninja"),
+    clientId,
+    month,
+    organizationId: data.organizationId,
+    source: data.source || "NinjaOne",
+    pulledAt: data.pulledAt || new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    rows: data.rows || [],
+    totals: data.totals || {},
+    pricingRows
+  };
+  state.ninjaOneAudits = (state.ninjaOneAudits || []).filter(existing => !(existing.clientId === clientId && existing.month === month));
+  state.ninjaOneAudits.push(audit);
+  return audit;
+}
+
 async function pullPax8Costs() {
   const clientId = document.getElementById("audit-client").value || state.clients[0]?.id;
   const month = document.getElementById("audit-month").value || today.slice(0, 7);
@@ -1731,6 +1874,12 @@ async function auditServices(clientId = "") {
       await pullPax8CostsForClient(idValue, month);
     } catch (error) {
       errors.push(error instanceof Error ? error.message : `${clientName(idValue)} Pax8 pull failed.`);
+    }
+
+    try {
+      await pullNinjaOneAuditForClient(idValue, month);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : `${clientName(idValue)} NinjaOne pull failed.`);
     }
   }
 
