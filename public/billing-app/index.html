@@ -18,7 +18,7 @@
     <nav>
       <button class="nav-link active" data-view="dashboard">Dashboard</button>
       <button class="nav-link" data-view="clients">Clients</button>
-      <button class="nav-link" data-view="audit365">365 Audit</button>
+      <button class="nav-link" data-view="audit365">Services Audit</button>
       <button class="nav-link" data-view="invoices">Invoices</button>
       <button class="nav-link" data-view="quotes">Quotes</button>
       <button class="nav-link" data-view="payments">Payments</button>
@@ -63,6 +63,14 @@
           <strong id="metric-msp">$0</strong>
         </article>
         <article class="metric">
+          <span>Total Pax8 Cost</span>
+          <strong id="metric-pax8">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Other Vendor Costs</span>
+          <strong id="metric-vendor-costs">$0</strong>
+        </article>
+        <article class="metric">
           <span>Draft Quotes</span>
           <strong id="metric-quotes">0</strong>
         </article>
@@ -90,6 +98,7 @@
         <h2>Clients</h2>
         <button id="add-client" class="primary">Add Client</button>
       </div>
+      <div id="client-detail"></div>
       <div id="client-list" class="grid-list"></div>
     </section>
 
@@ -97,11 +106,11 @@
       <section class="audit-workspace">
         <div class="audit-hero">
           <div>
-            <p class="eyebrow">Monthly MSP billing</p>
-            <h2>Microsoft 365 License Audit</h2>
-            <p class="subtle">Import the latest Microsoft 365 export for the billing month, review any exceptions, then generate the invoice.</p>
+            <p class="eyebrow">Client services</p>
+            <h2>Services Audit</h2>
+            <p class="subtle">Audit Microsoft 365 users, Pax8 subscription cost, and NinjaOne/other tracked service costs by client.</p>
           </div>
-          <button id="audit-create-invoice" class="primary">Create Invoice From Audit</button>
+          <button id="audit-create-invoice" class="primary">Create Invoice From Services Audit</button>
         </div>
 
         <div class="audit-steps">
@@ -112,13 +121,13 @@
           </div>
           <div class="audit-step">
             <span>2</span>
-            <strong>Pull latest 365 data</strong>
+            <strong>Pull latest service data</strong>
             <p>Re-pulling the same month uses the newest license counts for invoice totals.</p>
           </div>
           <div class="audit-step">
             <span>3</span>
-            <strong>Create invoice</strong>
-            <p>Only create/send after Review Needed is clear.</p>
+            <strong>Review costs</strong>
+            <p>Compare Microsoft 365 assignments, Pax8 cost, and NinjaOne/manual service costs.</p>
           </div>
         </div>
 
@@ -155,7 +164,7 @@
             <strong id="audit-service">0</strong>
           </article>
           <article class="metric total-metric">
-            <span>Invoice Total</span>
+            <span>Monthly Billing</span>
             <strong id="audit-total">$0</strong>
           </article>
         </div>
@@ -177,7 +186,7 @@
       </div>
 
       <div class="section-head table-heading">
-        <h2>Classified Users</h2>
+        <h2>Microsoft 365 Users</h2>
       </div>
       <div id="audit-users" class="table-card"></div>
 
@@ -185,6 +194,11 @@
         <h2>Pax8 Subscription Costs</h2>
       </div>
       <div id="audit-pax8-costs" class="table-card"></div>
+
+      <div class="section-head table-heading">
+        <h2>NinjaOne / Other Service Costs</h2>
+      </div>
+      <div id="audit-manual-costs" class="table-card"></div>
     </section>
 
     <section id="invoices" class="view">

@@ -21,6 +21,7 @@ const defaultData = {
         serviceAccount: 10,
         copilot: 30
       },
+      internalCosts: [],
       notes: "Pays by check."
     },
     {
@@ -40,6 +41,12 @@ const defaultData = {
         serviceAccount: 0,
         copilot: 0
       },
+      internalCosts: [
+        { name: "NinjaOne endpoint management", source: "NinjaOne", qty: 0, unitCost: 0, active: true },
+        { name: "Antivirus endpoint protection", source: "Security", qty: 0, unitCost: 0, active: true },
+        { name: "NinjaOne data backup", source: "NinjaOne", qty: 0, unitCost: 0, active: true },
+        { name: "Domain registration/service", source: "Domain", qty: 0, unitCost: 0, active: true }
+      ],
       notes: "Microsoft 365 audit is visibility only for this client, not invoice generation. Ship/contact from June invoice: Pasquale Bitonti, pasquale@newyorkstylesausage.com."
     }
   ],
@@ -105,6 +112,7 @@ migrateDefaultRecords();
 let activeView = "dashboard";
 let editing = null;
 let previewing = null;
+let selectedClientId = "";
 
 function loadState() {
   const raw = localStorage.getItem("gsvBillingHub");
@@ -130,7 +138,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "licenseAuditBilling"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "licenseAuditBilling", "internalCosts"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = record[field];
             changed = true;
@@ -194,6 +202,42 @@ function currentMspTotal(clientId, month = today.slice(0, 7)) {
   return currentMspItems(clientId, month).reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
 }
 
+function clientInvoices(clientId) {
+  return state.invoices.filter(inv => inv.clientId === clientId);
+}
+
+function clientInvoiceTotal(clientId) {
+  return clientInvoices(clientId).reduce((sum, inv) => sum + invoiceTotal(inv), 0);
+}
+
+function activeClientCosts(clientId) {
+  return (clientById(clientId)?.internalCosts || [])
+    .filter(cost => cost.active !== false)
+    .map(cost => ({
+      name: cost.name || "Internal cost",
+      source: cost.source || "Manual",
+      qty: Number(cost.qty || 0),
+      unitCost: Number(cost.unitCost || 0),
+      amount: Number(cost.qty || 0) * Number(cost.unitCost || 0)
+    }));
+}
+
+function manualCostTotal(clientId) {
+  return activeClientCosts(clientId).reduce((sum, cost) => sum + cost.amount, 0);
+}
+
+function pax8CostTotal(clientId, month = today.slice(0, 7)) {
+  return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPartnerCost || 0);
+}
+
+function clientCostTotal(clientId, month = today.slice(0, 7)) {
+  return pax8CostTotal(clientId, month) + manualCostTotal(clientId);
+}
+
+function costMargin(clientId, month = today.slice(0, 7)) {
+  return currentMspTotal(clientId, month) - clientCostTotal(clientId, month);
+}
+
 function paidAmount(invoiceId) {
   return state.payments.filter(p => p.invoiceId === invoiceId).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 }
@@ -229,7 +273,7 @@ function setView(view) {
   document.getElementById("view-title").textContent = {
     dashboard: "Dashboard",
     clients: "Clients",
-    audit365: "365 Audit",
+    audit365: "Services Audit",
     invoices: "Invoices",
     quotes: "Quotes",
     payments: "Payments",
@@ -253,11 +297,15 @@ function renderDashboard() {
   const open = invoices.filter(inv => computedInvoiceStatus(inv) !== "paid").reduce((sum, inv) => sum + invoiceTotal(inv) - paidAmount(inv.id), 0);
   const paid = state.payments.filter(p => String(p.date).startsWith(String(year))).reduce((sum, p) => sum + Number(p.amount || 0), 0);
   const msp = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + currentMspTotal(client.id), 0);
+  const pax8 = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + pax8CostTotal(client.id), 0);
+  const vendorCosts = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + manualCostTotal(client.id), 0);
   const draftQuotes = state.quotes.filter(q => q.status === "draft").length;
 
   document.getElementById("metric-open").textContent = money.format(open);
   document.getElementById("metric-paid").textContent = money.format(paid);
   document.getElementById("metric-msp").textContent = money.format(msp);
+  document.getElementById("metric-pax8").textContent = costMoney.format(pax8);
+  document.getElementById("metric-vendor-costs").textContent = costMoney.format(vendorCosts);
   document.getElementById("metric-quotes").textContent = draftQuotes;
 
   document.getElementById("dashboard-invoices").innerHTML = invoices
@@ -294,29 +342,37 @@ function invoiceNumber(invoiceId) {
 }
 
 function renderClients() {
+  const detail = document.getElementById("client-detail");
+  const activeClient = clientById(selectedClientId);
+  detail.innerHTML = activeClient ? clientDetailDashboard(activeClient) : "";
   document.getElementById("client-list").innerHTML = state.clients.map(client => {
     const audit = latestAudit(client.id, today.slice(0, 7));
     const monthly = currentMspTotal(client.id);
-    const rates = clientMspRates(client.id);
+    const pax8 = pax8CostTotal(client.id);
+    const manual = manualCostTotal(client.id);
+    const margin = costMargin(client.id);
+    const invoices = clientInvoices(client.id);
+    const open = invoices.filter(inv => computedInvoiceStatus(inv) !== "paid").reduce((sum, inv) => sum + invoiceTotal(inv) - paidAmount(inv.id), 0);
     return `
-      <article class="item">
+      <article class="item client-card ${selectedClientId === client.id ? "selected" : ""}" data-client-dashboard-card="${client.id}">
         <div class="item-line">
           <strong>${escapeHtml(client.name)}</strong>
           <span class="badge ${client.status}">${escapeHtml(client.status)}</span>
         </div>
-        <p class="subtle">${lines(client.billTo)}</p>
-        <div class="rate-summary">
-          <span>Full ${money.format(rates.fullUser)}</span>
-          <span>Light ${money.format(rates.lightUser)}</span>
-          <span>Service ${money.format(rates.serviceAccount)}</span>
-          <span>Copilot ${money.format(rates.copilot)}</span>
+        <div class="client-card-metrics">
+          <div><span>Monthly billing</span><strong>${money.format(monthly)}</strong></div>
+          <div><span>Pax8</span><strong>${costMoney.format(pax8)}</strong></div>
+          <div><span>Other costs</span><strong>${costMoney.format(manual)}</strong></div>
+          <div><span>Est. margin</span><strong>${costMoney.format(margin)}</strong></div>
         </div>
-        <div class="item-line">
-          <span>${audit ? "Current audit MSP" : "Baseline MSP"}</span>
-          <strong>${money.format(monthly)}</strong>
+        <div class="item-line subtle">
+          <span>${audit ? `${audit.rows.length} Microsoft 365 rows` : "No current 365 audit"}</span>
+          <span>${money.format(open)} open</span>
         </div>
         <div class="row-actions">
+          <button data-client-dashboard="${client.id}">Dashboard</button>
           <button data-edit-client="${client.id}">Edit</button>
+          <button data-client-services-audit="${client.id}">Services Audit</button>
           <button data-client-invoice="${client.id}">Invoice</button>
           <button data-client-quote="${client.id}">Quote</button>
         </div>
@@ -325,10 +381,74 @@ function renderClients() {
   }).join("");
 }
 
+function clientDetailDashboard(client) {
+  const month = today.slice(0, 7);
+  const audit = latestAudit(client.id, month);
+  const pax8 = latestPax8Costs(client.id, month);
+  const costs = activeClientCosts(client.id);
+  const recentInvoices = clientInvoices(client.id).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  return `
+    <section class="client-dashboard">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Client dashboard</p>
+          <h2>${escapeHtml(client.name)}</h2>
+        </div>
+        <div class="toolbar">
+          <button data-client-services-audit="${client.id}" class="primary">Services Audit</button>
+          <button data-edit-client="${client.id}">Edit Client</button>
+        </div>
+      </div>
+      <div class="metric-grid client-metrics">
+        <article class="metric"><span>Monthly Billing</span><strong>${money.format(currentMspTotal(client.id))}</strong></article>
+        <article class="metric"><span>Pax8 Cost</span><strong>${costMoney.format(pax8CostTotal(client.id))}</strong></article>
+        <article class="metric"><span>NinjaOne / Other Costs</span><strong>${costMoney.format(manualCostTotal(client.id))}</strong></article>
+        <article class="metric"><span>Estimated Margin</span><strong>${costMoney.format(costMargin(client.id))}</strong></article>
+      </div>
+      <div class="split">
+        <section>
+          <div class="section-head"><h2>Services Audit</h2></div>
+          <div class="stack">
+            <div class="item"><div class="item-line"><span>Microsoft 365 users</span><strong>${audit ? audit.rows.length : "Not pulled"}</strong></div></div>
+            <div class="item"><div class="item-line"><span>Pax8 subscriptions</span><strong>${pax8 ? (pax8.rows || []).length : "Not pulled"}</strong></div></div>
+            <div class="item"><div class="item-line"><span>NinjaOne</span><strong>${costs.some(cost => /ninja/i.test(cost.source + cost.name)) ? "Tracked manually" : "Ready to add"}</strong></div></div>
+          </div>
+        </section>
+        <section>
+          <div class="section-head"><h2>Recent Invoices</h2></div>
+          <div class="stack">
+            ${recentInvoices.map(inv => `
+              <div class="item">
+                <div class="item-line"><strong>${escapeHtml(inv.number)}</strong><span>${money.format(invoiceTotal(inv))}</span></div>
+                <div class="item-line subtle"><span>${formatDate(inv.date)}</span><span>${computedInvoiceStatus(inv)}</span></div>
+              </div>
+            `).join("") || `<div class="item"><strong>No invoices yet.</strong></div>`}
+          </div>
+        </section>
+      </div>
+      <div class="section-head table-heading"><h2>Tracked Vendor Costs</h2></div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Service</th><th>Source</th><th class="num">Qty</th><th class="num">Unit Cost</th><th class="num">Monthly Cost</th></tr></thead>
+          <tbody>
+            ${(pax8?.rows || []).slice(0, 8).map(row => `
+              <tr><td>${escapeHtml(row.productName)}</td><td>Pax8</td><td class="num">${row.quantity}</td><td class="num">${costMoney.format(row.unitPartnerCost || 0)}</td><td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td></tr>
+            `).join("")}
+            ${costs.map(cost => `
+              <tr><td>${escapeHtml(cost.name)}</td><td>${escapeHtml(cost.source)}</td><td class="num">${cost.qty}</td><td class="num">${costMoney.format(cost.unitCost)}</td><td class="num">${costMoney.format(cost.amount)}</td></tr>
+            `).join("")}
+            ${!(pax8?.rows || []).length && !costs.length ? `<tr><td colspan="5">No costs tracked yet. Edit the client to add NinjaOne, antivirus, backup, or domain costs.</td></tr>` : ""}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
 function renderAudit365() {
   const clientSelect = document.getElementById("audit-client");
   if (!clientSelect) return;
-  const selectedClient = clientSelect.value || state.clients[0]?.id || "";
+  const selectedClient = selectedClientId || clientSelect.value || state.clients[0]?.id || "";
   clientSelect.innerHTML = state.clients.map(c => `<option value="${c.id}" ${selectedClient === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("");
   if (!document.getElementById("audit-month").value) document.getElementById("audit-month").value = today.slice(0, 7);
 
@@ -393,6 +513,7 @@ function renderAudit365() {
     </table>
   `;
   renderPax8Costs(pax8Cost, audit, selectedClient);
+  renderManualServiceCosts(selectedClient);
 }
 
 function latestAudit(clientId, month = "") {
@@ -464,6 +585,27 @@ function renderPax8Costs(pax8Cost, audit, clientId) {
           </tr>
         `;
       }).join("") || `<tr><td colspan="6">No active Pax8 subscriptions found.</td></tr>`}</tbody>
+    </table>
+  `;
+}
+
+function renderManualServiceCosts(clientId) {
+  const container = document.getElementById("audit-manual-costs");
+  if (!container) return;
+  const costs = activeClientCosts(clientId);
+  container.innerHTML = `
+    <table>
+      <thead><tr><th>Service</th><th>Source</th><th class="num">Qty</th><th class="num">Unit Cost</th><th class="num">Monthly Cost</th><th>Status</th></tr></thead>
+      <tbody>${costs.map(cost => `
+        <tr>
+          <td>${escapeHtml(cost.name)}</td>
+          <td>${escapeHtml(cost.source)}</td>
+          <td class="num">${cost.qty}</td>
+          <td class="num">${costMoney.format(cost.unitCost)}</td>
+          <td class="num">${costMoney.format(cost.amount)}</td>
+          <td><span class="badge ready">Tracked</span></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6">No NinjaOne/manual service costs yet. Edit the client to add NinjaOne, antivirus, backup, domain, or other vendor costs.</td></tr>`}</tbody>
     </table>
   `;
 }
@@ -799,6 +941,11 @@ function editorFields(mode, item) {
         </div>
         <p class="subtle">New 365 audits and generated invoices use these rates. Existing invoices keep their saved line-item prices.</p>
       </div>
+      <div class="field full pricing-editor">
+        <h3>Internal Vendor Costs</h3>
+        <p class="subtle">One row per service: name | source | qty | unit cost. Use this for NinjaOne, antivirus, backup, domains, and other non-Pax8 costs until an API is connected.</p>
+        <textarea id="internalCostsText" name="internalCostsText">${escapeHtml(costsToText(item.internalCosts || []))}</textarea>
+      </div>
       ${textarea("billTo", "Bill To", item.billTo || "", true)}
       ${textarea("notes", "Notes", item.notes || "", true)}
     `;
@@ -961,6 +1108,23 @@ function textToItems(text) {
   });
 }
 
+function costsToText(costs) {
+  return (costs || []).map(cost => `${cost.name || ""} | ${cost.source || ""} | ${cost.qty ?? 1} | ${cost.unitCost ?? 0}`).join("\n");
+}
+
+function textToCosts(text) {
+  return text.split("\n").map(line => line.trim()).filter(Boolean).map(line => {
+    const [name, source, qty, unitCost] = line.split("|").map(part => part.trim());
+    return {
+      name,
+      source: source || "Manual",
+      qty: Number(qty || 1),
+      unitCost: Number(unitCost || 0),
+      active: true
+    };
+  });
+}
+
 function addDays(dateText, days) {
   const d = new Date(`${dateText}T00:00:00`);
   d.setDate(d.getDate() + days);
@@ -987,6 +1151,7 @@ function saveEditor() {
         serviceAccount: Number(data.rateServiceAccount || 0),
         copilot: Number(data.rateCopilot || 0)
       },
+      internalCosts: textToCosts(data.internalCostsText || ""),
       billTo: data.billTo,
       notes: data.notes
     };
@@ -1505,6 +1670,12 @@ function importAuditCsv(file) {
 
 document.addEventListener("click", event => {
   const target = event.target.closest("button");
+  const card = event.target.closest(".client-card[data-client-dashboard-card]");
+  if (!target && card) {
+    selectedClientId = card.dataset.clientDashboardCard;
+    setView("clients");
+    return;
+  }
   if (!target) return;
   if (target.dataset.view) setView(target.dataset.view);
   if (target.dataset.viewJump) setView(target.dataset.viewJump);
@@ -1539,6 +1710,17 @@ document.addEventListener("click", event => {
   if (target.id === "export-payments") exportPayments();
   if (target.id === "export-summary") exportSummary();
   if (target.dataset.editClient) openEditor("client", state.clients.find(c => c.id === target.dataset.editClient));
+  if (target.dataset.clientDashboard) {
+    selectedClientId = target.dataset.clientDashboard;
+    setView("clients");
+  }
+  if (target.dataset.clientServicesAudit) {
+    selectedClientId = target.dataset.clientServicesAudit;
+    setView("audit365");
+    const select = document.getElementById("audit-client");
+    if (select) select.value = selectedClientId;
+    renderAudit365();
+  }
   if (target.dataset.clientInvoice) openEditor("invoice", { clientId: target.dataset.clientInvoice, date: today, dueDate: addDays(today, 15), status: "draft", items: [] });
   if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
@@ -1574,6 +1756,11 @@ document.addEventListener("change", event => {
     const client = clientById(event.target.value);
     if (address) address.innerHTML = lines(client?.billTo || client?.name || "Select a client");
     if (shipTo && !shipTo.value.trim()) shipTo.value = client?.billTo || client?.name || "";
+  }
+  if (event.target.id === "audit-client") {
+    selectedClientId = event.target.value;
+    renderAudit365();
+    renderClients();
   }
   if (event.target.closest("#line-editor-rows")) updateEditorTotal();
 });
