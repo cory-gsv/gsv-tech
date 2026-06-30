@@ -182,8 +182,8 @@ export async function POST(request: Request) {
       `<p>Hi ${client.name || ""},</p>`,
       `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
       `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
-      "<p>Please remit payment by check.</p>",
-      `<p>Thank you,<br>${senderName}<br>757 Caber Drive<br>Lincoln, CA 95648<br>${fromMailbox}<br>(916) 432-3373</p>`,
+      `<p>Please remit payment by check.</p><p>Golden State Visions<br>757 Caber Drive<br>Lincoln, CA 95648</p>`,
+      `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
     ].join("");
 
     const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {
