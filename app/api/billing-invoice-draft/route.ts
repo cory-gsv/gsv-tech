@@ -183,7 +183,7 @@ export async function POST(request: Request) {
       `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
       `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
       "<p>Please remit payment by check.</p>",
-      `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
+      `<p>Thank you,<br>${senderName}<br>757 Caber Drive<br>Lincoln, CA 95648<br>${fromMailbox}<br>(916) 432-3373</p>`,
     ].join("");
 
     const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {
@@ -197,6 +197,9 @@ export async function POST(request: Request) {
         body: { contentType: "HTML", content: body },
         toRecipients: [
           { emailAddress: { address: client.email, name: client.name || client.email } },
+        ],
+        bccRecipients: [
+          { emailAddress: { address: "cory@gsvisions.com", name: "Cory" } },
         ],
         replyTo: [
           { emailAddress: { address: fromMailbox, name: senderName } },
