@@ -54,17 +54,6 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
 
   return (
     <main className="gsv-billing-shell">
-      <header className="gsv-billing-shell__bar">
-        <div>
-          <strong>GSV Billing Hub</strong>
-          <span>Invoices, quotes, payments, and monthly MSP audits</span>
-        </div>
-        <form action="/api/billing-logout" method="post">
-          <button className="gsv-billing-shell__logout" type="submit">
-            Log Out
-          </button>
-        </form>
-      </header>
       <iframe
         className="gsv-billing-shell__frame"
         src="/billing-app/index.html"

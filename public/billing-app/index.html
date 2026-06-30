@@ -12,13 +12,12 @@
       <img src="assets/gsv-logo.png" alt="Golden State Visions">
       <div>
         <strong>Billing Hub</strong>
-        <span>Checks, quotes, MSP invoices</span>
+        <span>Quotes, invoices, audits</span>
       </div>
     </div>
     <nav>
       <button class="nav-link active" data-view="dashboard">Dashboard</button>
       <button class="nav-link" data-view="clients">Clients</button>
-      <button class="nav-link" data-view="audit365">Services Audit</button>
       <button class="nav-link" data-view="invoices">Invoices</button>
       <button class="nav-link" data-view="quotes">Quotes</button>
       <button class="nav-link" data-view="payments">Payments</button>
@@ -96,7 +95,10 @@
     <section id="clients" class="view">
       <div class="section-head">
         <h2>Clients</h2>
-        <button id="add-client" class="primary">Add Client</button>
+        <div class="toolbar">
+          <button id="audit-services-all" class="primary">Audit Services</button>
+          <button id="add-client">Add Client</button>
+        </div>
       </div>
       <div id="client-detail"></div>
       <div id="client-list" class="grid-list"></div>
@@ -205,7 +207,7 @@
       <div class="section-head">
         <h2>Invoices</h2>
         <div class="toolbar">
-          <button id="generate-monthly" class="primary">Invoice Latest 365 Audit</button>
+          <button id="generate-monthly" class="primary">Invoice Latest Services Audit</button>
         </div>
       </div>
       <div class="filter-panel">

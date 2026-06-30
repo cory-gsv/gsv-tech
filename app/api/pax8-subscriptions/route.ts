@@ -112,9 +112,12 @@ export async function GET(request: Request) {
     }
 
     const accessToken = await pax8Token();
-    const subscriptions = await pax8GetAll<Pax8Subscription>(
+    const allSubscriptions = await pax8GetAll<Pax8Subscription>(
       accessToken,
-      `/v1/subscriptions?company_id=${encodeURIComponent(companyId)}`,
+      "/v1/subscriptions",
+    );
+    const subscriptions = allSubscriptions.filter(
+      (subscription) => String(subscription.companyId || "").toLowerCase() === companyId.toLowerCase(),
     );
 
     const rows = subscriptions

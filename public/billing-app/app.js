@@ -226,6 +226,16 @@ function manualCostTotal(clientId) {
   return activeClientCosts(clientId).reduce((sum, cost) => sum + cost.amount, 0);
 }
 
+function ninjaOneCostTotal(clientId) {
+  return activeClientCosts(clientId)
+    .filter(cost => /ninja/i.test(`${cost.source} ${cost.name}`))
+    .reduce((sum, cost) => sum + cost.amount, 0);
+}
+
+function otherManualCostTotal(clientId) {
+  return manualCostTotal(clientId) - ninjaOneCostTotal(clientId);
+}
+
 function pax8CostTotal(clientId, month = today.slice(0, 7)) {
   return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPartnerCost || 0);
 }
@@ -236,6 +246,10 @@ function clientCostTotal(clientId, month = today.slice(0, 7)) {
 
 function costMargin(clientId, month = today.slice(0, 7)) {
   return currentMspTotal(clientId, month) - clientCostTotal(clientId, month);
+}
+
+function activeClientIds(clientId = "") {
+  return clientId ? [clientId] : state.clients.filter(client => client.status === "active").map(client => client.id);
 }
 
 function paidAmount(invoiceId) {
@@ -298,14 +312,15 @@ function renderDashboard() {
   const paid = state.payments.filter(p => String(p.date).startsWith(String(year))).reduce((sum, p) => sum + Number(p.amount || 0), 0);
   const msp = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + currentMspTotal(client.id), 0);
   const pax8 = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + pax8CostTotal(client.id), 0);
-  const vendorCosts = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + manualCostTotal(client.id), 0);
+  const ninjaOne = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + ninjaOneCostTotal(client.id), 0);
+  const vendorCosts = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + otherManualCostTotal(client.id), 0);
   const draftQuotes = state.quotes.filter(q => q.status === "draft").length;
 
   document.getElementById("metric-open").textContent = money.format(open);
   document.getElementById("metric-paid").textContent = money.format(paid);
   document.getElementById("metric-msp").textContent = money.format(msp);
   document.getElementById("metric-pax8").textContent = costMoney.format(pax8);
-  document.getElementById("metric-vendor-costs").textContent = costMoney.format(vendorCosts);
+  document.getElementById("metric-vendor-costs").textContent = costMoney.format(ninjaOne + vendorCosts);
   document.getElementById("metric-quotes").textContent = draftQuotes;
 
   document.getElementById("dashboard-invoices").innerHTML = invoices
@@ -349,7 +364,8 @@ function renderClients() {
     const audit = latestAudit(client.id, today.slice(0, 7));
     const monthly = currentMspTotal(client.id);
     const pax8 = pax8CostTotal(client.id);
-    const manual = manualCostTotal(client.id);
+    const ninjaOne = ninjaOneCostTotal(client.id);
+    const manual = otherManualCostTotal(client.id);
     const margin = costMargin(client.id);
     const invoices = clientInvoices(client.id);
     const open = invoices.filter(inv => computedInvoiceStatus(inv) !== "paid").reduce((sum, inv) => sum + invoiceTotal(inv) - paidAmount(inv.id), 0);
@@ -362,6 +378,7 @@ function renderClients() {
         <div class="client-card-metrics">
           <div><span>Monthly billing</span><strong>${money.format(monthly)}</strong></div>
           <div><span>Pax8</span><strong>${costMoney.format(pax8)}</strong></div>
+          <div><span>NinjaOne</span><strong>${costMoney.format(ninjaOne)}</strong></div>
           <div><span>Other costs</span><strong>${costMoney.format(manual)}</strong></div>
           <div><span>Est. margin</span><strong>${costMoney.format(margin)}</strong></div>
         </div>
@@ -372,7 +389,7 @@ function renderClients() {
         <div class="row-actions">
           <button data-client-dashboard="${client.id}">Dashboard</button>
           <button data-edit-client="${client.id}">Edit</button>
-          <button data-client-services-audit="${client.id}">Services Audit</button>
+          <button data-audit-services="${client.id}">Audit Services</button>
           <button data-client-invoice="${client.id}">Invoice</button>
           <button data-client-quote="${client.id}">Quote</button>
         </div>
@@ -395,14 +412,15 @@ function clientDetailDashboard(client) {
           <h2>${escapeHtml(client.name)}</h2>
         </div>
         <div class="toolbar">
-          <button data-client-services-audit="${client.id}" class="primary">Services Audit</button>
+          <button data-audit-services="${client.id}" class="primary">Audit Services</button>
           <button data-edit-client="${client.id}">Edit Client</button>
         </div>
       </div>
       <div class="metric-grid client-metrics">
         <article class="metric"><span>Monthly Billing</span><strong>${money.format(currentMspTotal(client.id))}</strong></article>
         <article class="metric"><span>Pax8 Cost</span><strong>${costMoney.format(pax8CostTotal(client.id))}</strong></article>
-        <article class="metric"><span>NinjaOne / Other Costs</span><strong>${costMoney.format(manualCostTotal(client.id))}</strong></article>
+        <article class="metric"><span>NinjaOne Cost</span><strong>${costMoney.format(ninjaOneCostTotal(client.id))}</strong></article>
+        <article class="metric"><span>Other Vendor Costs</span><strong>${costMoney.format(otherManualCostTotal(client.id))}</strong></article>
         <article class="metric"><span>Estimated Margin</span><strong>${costMoney.format(costMargin(client.id))}</strong></article>
       </div>
       <div class="split">
@@ -1335,11 +1353,9 @@ function generateMonthlyInvoice() {
   const useAuditBilling = client.licenseAuditBilling !== false;
   const audit = latestAudit(client.id, month);
   if (useAuditBilling && !audit) {
-    setView("audit365");
-    document.getElementById("audit-client").value = client.id;
-    document.getElementById("audit-month").value = month;
-    renderAudit365();
-    window.alert("Import this month's Microsoft 365 audit before generating the monthly MSP invoice.");
+    selectedClientId = client.id;
+    setView("clients");
+    window.alert("Run Audit Services for this client before generating the monthly MSP invoice.");
     return;
   }
   const items = useAuditBilling && audit ? auditInvoiceItems(audit) : currentMspItems(client.id, month);
@@ -1578,6 +1594,7 @@ async function pullMicrosoft365Audit() {
     const audit = buildAudit(clientId, month, data.rows || []);
     audit.source = data.source || "Microsoft Graph";
     audit.pulledAt = data.pulledAt || new Date().toISOString();
+    state.audits365 = state.audits365.filter(existing => !(existing.clientId === clientId && existing.month === month));
     state.audits365.push(audit);
     saveState();
     renderAudit365();
@@ -1592,6 +1609,44 @@ async function pullMicrosoft365Audit() {
       button.textContent = "Pull from Microsoft 365";
     }
   }
+}
+
+async function pullMicrosoft365AuditForClient(clientId, month) {
+  const client = clientById(clientId);
+  const tenant = encodeURIComponent(client?.m365TenantKey || "default");
+  const response = await fetch(`/api/m365-audit?tenant=${tenant}`, { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error(`${client?.name || "Client"} Microsoft 365: ${data.error || "pull failed"}`);
+
+  const audit = buildAudit(clientId, month, data.rows || []);
+  audit.source = data.source || "Microsoft Graph";
+  audit.pulledAt = data.pulledAt || new Date().toISOString();
+  state.audits365 = state.audits365.filter(existing => !(existing.clientId === clientId && existing.month === month));
+  state.audits365.push(audit);
+  return audit;
+}
+
+async function pullPax8CostsForClient(clientId, month) {
+  const client = clientById(clientId);
+  if (!client?.pax8CompanyId) return null;
+  const response = await fetch(`/api/pax8-subscriptions?companyId=${encodeURIComponent(client.pax8CompanyId)}`, { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error(`${client?.name || "Client"} Pax8: ${data.error || "pull failed"}`);
+
+  state.pax8Costs = (state.pax8Costs || []).filter(cost => !(cost.clientId === clientId && cost.month === month));
+  const cost = {
+    id: id("pax8"),
+    clientId,
+    month,
+    companyId: data.companyId,
+    source: data.source || "Pax8",
+    pulledAt: data.pulledAt || new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    rows: data.rows || [],
+    totals: data.totals || {}
+  };
+  state.pax8Costs.push(cost);
+  return cost;
 }
 
 async function pullPax8Costs() {
@@ -1654,6 +1709,44 @@ async function pullPax8Costs() {
   }
 }
 
+async function auditServices(clientId = "") {
+  const month = today.slice(0, 7);
+  const clientIds = activeClientIds(clientId);
+  const buttons = document.querySelectorAll(clientId ? `[data-audit-services="${clientId}"]` : `[data-audit-services], #audit-services-all`);
+  buttons.forEach(button => {
+    button.disabled = true;
+    button.classList.add("is-loading");
+    button.textContent = "Auditing...";
+  });
+
+  const errors = [];
+  for (const idValue of clientIds) {
+    try {
+      await pullMicrosoft365AuditForClient(idValue, month);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : `${clientName(idValue)} Microsoft 365 pull failed.`);
+    }
+
+    try {
+      await pullPax8CostsForClient(idValue, month);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : `${clientName(idValue)} Pax8 pull failed.`);
+    }
+  }
+
+  saveState();
+  render();
+  buttons.forEach(button => {
+    button.disabled = false;
+    button.classList.remove("is-loading");
+    button.textContent = "Audit Services";
+  });
+
+  if (errors.length) {
+    window.alert(`Services audit finished with ${errors.length} issue${errors.length === 1 ? "" : "s"}:\n\n${errors.join("\n")}`);
+  }
+}
+
 function importAuditCsv(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -1661,6 +1754,7 @@ function importAuditCsv(file) {
     const month = document.getElementById("audit-month").value || today.slice(0, 7);
     const rows = parseCsv(String(reader.result || ""));
     const audit = buildAudit(clientId, month, rows);
+    state.audits365 = state.audits365.filter(existing => !(existing.clientId === clientId && existing.month === month));
     state.audits365.push(audit);
     saveState();
     renderAudit365();
@@ -1687,6 +1781,8 @@ document.addEventListener("click", event => {
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
   if (target.id === "audit-pull-graph") pullMicrosoft365Audit();
   if (target.id === "audit-pull-pax8") pullPax8Costs();
+  if (target.id === "audit-services-all") auditServices();
+  if (target.dataset.auditServices) auditServices(target.dataset.auditServices);
   if (target.id === "add-line-item") {
     document.getElementById("line-editor-rows")?.insertAdjacentHTML("beforeend", lineEditorRow());
     updateEditorTotal();
@@ -1713,13 +1809,6 @@ document.addEventListener("click", event => {
   if (target.dataset.clientDashboard) {
     selectedClientId = target.dataset.clientDashboard;
     setView("clients");
-  }
-  if (target.dataset.clientServicesAudit) {
-    selectedClientId = target.dataset.clientServicesAudit;
-    setView("audit365");
-    const select = document.getElementById("audit-client");
-    if (select) select.value = selectedClientId;
-    renderAudit365();
   }
   if (target.dataset.clientInvoice) openEditor("invoice", { clientId: target.dataset.clientInvoice, date: today, dueDate: addDays(today, 15), status: "draft", items: [] });
   if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });

@@ -52,8 +52,7 @@
   font: inherit;
 }
 
-.gsv-billing-login__card button,
-.gsv-billing-shell__logout {
+.gsv-billing-login__card button {
   min-height: 44px;
   border: 1px solid #1f2933;
   background: #1f2933;
@@ -70,43 +69,12 @@
 
 .gsv-billing-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
   background: #f4f6f8;
-}
-
-.gsv-billing-shell__bar {
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 10px 16px;
-  border-bottom: 1px solid #d9e1ea;
-  background: #ffffff;
-  color: #1f2933;
-  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-}
-
-.gsv-billing-shell__bar strong {
-  display: block;
-  font-size: 16px;
-}
-
-.gsv-billing-shell__bar span {
-  display: block;
-  margin-top: 2px;
-  color: #52616f;
-  font-size: 13px;
-}
-
-.gsv-billing-shell__logout {
-  padding: 0 14px;
 }
 
 .gsv-billing-shell__frame {
   width: 100%;
-  min-height: calc(100vh - 58px);
+  min-height: 100vh;
   border: 0;
   background: #fff;
 }
