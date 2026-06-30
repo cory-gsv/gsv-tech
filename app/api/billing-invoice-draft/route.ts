@@ -242,8 +242,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   let content = "";
   content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
   content += drawLogo(margin, 650, 240);
-  content += drawText("info@gsvisions.com", margin, 593, 12);
-  content += drawText("(916) 432-3373", margin, 565, 12);
+  content += drawText("info@gsvisions.com", margin, 592, 12);
+  content += drawText("(916) 432-3373", margin, 568, 12);
 
   content += drawText("INVOICE", 434, 705, 30, ink, "F2");
   const metaX = 350;
@@ -261,33 +261,33 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
 
   const tableX = margin;
   const tableW = page.width - margin * 2;
-  const billY = 475;
-  const billH = 112;
+  const billY = 430;
+  const billH = 126;
   content += rect(tableX, billY, tableW, billH);
   content += rect(tableX, billY + billH - 28, tableW, 28, headerFill);
   content += drawTextCenter("Bill To", tableX, billY + billH - 19, tableW, 12, ink, "F2");
   const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
   billTo.slice(0, 6).forEach((line, index) => {
-    content += drawText(line, tableX + 8, billY + billH - 50 - index * 16, 12);
+    content += drawText(line, tableX + 8, billY + billH - 50 - index * 15, 12);
   });
 
-  content += drawText("Monthly IT Services", tableX, 420, 18, ink, "F2");
+  content += drawText("Monthly IT Services", tableX, 382, 18, ink, "F2");
   const items = (invoice.items || []).slice(0, 14);
   const rowH = 27;
   const headerH = 30;
-  const itemsY = 170;
+  const itemsY = 135;
   const itemsH = headerH + rowH * Math.max(items.length, 1);
   const col = {
     desc: tableX,
     qty: tableX + 350,
-    rate: tableX + 420,
-    amount: tableX + 490,
+    rate: tableX + 415,
+    amount: tableX + 470,
   };
   const width = {
     desc: 350,
-    qty: 70,
-    rate: 70,
-    amount: tableW - 490,
+    qty: 65,
+    rate: 55,
+    amount: tableW - 470,
   };
 
   content += rect(tableX, itemsY, tableW, itemsH);
@@ -313,7 +313,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
     y -= rowH;
   }
 
-  const totalY = 112;
+  const totalY = 58;
   content += rect(tableX, totalY, tableW, 36, gold);
   content += vline(tableX + tableW - 115, totalY, totalY + 36);
   content += drawTextRight("Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");

@@ -884,6 +884,20 @@ function markInvoiceSent(invoiceId) {
   render();
 }
 
+function setInvoiceSending(invoiceId, isSending) {
+  document.querySelectorAll(`[data-send-invoice="${invoiceId}"], #editor-send, #send-preview-document`).forEach(button => {
+    button.disabled = isSending;
+    button.classList.toggle("is-loading", isSending);
+    if (isSending) {
+      button.dataset.readyText = button.textContent;
+      button.textContent = "Creating draft...";
+    } else if (button.dataset.readyText) {
+      button.textContent = button.dataset.readyText;
+      delete button.dataset.readyText;
+    }
+  });
+}
+
 async function sendInvoice(invoiceId, invoiceOverride = null) {
   const invoice = invoiceOverride || state.invoices.find(inv => inv.id === invoiceId);
   if (!invoice) return;
@@ -894,6 +908,7 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
     return;
   }
 
+  setInvoiceSending(invoiceId, true);
   try {
     const response = await fetch("/api/billing-invoice-draft", {
       method: "POST",
@@ -916,20 +931,10 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Outlook draft creation failed.");
+    setInvoiceSending(invoiceId, false);
     window.alert("Email draft created in billing@gsvisions.com Drafts with the invoice PDF attached.");
-    if (!window.confirm(`Mark invoice ${invoice.number} as sent?`)) return;
-    if (invoiceOverride) {
-      invoice.status = "sent";
-      invoice.sentAt = new Date().toISOString();
-      upsert(state.invoices, invoice);
-      saveState();
-      const editor = document.getElementById("editor");
-      if (editor.open) editor.close();
-      render();
-      return;
-    }
-    markInvoiceSent(invoice.id);
   } catch (error) {
+    setInvoiceSending(invoiceId, false);
     window.alert(error instanceof Error ? error.message : "Outlook draft creation failed.");
   }
 }
