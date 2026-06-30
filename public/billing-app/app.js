@@ -1032,8 +1032,13 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Outlook draft creation failed.");
+    invoice.status = "sent";
+    invoice.sentAt = new Date().toISOString();
+    upsert(state.invoices, invoice);
+    saveState();
     setInvoiceSending(invoiceId, false);
     window.alert("Email draft created in billing@gsvisions.com Drafts with the invoice PDF attached.");
+    render();
   } catch (error) {
     setInvoiceSending(invoiceId, false);
     window.alert(error instanceof Error ? error.message : "Outlook draft creation failed.");
