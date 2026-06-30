@@ -916,7 +916,15 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Outlook draft creation failed.");
-    if (data.webLink) window.open(data.webLink, "_blank", "noopener");
+    if (data.webLink) {
+      const shouldOpen = window.confirm(
+        "Outlook draft created in billing@gsvisions.com Drafts with the invoice PDF attached.\n\n" +
+        "Open Outlook now? If Outlook says the message was moved or deleted, open the billing@gsvisions.com shared mailbox and go to Drafts."
+      );
+      if (shouldOpen) window.open(data.webLink, "_blank", "noopener");
+    } else {
+      window.alert("Outlook draft created in billing@gsvisions.com Drafts with the invoice PDF attached.");
+    }
     if (!window.confirm(`Mark invoice ${invoice.number} as sent?`)) return;
     if (invoiceOverride) {
       invoice.status = "sent";
