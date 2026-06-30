@@ -50,6 +50,7 @@ const defaultData = {
 let state = loadState();
 let activeView = "dashboard";
 let editing = null;
+let previewing = null;
 
 function loadState() {
   const raw = localStorage.getItem("gsvBillingHub");
@@ -889,6 +890,7 @@ function convertQuote(quoteId) {
 function previewDocument(type, idValue) {
   const doc = type === "quote" ? state.quotes.find(q => q.id === idValue) : state.invoices.find(inv => inv.id === idValue);
   if (!doc) return;
+  previewing = { type, id: idValue };
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
@@ -897,12 +899,24 @@ function previewDocument(type, idValue) {
 
 function exportDocumentPdf(type, doc) {
   if (!doc) return;
+  previewing = { type, id: doc.id };
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
   const preview = document.getElementById("document-preview");
   if (!preview.open) preview.showModal();
   window.setTimeout(() => window.print(), 150);
+}
+
+function editPreviewDocument() {
+  if (!previewing) return;
+  const preview = document.getElementById("document-preview");
+  if (preview.open) preview.close();
+  if (previewing.type === "quote") {
+    openEditor("quote", state.quotes.find(quote => quote.id === previewing.id));
+    return;
+  }
+  openEditor("invoice", state.invoices.find(invoice => invoice.id === previewing.id));
 }
 
 function renderDocument(type, doc, client) {
@@ -1104,6 +1118,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
+  if (target.id === "edit-preview-document") editPreviewDocument();
   if (target.id === "print-document") window.print();
   if (target.id === "save-snapshot") snapshot();
   if (target.id === "export-invoices") exportInvoices();
