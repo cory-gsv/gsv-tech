@@ -140,7 +140,7 @@ function saveState() {
 
 function migrateDefaultRecords() {
   let changed = false;
-  for (const key of ["clients", "serviceAgreements", "invoices"]) {
+  for (const key of ["clients", "serviceAgreements"]) {
     if (!Array.isArray(state[key])) state[key] = [];
     for (const record of defaultData[key]) {
       const existing = state[key].find(existing => existing.id === record.id);
