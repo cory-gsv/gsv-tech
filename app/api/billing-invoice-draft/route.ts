@@ -18,6 +18,7 @@ type InvoicePayload = {
   date?: string;
   dueDate?: string;
   month?: string;
+  subject?: string;
   items?: InvoiceItem[];
   showShipTo?: boolean;
   shipTo?: string;
@@ -244,7 +245,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   let content = "";
   content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
   content += drawLogo(margin, 650, 240);
-  content += drawText("info@gsvisions.com", margin, 592, 12);
+  content += drawText("billing@gsvisions.com", margin, 592, 12);
   content += drawText("(916) 432-3373", margin, 568, 12);
 
   content += drawText("INVOICE", 434, 705, 30, ink, "F2");
@@ -384,7 +385,7 @@ export async function POST(request: Request) {
 
     const accessToken = await graphToken();
     const pdf = generateInvoicePdf(invoice, client);
-    const subject = `Monthly IT Services Invoice (${invoice.number || ""})`;
+    const subject = invoice.subject?.trim() || `Monthly IT Services Invoice (${invoice.number || ""})`;
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
     const senderName = "Golden State Visions";
     const body = [

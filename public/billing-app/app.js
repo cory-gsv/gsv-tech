@@ -646,21 +646,24 @@ function editorFields(mode, item) {
   }
   if (mode === "invoice" || mode === "quote") {
     const numberPrefix = mode === "invoice" ? "GSV-INV" : "GSV-Q";
+    const documentNumber = item.number || `${numberPrefix}-${String(Date.now()).slice(-6)}`;
     const title = typeLabel(mode);
+    const contactEmail = mode === "invoice" ? "billing@gsvisions.com" : "info@gsvisions.com";
     return `
       <div class="invoice-edit-head full">
         <div>
           <img class="invoice-edit-logo" src="assets/gsv-logo.png" alt="Golden State Visions">
           <div class="invoice-edit-contact">
-            <p>info@gsvisions.com</p>
+            <p>${contactEmail}</p>
             <p>(916) 432-3373</p>
           </div>
         </div>
         <div class="invoice-edit-meta">
           <h3>${title}</h3>
-          ${field("number", mode === "invoice" ? "Invoice #" : "Quote #", item.number || `${numberPrefix}-${String(Date.now()).slice(-6)}`)}
+          ${field("number", mode === "invoice" ? "Invoice #" : "Quote #", documentNumber)}
           ${field("date", "Date", item.date || today, "date")}
           ${mode === "invoice" ? field("dueDate", "Due Date", item.dueDate || addDays(today, 15), "date") : field("title", "Project / Quote Title", item.title || "")}
+          ${field("subject", "Email Subject", item.subject || defaultDocumentSubject(mode, { ...item, number: documentNumber }))}
           ${select("status", "Status", statusOptions(mode, item.status), false)}
         </div>
       </div>
@@ -712,6 +715,17 @@ function statusOptions(mode, selected) {
 
 function typeLabel(mode) {
   return mode === "quote" ? "QUOTE" : "INVOICE";
+}
+
+function defaultDocumentSubject(mode, item = {}) {
+  const number = item.number || (mode === "quote" ? "Quote #" : "Invoice #");
+  if (mode === "quote") {
+    const title = String(item.title || "").trim();
+    return `${title || "Project Quote"} (${number})`;
+  }
+  const title = String(item.title || "").trim();
+  if (title) return `${title} Invoice (${number})`;
+  return `Monthly IT Services Invoice (${number})`;
 }
 
 function field(name, label, value, type = "text") {
@@ -825,6 +839,7 @@ function saveEditor() {
       date: data.date,
       dueDate: data.dueDate,
       month: existingInvoice?.month || data.date?.slice(0, 7),
+      subject: data.subject || defaultDocumentSubject("invoice", data),
       status: data.status,
       type: existingInvoice?.type || "Manual",
       items: editorLineItems(),
@@ -842,6 +857,7 @@ function saveEditor() {
       clientId: data.clientId,
       date: data.date,
       title: data.title,
+      subject: data.subject || defaultDocumentSubject("quote", data),
       status: data.status,
       items: editorLineItems(),
       showShipTo: data.showShipTo === "on",
@@ -935,6 +951,7 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
           date: invoice.date,
           dueDate: invoice.dueDate,
           month: invoice.month,
+          subject: invoice.subject,
           items: invoice.items,
           showShipTo: invoice.showShipTo,
           shipTo: invoice.shipTo,
@@ -968,6 +985,7 @@ function invoiceFromEditor() {
     date: data.date,
     dueDate: data.dueDate,
     month: existingInvoice?.month || data.date?.slice(0, 7),
+    subject: data.subject || defaultDocumentSubject("invoice", data),
     status: data.status,
     type: existingInvoice?.type || "Manual",
     items: editorLineItems(),
@@ -1012,15 +1030,17 @@ function generateMonthlyInvoice() {
 function convertQuote(quoteId) {
   const quote = state.quotes.find(q => q.id === quoteId);
   if (!quote) return;
+  const invoiceNumber = quote.number.replace("GSV-Q", "GSV-INV");
   const invoice = {
     id: id("inv"),
-    number: quote.number.replace("GSV-Q", "GSV-INV"),
+    number: invoiceNumber,
     clientId: quote.clientId,
     date: today,
     dueDate: addDays(today, 15),
     month: today.slice(0, 7),
     status: "draft",
     type: "Project",
+    subject: defaultDocumentSubject("invoice", { ...quote, number: invoiceNumber }),
     items: structuredClone(quote.items),
     showShipTo: quote.showShipTo,
     shipTo: quote.shipTo,
@@ -1073,13 +1093,14 @@ function sendPreviewDocument() {
 
 function renderDocument(type, doc, client) {
   const title = type === "quote" ? "QUOTE" : "INVOICE";
+  const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "info@gsvisions.com";
   return `
     <div class="doc">
       <div class="doc-head">
         <div>
           <img class="doc-logo" src="assets/gsv-logo.png" alt="Golden State Visions">
           <div class="doc-contact">
-            <p>info@gsvisions.com</p>
+            <p>${contactEmail}</p>
             <p>(916) 432-3373</p>
           </div>
         </div>
