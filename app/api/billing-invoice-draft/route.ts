@@ -85,11 +85,6 @@ function invoiceTotal(invoice: InvoicePayload) {
   );
 }
 
-function outlookSharedDraftLink(mailbox: string, messageId: string, fallback: string) {
-  if (!mailbox || !messageId) return fallback;
-  return `https://outlook.office.com/mail/${encodeURIComponent(mailbox)}/drafts/id/${encodeURIComponent(messageId)}`;
-}
-
 function pdfLine(y: number, value: string, x = 54, size = 11) {
   return `BT /F1 ${size} Tf ${x} ${y} Td (${text(value)}) Tj ET\n`;
 }
@@ -230,7 +225,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: data.id,
-      webLink: outlookSharedDraftLink(fromMailbox, data.id, data.webLink || ""),
+      webLink: data.webLink || "",
       message: "Outlook draft created with invoice PDF attached.",
     });
   } catch (error) {
