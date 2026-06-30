@@ -489,7 +489,7 @@ function renderInvoices() {
               <button data-preview-invoice="${inv.id}">Preview</button>
               <button data-pdf-invoice="${inv.id}">PDF</button>
               <button data-edit-invoice="${inv.id}">Edit</button>
-              ${status !== "sent" && status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
+              ${status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
               <button data-pay-invoice="${inv.id}">Pay</button>
               <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
             </div>
