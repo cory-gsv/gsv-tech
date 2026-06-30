@@ -12,6 +12,12 @@ const defaultData = {
       phone: "(916) 652-1300",
       terms: "Net 15",
       status: "active",
+      mspRates: {
+        fullUser: 70,
+        lightUser: 20,
+        serviceAccount: 10,
+        copilot: 30
+      },
       notes: "Pays by check."
     }
   ],
@@ -76,6 +82,16 @@ function clientName(clientId) {
 
 function clientById(clientId) {
   return state.clients.find(c => c.id === clientId);
+}
+
+function clientMspRates(clientId) {
+  const rates = clientById(clientId)?.mspRates || {};
+  return {
+    fullUser: Number(rates.fullUser ?? 70),
+    lightUser: Number(rates.lightUser ?? 20),
+    serviceAccount: Number(rates.serviceAccount ?? 10),
+    copilot: Number(rates.copilot ?? 30)
+  };
 }
 
 function invoiceTotal(invoice) {
@@ -197,6 +213,7 @@ function renderClients() {
   document.getElementById("client-list").innerHTML = state.clients.map(client => {
     const audit = latestAudit(client.id, today.slice(0, 7));
     const monthly = currentMspTotal(client.id);
+    const rates = clientMspRates(client.id);
     return `
       <article class="item">
         <div class="item-line">
@@ -204,6 +221,12 @@ function renderClients() {
           <span class="badge ${client.status}">${escapeHtml(client.status)}</span>
         </div>
         <p class="subtle">${lines(client.billTo)}</p>
+        <div class="rate-summary">
+          <span>Full ${money.format(rates.fullUser)}</span>
+          <span>Light ${money.format(rates.lightUser)}</span>
+          <span>Service ${money.format(rates.serviceAccount)}</span>
+          <span>Copilot ${money.format(rates.copilot)}</span>
+        </div>
         <div class="item-line">
           <span>${audit ? "Current audit MSP" : "Baseline MSP"}</span>
           <strong>${money.format(monthly)}</strong>
@@ -325,7 +348,8 @@ function parseCsv(text) {
   return rows.map(values => Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])));
 }
 
-function classify365Row(raw) {
+function classify365Row(raw, clientId) {
+  const rates = clientMspRates(clientId);
   const displayName = raw["Display Name"] || raw.displayName || raw.name || "";
   const upn = raw["User Principal Name"] || raw.userPrincipalName || raw.mail || "";
   const licenses = raw["License Names"] || raw.licenses || raw.assignedLicenses || "";
@@ -352,8 +376,8 @@ function classify365Row(raw) {
   }
 
   const hasCopilot = /Copilot/i.test(licenses);
-  const baseRate = status === "Ready" ? ({ "Service Account": 10, "Email User": 20, "Full Suite": 70 }[tier] || 0) : 0;
-  const copilotRate = status === "Ready" && hasCopilot ? 30 : 0;
+  const baseRate = status === "Ready" ? ({ "Service Account": rates.serviceAccount, "Email User": rates.lightUser, "Full Suite": rates.fullUser }[tier] || 0) : 0;
+  const copilotRate = status === "Ready" && hasCopilot ? rates.copilot : 0;
   return {
     displayName,
     upn,
@@ -367,7 +391,7 @@ function classify365Row(raw) {
 }
 
 function buildAudit(clientId, month, rows) {
-  const classified = rows.filter(row => row["User Principal Name"] || row.userPrincipalName || row.mail).map(classify365Row);
+  const classified = rows.filter(row => row["User Principal Name"] || row.userPrincipalName || row.mail).map(row => classify365Row(row, clientId));
   const counts = {};
   for (const row of classified) {
     if (row.status === "Ready") {
@@ -391,14 +415,15 @@ function buildAudit(clientId, month, rows) {
 
 function auditInvoiceItems(audit) {
   const counts = audit.counts || {};
+  const rates = clientMspRates(audit.clientId);
   const recurringCredits = state.serviceAgreements
     .filter(service => service.clientId === audit.clientId && service.active && Number(service.rate || 0) < 0)
     .map(service => ({ description: service.name, qty: Number(service.qty || 1), rate: Number(service.rate || 0) }));
   return [
-    { description: "Monthly IT (Full User)", qty: counts["Full Suite"] || 0, rate: 70 },
-    { description: "Monthly IT (Light User)", qty: counts["Email User"] || 0, rate: 20 },
-    { description: "Monthly IT (Service Account)", qty: counts["Service Account"] || 0, rate: 10 },
-    { description: "Copilot Add-on license billing", qty: counts["Copilot Add-on"] || 0, rate: 30 },
+    { description: "Monthly IT (Full User)", qty: counts["Full Suite"] || 0, rate: rates.fullUser },
+    { description: "Monthly IT (Light User)", qty: counts["Email User"] || 0, rate: rates.lightUser },
+    { description: "Monthly IT (Service Account)", qty: counts["Service Account"] || 0, rate: rates.serviceAccount },
+    { description: "Copilot Add-on license billing", qty: counts["Copilot Add-on"] || 0, rate: rates.copilot },
     ...recurringCredits
   ].filter(item => item.qty || item.rate < 0);
 }
@@ -595,12 +620,26 @@ function invoiceOptions(selected) {
 
 function editorFields(mode, item) {
   if (mode === "client") {
+    const rates = {
+      ...clientMspRates(item.id),
+      ...(item.mspRates || {})
+    };
     return `
       ${field("name", "Client Name", item.name || "")}
       ${field("status", "Status", item.status || "active")}
       ${field("email", "Email", item.email || "")}
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
+      <div class="field full pricing-editor">
+        <h3>Monthly MSP License Pricing</h3>
+        <div class="pricing-grid">
+          ${field("rateFullUser", "Full User", rates.fullUser, "number")}
+          ${field("rateLightUser", "Light User", rates.lightUser, "number")}
+          ${field("rateServiceAccount", "Service Account", rates.serviceAccount, "number")}
+          ${field("rateCopilot", "Copilot Add-on", rates.copilot, "number")}
+        </div>
+        <p class="subtle">New 365 audits and generated invoices use these rates. Existing invoices keep their saved line-item prices.</p>
+      </div>
       ${textarea("billTo", "Bill To", item.billTo || "", true)}
       ${textarea("notes", "Notes", item.notes || "", true)}
     `;
@@ -754,6 +793,12 @@ function saveEditor() {
       email: data.email,
       phone: data.phone,
       terms: data.terms,
+      mspRates: {
+        fullUser: Number(data.rateFullUser || 0),
+        lightUser: Number(data.rateLightUser || 0),
+        serviceAccount: Number(data.rateServiceAccount || 0),
+        copilot: Number(data.rateCopilot || 0)
+      },
       billTo: data.billTo,
       notes: data.notes
     };
