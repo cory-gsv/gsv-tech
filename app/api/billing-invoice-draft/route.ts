@@ -19,6 +19,8 @@ type InvoicePayload = {
   dueDate?: string;
   month?: string;
   items?: InvoiceItem[];
+  showShipTo?: boolean;
+  shipTo?: string;
   total?: number;
 };
 
@@ -263,13 +265,25 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const tableW = page.width - margin * 2;
   const billY = 430;
   const billH = 126;
-  content += rect(tableX, billY, tableW, billH);
-  content += rect(tableX, billY + billH - 28, tableW, 28, headerFill);
-  content += drawTextCenter("Bill To", tableX, billY + billH - 19, tableW, 12, ink, "F2");
+  const addressGap = 18;
+  const addressW = (tableW - addressGap) / 2;
+  content += rect(tableX, billY, addressW, billH);
+  content += rect(tableX, billY + billH - 28, addressW, 28, headerFill);
+  content += drawTextCenter("Bill To", tableX, billY + billH - 19, addressW, 12, ink, "F2");
   const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
   billTo.slice(0, 6).forEach((line, index) => {
     content += drawText(line, tableX + 8, billY + billH - 50 - index * 15, 12);
   });
+  if (invoice.showShipTo) {
+    const shipX = tableX + addressW + addressGap;
+    content += rect(shipX, billY, addressW, billH);
+    content += rect(shipX, billY + billH - 28, addressW, 28, headerFill);
+    content += drawTextCenter("Ship To", shipX, billY + billH - 19, addressW, 12, ink, "F2");
+    const shipTo = (invoice.shipTo || client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
+    shipTo.slice(0, 6).forEach((line, index) => {
+      content += drawText(line, shipX + 8, billY + billH - 50 - index * 15, 12);
+    });
+  }
 
   content += drawText("Monthly IT Services", tableX, 382, 18, ink, "F2");
   const items = (invoice.items || []).slice(0, 14);

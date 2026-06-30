@@ -674,6 +674,23 @@ button.danger {
   border-color: #e2b8b2;
 }
 
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 700;
+}
+
+.check-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.check-field:has(input:not(:checked)) + .field {
+  display: none;
+}
+
 .invoice-editor {
   display: block;
   padding: 24px;
@@ -720,8 +737,15 @@ button.danger {
 }
 
 .invoice-edit-bill {
-  max-width: 620px;
+  max-width: none;
   margin: 0 0 30px;
+}
+
+.invoice-edit-address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
 .invoice-edit-address {
@@ -900,6 +924,18 @@ button.danger {
 
 .doc-block {
   margin-top: 40px;
+}
+
+.doc-address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.doc-address-grid .doc-table td {
+  height: 118px;
+  vertical-align: top;
 }
 
 .doc-table {

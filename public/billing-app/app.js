@@ -665,8 +665,16 @@ function editorFields(mode, item) {
         </div>
       </div>
       <div class="invoice-edit-bill full">
-        ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
-        <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || "Select a client")}</div>
+        <div class="invoice-edit-address-grid">
+          <div>
+            ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
+            <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || "Select a client")}</div>
+          </div>
+          <div>
+            ${checkbox("showShipTo", "Show Ship To", item.showShipTo)}
+            ${textarea("shipTo", "Ship To", item.shipTo || clientById(item.clientId)?.billTo || "", false)}
+          </div>
+        </div>
       </div>
       <div class="invoice-edit-section full">
         <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
@@ -708,6 +716,10 @@ function typeLabel(mode) {
 
 function field(name, label, value, type = "text") {
   return `<div class="field"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`;
+}
+
+function checkbox(name, label, checked = false) {
+  return `<label class="check-field"><input id="${name}" name="${name}" type="checkbox" ${checked ? "checked" : ""}> <span>${label}</span></label>`;
 }
 
 function clientEmail(client) {
@@ -816,6 +828,8 @@ function saveEditor() {
       status: data.status,
       type: existingInvoice?.type || "Manual",
       items: editorLineItems(),
+      showShipTo: data.showShipTo === "on",
+      shipTo: data.shipTo,
       notes: data.notes,
       sentAt: data.status === "sent" ? (existingInvoice?.sentAt || new Date().toISOString()) : ""
     };
@@ -830,6 +844,8 @@ function saveEditor() {
       title: data.title,
       status: data.status,
       items: editorLineItems(),
+      showShipTo: data.showShipTo === "on",
+      shipTo: data.shipTo,
       notes: data.notes
     };
     upsert(state.quotes, quote);
@@ -920,6 +936,8 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
           dueDate: invoice.dueDate,
           month: invoice.month,
           items: invoice.items,
+          showShipTo: invoice.showShipTo,
+          shipTo: invoice.shipTo,
           total: invoiceTotal(invoice)
         },
         client: {
@@ -953,6 +971,8 @@ function invoiceFromEditor() {
     status: data.status,
     type: existingInvoice?.type || "Manual",
     items: editorLineItems(),
+    showShipTo: data.showShipTo === "on",
+    shipTo: data.shipTo,
     notes: data.notes,
     sentAt: existingInvoice?.sentAt || ""
   };
@@ -1002,6 +1022,8 @@ function convertQuote(quoteId) {
     status: "draft",
     type: "Project",
     items: structuredClone(quote.items),
+    showShipTo: quote.showShipTo,
+    shipTo: quote.shipTo,
     notes: quote.notes
   };
   quote.status = "converted";
@@ -1070,11 +1092,17 @@ function renderDocument(type, doc, client) {
           </div>
         </div>
       </div>
-      <div class="doc-block">
+      <div class="doc-block doc-address-grid">
         <table class="doc-table">
-          <thead><tr><th colspan="4">Bill To</th></tr></thead>
-          <tbody><tr><td colspan="4">${lines(client?.billTo || client?.name || "")}</td></tr></tbody>
+          <thead><tr><th>Bill To</th></tr></thead>
+          <tbody><tr><td>${lines(client?.billTo || client?.name || "")}</td></tr></tbody>
         </table>
+        ${doc.showShipTo ? `
+          <table class="doc-table">
+            <thead><tr><th>Ship To</th></tr></thead>
+            <tbody><tr><td>${lines(doc.shipTo || client?.billTo || client?.name || "")}</td></tr></tbody>
+          </table>
+        ` : ""}
       </div>
       <div class="doc-block">
         <h2>${type === "quote" ? escapeHtml(doc.title || "Project Quote") : "Monthly IT Services"}</h2>
@@ -1288,8 +1316,10 @@ document.addEventListener("input", event => {
 document.addEventListener("change", event => {
   if (event.target.id === "clientId") {
     const address = document.querySelector(".invoice-edit-address");
+    const shipTo = document.getElementById("shipTo");
     const client = clientById(event.target.value);
     if (address) address.innerHTML = lines(client?.billTo || client?.name || "Select a client");
+    if (shipTo && !shipTo.value.trim()) shipTo.value = client?.billTo || client?.name || "";
   }
   if (event.target.closest("#line-editor-rows")) updateEditorTotal();
 });
