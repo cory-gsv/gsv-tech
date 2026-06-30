@@ -34,9 +34,9 @@ function envValue(...keys: string[]) {
 }
 
 async function graphToken() {
-  const tenantId = envValue("MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
-  const clientId = envValue("MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
-  const clientSecret = envValue("MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
+  const tenantId = envValue("BILLING_MS_TENANT_ID", "BILLING_MICROSOFT_TENANT_ID", "MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
+  const clientId = envValue("BILLING_MS_CLIENT_ID", "BILLING_MICROSOFT_CLIENT_ID", "MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
+  const clientSecret = envValue("BILLING_MS_CLIENT_SECRET", "BILLING_MICROSOFT_CLIENT_SECRET", "MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
 
   if (!tenantId || !clientId || !clientSecret) {
     throw new Error("Missing Microsoft Graph app credentials.");
@@ -211,6 +211,11 @@ export async function POST(request: Request) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (String(data.error?.message || "").includes("requested user")) {
+        throw new Error(
+          `Outlook sender mailbox ${fromMailbox} was not found in the configured billing Microsoft tenant. Set BILLING_MS_TENANT_ID / BILLING_MS_CLIENT_ID / BILLING_MS_CLIENT_SECRET for the GSV Outlook tenant, or set BILLING_SEND_FROM to a mailbox in that tenant.`,
+        );
+      }
       throw new Error(data.error?.message || `Outlook draft failed with ${response.status}.`);
     }
 
