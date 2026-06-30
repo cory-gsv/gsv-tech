@@ -24,6 +24,9 @@ Set these environment variables in Vercel before using it:
 
 - `BILLING_HUB_PASSWORD`: password required to open the Billing Hub.
 - `BILLING_HUB_SESSION_SECRET`: long random value used to sign the login session.
+- `MS_TENANT_ID`: Microsoft Entra tenant ID for the billing audit app.
+- `MS_CLIENT_ID`: Microsoft Entra app/client ID.
+- `MS_CLIENT_SECRET`: Microsoft Entra client secret.
 
 The Billing Hub currently stores working invoice, quote, payment, and Microsoft 365 audit data in the browser after login. Use the built-in backup button before changing browsers or machines.
 

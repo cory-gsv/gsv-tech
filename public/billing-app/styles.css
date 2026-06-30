@@ -281,7 +281,7 @@ h2 {
 
 .audit-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 180px 160px minmax(260px, 1.1fr);
+  grid-template-columns: minmax(220px, 1fr) 180px 210px 140px minmax(260px, 1.1fr);
   gap: 14px;
   align-items: end;
   padding: 18px 22px;
@@ -323,6 +323,18 @@ h2 {
   border-radius: 6px;
   background: var(--ink);
   color: #fff;
+}
+
+.audit-pull {
+  min-height: 40px;
+  align-self: end;
+  font-weight: 800;
+}
+
+.fallback-import strong {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
 }
 
 .import-field input {

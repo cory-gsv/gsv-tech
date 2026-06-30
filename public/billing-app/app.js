@@ -868,6 +868,45 @@ function restore(file) {
   reader.readAsText(file);
 }
 
+async function pullMicrosoft365Audit() {
+  const clientId = document.getElementById("audit-client").value || state.clients[0]?.id;
+  const month = document.getElementById("audit-month").value || today.slice(0, 7);
+  const status = document.getElementById("audit-status");
+  const button = document.getElementById("audit-pull-graph");
+
+  if (status) {
+    status.className = "audit-status";
+    status.textContent = "Pulling current Microsoft 365 license data...";
+  }
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Pulling...";
+  }
+
+  try {
+    const response = await fetch("/api/m365-audit", { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Microsoft 365 pull failed.");
+
+    const audit = buildAudit(clientId, month, data.rows || []);
+    audit.source = data.source || "Microsoft Graph";
+    audit.pulledAt = data.pulledAt || new Date().toISOString();
+    state.audits365.push(audit);
+    saveState();
+    renderAudit365();
+  } catch (error) {
+    if (status) {
+      status.className = "audit-status review";
+      status.textContent = error instanceof Error ? error.message : "Microsoft 365 pull failed.";
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Pull from Microsoft 365";
+    }
+  }
+}
+
 function importAuditCsv(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -893,6 +932,7 @@ document.addEventListener("click", event => {
   if (target.id === "record-payment") openEditor("payment", { date: today, method: "Check" });
   if (target.id === "generate-monthly") generateMonthlyInvoice();
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
+  if (target.id === "audit-pull-graph") pullMicrosoft365Audit();
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "print-document") window.print();

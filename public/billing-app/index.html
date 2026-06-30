@@ -112,8 +112,8 @@
           </div>
           <div class="audit-step">
             <span>2</span>
-            <strong>Import latest CSV</strong>
-            <p>Re-importing the same month uses the newest audit for invoice totals.</p>
+            <strong>Pull latest 365 data</strong>
+            <p>Re-pulling the same month uses the newest license counts for invoice totals.</p>
           </div>
           <div class="audit-step">
             <span>3</span>
@@ -131,8 +131,9 @@
             <label for="audit-month">Billing month</label>
             <input id="audit-month" type="month">
           </div>
-          <label class="field import-field" for="audit-csv">
-            <span>Microsoft 365 CSV</span>
+          <button id="audit-pull-graph" class="primary audit-pull" type="button">Pull from Microsoft 365</button>
+          <label class="field import-field fallback-import" for="audit-csv">
+            <span>Fallback only</span>
             <strong>Import CSV</strong>
             <input id="audit-csv" type="file" accept=".csv,text/csv">
           </label>
