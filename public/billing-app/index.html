@@ -198,9 +198,11 @@
           <select id="invoice-filter">
             <option value="all">All invoices</option>
             <option value="draft">Draft</option>
+            <option value="ready">Ready</option>
             <option value="sent">Sent</option>
             <option value="paid">Paid</option>
             <option value="overdue">Overdue</option>
+            <option value="void">Void</option>
           </select>
         </div>
         <div class="field">
@@ -262,6 +264,7 @@
       <div class="modal-actions" id="editor-actions">
         <button id="editor-delete" class="danger ghost" type="button" hidden>Delete Invoice</button>
         <button id="editor-pdf" type="button" hidden>Export PDF</button>
+        <button id="editor-send" type="button" hidden>Send</button>
         <button value="cancel">Cancel</button>
         <button id="editor-save" value="default" class="primary">Save</button>
       </div>
@@ -276,6 +279,7 @@
     <div id="document-body"></div>
     <div class="modal-actions">
       <button id="edit-preview-document" type="button">Edit</button>
+      <button id="send-preview-document" type="button">Send</button>
       <button id="print-document" class="primary">Print / Save PDF</button>
     </div>
   </dialog>

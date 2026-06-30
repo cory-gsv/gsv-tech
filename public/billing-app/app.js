@@ -30,7 +30,7 @@ const defaultData = {
       date: "2026-06-25",
       dueDate: "2026-07-10",
       month: "2026-06",
-      status: "sent",
+      status: "ready",
       type: "Monthly MSP",
       items: [
         { description: "Monthly IT (Full User)", qty: 7, rate: 70 },
@@ -100,10 +100,12 @@ function paidAmount(invoiceId) {
 
 function computedInvoiceStatus(invoice) {
   if (invoice.status === "paid") return "paid";
+  if (invoice.status === "void") return "void";
+  if (invoice.status === "sent" && !invoice.sentAt) return "ready";
   if (paidAmount(invoice.id) >= invoiceTotal(invoice)) return "paid";
   if (invoice.status === "draft") return "draft";
-  if (invoice.dueDate < today) return "overdue";
-  return invoice.status || "sent";
+  if (invoice.dueDate < today && invoice.status !== "draft") return "overdue";
+  return invoice.status || "draft";
 }
 
 function formatDate(value) {
@@ -415,7 +417,7 @@ function createInvoiceFromAudit() {
     date: today,
     dueDate: addDays(today, 15),
     month: audit.month,
-    status: audit.reviewCount ? "draft" : "sent",
+    status: audit.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
     items: auditInvoiceItems(audit),
     notes: audit.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
@@ -462,6 +464,7 @@ function renderInvoices() {
               <button data-preview-invoice="${inv.id}">Preview</button>
               <button data-pdf-invoice="${inv.id}">PDF</button>
               <button data-edit-invoice="${inv.id}">Edit</button>
+              ${status !== "sent" && status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
               <button data-pay-invoice="${inv.id}">Pay</button>
               <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
             </div>
@@ -562,11 +565,13 @@ function openEditor(mode, existing = {}) {
   const fields = document.getElementById("editor-fields");
   const deleteButton = document.getElementById("editor-delete");
   const pdfButton = document.getElementById("editor-pdf");
+  const sendButton = document.getElementById("editor-send");
   document.getElementById("editor-title").textContent = editorTitle(mode);
   fields.className = mode === "invoice" || mode === "quote" ? "form-grid invoice-editor" : "form-grid";
   fields.innerHTML = editorFields(mode, existing);
   deleteButton.hidden = !(mode === "invoice" && existing.id);
   pdfButton.hidden = mode !== "invoice";
+  sendButton.hidden = !(mode === "invoice" && existing.id);
   dialog.showModal();
   updateEditorTotal();
 }
@@ -654,7 +659,7 @@ function editorFields(mode, item) {
 }
 
 function statusOptions(mode, selected) {
-  const values = mode === "quote" ? ["draft", "sent", "approved", "declined", "converted"] : ["draft", "sent", "paid"];
+  const values = mode === "quote" ? ["draft", "sent", "approved", "declined", "converted"] : ["draft", "ready", "sent", "paid", "void"];
   return values.map(v => `<option value="${v}" ${selected === v ? "selected" : ""}>${v}</option>`).join("");
 }
 
@@ -664,6 +669,11 @@ function typeLabel(mode) {
 
 function field(name, label, value, type = "text") {
   return `<div class="field"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`;
+}
+
+function clientEmail(client) {
+  if (client?.email) return client.email;
+  return (client?.billTo || "").match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "";
 }
 
 function textarea(name, label, value, full = false) {
@@ -750,17 +760,19 @@ function saveEditor() {
     upsert(state.clients, client);
   }
   if (editing.mode === "invoice") {
+    const existingInvoice = state.invoices.find(inv => inv.id === editing.id);
     const invoice = {
       id: editing.id || id("inv"),
       number: data.number,
       clientId: data.clientId,
       date: data.date,
       dueDate: data.dueDate,
-      month: data.date?.slice(0, 7),
+      month: existingInvoice?.month || data.date?.slice(0, 7),
       status: data.status,
-      type: "Manual",
+      type: existingInvoice?.type || "Manual",
       items: editorLineItems(),
-      notes: data.notes
+      notes: data.notes,
+      sentAt: data.status === "sent" ? (existingInvoice?.sentAt || new Date().toISOString()) : ""
     };
     upsert(state.invoices, invoice);
   }
@@ -818,20 +830,69 @@ function deleteInvoice(invoiceId) {
   render();
 }
 
+function markInvoiceSent(invoiceId) {
+  const invoice = state.invoices.find(inv => inv.id === invoiceId);
+  if (!invoice) return;
+  invoice.status = "sent";
+  invoice.sentAt = new Date().toISOString();
+  saveState();
+  render();
+}
+
+function sendInvoice(invoiceId, invoiceOverride = null) {
+  const invoice = invoiceOverride || state.invoices.find(inv => inv.id === invoiceId);
+  if (!invoice) return;
+  const client = clientById(invoice.clientId);
+  const to = clientEmail(client);
+  const subject = `Invoice ${invoice.number} from Golden State Visions`;
+  const body = [
+    `Hi ${client?.name || ""},`,
+    "",
+    `Invoice ${invoice.number} is ready.`,
+    `Total due: ${money.format(invoiceTotal(invoice))}`,
+    `Due date: ${formatDate(invoice.dueDate)}`,
+    "",
+    "Please remit payment by check.",
+    "",
+    "Thank you,",
+    "Golden State Visions",
+    "info@gsvisions.com",
+    "(916) 432-3373"
+  ].join("\n");
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+  window.setTimeout(() => {
+    if (!window.confirm(`Mark invoice ${invoice.number} as sent?`)) return;
+    if (invoiceOverride) {
+      invoice.status = "sent";
+      invoice.sentAt = new Date().toISOString();
+      upsert(state.invoices, invoice);
+      saveState();
+      const editor = document.getElementById("editor");
+      if (editor.open) editor.close();
+      render();
+      return;
+    }
+    markInvoiceSent(invoice.id);
+  }, 500);
+}
+
 function invoiceFromEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
+  const existingInvoice = state.invoices.find(inv => inv.id === editing.id);
   return {
     id: editing.id || id("preview"),
     number: data.number,
     clientId: data.clientId,
     date: data.date,
     dueDate: data.dueDate,
-    month: data.date?.slice(0, 7),
+    month: existingInvoice?.month || data.date?.slice(0, 7),
     status: data.status,
-    type: "Manual",
+    type: existingInvoice?.type || "Manual",
     items: editorLineItems(),
-    notes: data.notes
+    notes: data.notes,
+    sentAt: existingInvoice?.sentAt || ""
   };
 }
 
@@ -855,7 +916,7 @@ function generateMonthlyInvoice() {
     date: today,
     dueDate: addDays(today, 15),
     month,
-    status: audit.reviewCount ? "draft" : "sent",
+    status: audit.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
     items: auditInvoiceItems(audit),
     notes: audit.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
@@ -894,6 +955,7 @@ function previewDocument(type, idValue) {
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
   document.getElementById("document-preview").showModal();
 }
 
@@ -903,6 +965,7 @@ function exportDocumentPdf(type, doc) {
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
   const preview = document.getElementById("document-preview");
   if (!preview.open) preview.showModal();
   window.setTimeout(() => window.print(), 150);
@@ -917,6 +980,11 @@ function editPreviewDocument() {
     return;
   }
   openEditor("invoice", state.invoices.find(invoice => invoice.id === previewing.id));
+}
+
+function sendPreviewDocument() {
+  if (!previewing || previewing.type !== "invoice") return;
+  sendInvoice(previewing.id);
 }
 
 function renderDocument(type, doc, client) {
@@ -1116,9 +1184,11 @@ document.addEventListener("click", event => {
   }
   if (target.id === "editor-delete" && editing.mode === "invoice" && editing.id) deleteInvoice(editing.id);
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
+  if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "edit-preview-document") editPreviewDocument();
+  if (target.id === "send-preview-document") sendPreviewDocument();
   if (target.id === "print-document") window.print();
   if (target.id === "save-snapshot") snapshot();
   if (target.id === "export-invoices") exportInvoices();
@@ -1129,6 +1199,7 @@ document.addEventListener("click", event => {
   if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
   if (target.dataset.deleteInvoice) deleteInvoice(target.dataset.deleteInvoice);
+  if (target.dataset.sendInvoice) sendInvoice(target.dataset.sendInvoice);
   if (target.dataset.editQuote) openEditor("quote", state.quotes.find(q => q.id === target.dataset.editQuote));
   if (target.dataset.payInvoice) {
     const inv = state.invoices.find(invoice => invoice.id === target.dataset.payInvoice);
