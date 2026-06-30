@@ -229,6 +229,37 @@ h2 {
   font-size: 26px;
 }
 
+.cost-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.cost-summary div {
+  padding: 12px 14px;
+  border-right: 1px solid var(--line);
+}
+
+.cost-summary div:last-child {
+  border-right: 0;
+}
+
+.cost-summary span,
+.cost-summary strong {
+  display: block;
+}
+
+.cost-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cost-summary strong {
+  margin-top: 3px;
+  font-size: 16px;
+}
+
 .audit-workspace {
   padding: 0;
   overflow: hidden;

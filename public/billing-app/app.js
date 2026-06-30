@@ -1,4 +1,5 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
 
@@ -13,6 +14,7 @@ const defaultData = {
       terms: "Net 15",
       status: "active",
       m365TenantKey: "default",
+      pax8CompanyId: "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -31,6 +33,7 @@ const defaultData = {
       status: "active",
       licenseAuditBilling: false,
       m365TenantKey: "nyssco",
+      pax8CompanyId: "6e6399cf-8808-4c9c-bcce-19e6386e6589",
       mspRates: {
         fullUser: 0,
         lightUser: 0,
@@ -93,7 +96,8 @@ const defaultData = {
   ],
   quotes: [],
   payments: [],
-  audits365: []
+  audits365: [],
+  pax8Costs: []
 };
 
 let state = loadState();
@@ -121,12 +125,34 @@ function migrateDefaultRecords() {
   for (const key of ["clients", "serviceAgreements", "invoices"]) {
     if (!Array.isArray(state[key])) state[key] = [];
     for (const record of defaultData[key]) {
-      if (!state[key].some(existing => existing.id === record.id)) {
+      const existing = state[key].find(existing => existing.id === record.id);
+      if (!existing) {
         state[key].push(structuredClone(record));
         changed = true;
+      } else if (key === "clients") {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "licenseAuditBilling"]) {
+          if (existing[field] === undefined && record[field] !== undefined) {
+            existing[field] = record[field];
+            changed = true;
+          }
+        }
       }
     }
   }
+  if (!Array.isArray(state.pax8Costs)) {
+    state.pax8Costs = [];
+    changed = true;
+  }
+  const pax8CompanyIdFixes = {
+    "1933729": "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
+    "1933703": "6e6399cf-8808-4c9c-bcce-19e6386e6589"
+  };
+  state.clients.forEach(client => {
+    if (pax8CompanyIdFixes[client.pax8CompanyId]) {
+      client.pax8CompanyId = pax8CompanyIdFixes[client.pax8CompanyId];
+      changed = true;
+    }
+  });
   if (changed) saveState();
 }
 
@@ -308,6 +334,7 @@ function renderAudit365() {
 
   const selectedMonth = document.getElementById("audit-month").value || today.slice(0, 7);
   const audit = latestAudit(selectedClient, selectedMonth);
+  const pax8Cost = latestPax8Costs(selectedClient, selectedMonth);
   const counts = audit?.counts || {};
   const total = audit ? auditInvoiceItems(audit).reduce((sum, item) => sum + item.qty * item.rate, 0) : 0;
   document.getElementById("audit-full").textContent = counts["Full Suite"] || 0;
@@ -365,6 +392,7 @@ function renderAudit365() {
       `).join("") || `<tr><td colspan="7">Import a CSV to classify Microsoft 365 users.</td></tr>`}</tbody>
     </table>
   `;
+  renderPax8Costs(pax8Cost, audit, selectedClient);
 }
 
 function latestAudit(clientId, month = "") {
@@ -372,6 +400,72 @@ function latestAudit(clientId, month = "") {
     .filter(audit => (!clientId || audit.clientId === clientId) && (!month || audit.month === month))
     .slice()
     .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
+}
+
+function latestPax8Costs(clientId, month = "") {
+  return (state.pax8Costs || [])
+    .filter(cost => (!clientId || cost.clientId === clientId) && (!month || cost.month === month))
+    .slice()
+    .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
+}
+
+function normalizedProductName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/microsoft|office|365|business|online|plan|no teams|\\(|\\)|-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function assignedCountForProduct(audit, productName) {
+  if (!audit) return null;
+  const product = normalizedProductName(productName);
+  if (!product) return null;
+  const productWords = product.split(" ").filter(word => word.length > 2);
+  if (!productWords.length) return null;
+  return audit.rows.filter(row => {
+    const license = normalizedProductName(row.licenses);
+    return productWords.every(word => license.includes(word)) || license.includes(product) || product.includes(license);
+  }).length;
+}
+
+function renderPax8Costs(pax8Cost, audit, clientId) {
+  const container = document.getElementById("audit-pax8-costs");
+  if (!container) return;
+  const client = clientById(clientId);
+  if (!client?.pax8CompanyId) {
+    container.innerHTML = `<div class="empty-state">Add this client's Pax8 Company ID, then pull Pax8 costs.</div>`;
+    return;
+  }
+  if (!pax8Cost) {
+    container.innerHTML = `<div class="empty-state">No Pax8 costs pulled for this client/month yet.</div>`;
+    return;
+  }
+  const rows = pax8Cost.rows || [];
+  container.innerHTML = `
+    <div class="cost-summary">
+      <div><span>Pax8 subscriptions</span><strong>${rows.length}</strong></div>
+      <div><span>Total quantity</span><strong>${pax8Cost.totals?.quantity || 0}</strong></div>
+      <div><span>Monthly partner cost</span><strong>${costMoney.format(pax8Cost.totals?.monthlyPartnerCost || 0)}</strong></div>
+      <div><span>Pulled</span><strong>${formatDate(String(pax8Cost.pulledAt || pax8Cost.createdAt || today).slice(0, 10))}</strong></div>
+    </div>
+    <table>
+      <thead><tr><th>Product</th><th class="num">Pax8 Qty</th><th class="num">365 Assigned</th><th class="num">Unit Cost</th><th class="num">Monthly Cost</th><th>Status</th></tr></thead>
+      <tbody>${rows.map(row => {
+        const assigned = assignedCountForProduct(audit, row.productName);
+        return `
+          <tr>
+            <td>${escapeHtml(row.productName)}</td>
+            <td class="num">${Number(row.quantity || 0)}</td>
+            <td class="num">${assigned === null ? "n/a" : assigned}</td>
+            <td class="num">${costMoney.format(row.unitPartnerCost || 0)}</td>
+            <td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td>
+            <td><span class="badge ${String(row.status || "").toLowerCase()}">${escapeHtml(row.status || "active")}</span></td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="6">No active Pax8 subscriptions found.</td></tr>`}</tbody>
+    </table>
+  `;
 }
 
 function parseCsv(text) {
@@ -693,6 +787,7 @@ function editorFields(mode, item) {
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
       ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
+      ${field("pax8CompanyId", "Pax8 Company ID", item.pax8CompanyId || "")}
       ${checkbox("licenseAuditBilling", "Use Microsoft 365 audit to generate monthly invoice", item.licenseAuditBilling !== false)}
       <div class="field full pricing-editor">
         <h3>Monthly MSP License Pricing</h3>
@@ -884,6 +979,7 @@ function saveEditor() {
       phone: data.phone,
       terms: data.terms,
       m365TenantKey: data.m365TenantKey || "default",
+      pax8CompanyId: data.pax8CompanyId || "",
       licenseAuditBilling: data.licenseAuditBilling === "on",
       mspRates: {
         fullUser: Number(data.rateFullUser || 0),
@@ -1333,6 +1429,66 @@ async function pullMicrosoft365Audit() {
   }
 }
 
+async function pullPax8Costs() {
+  const clientId = document.getElementById("audit-client").value || state.clients[0]?.id;
+  const month = document.getElementById("audit-month").value || today.slice(0, 7);
+  const status = document.getElementById("audit-status");
+  const button = document.getElementById("audit-pull-pax8");
+  const client = clientById(clientId);
+
+  if (!client?.pax8CompanyId) {
+    if (status) {
+      status.className = "audit-status review";
+      status.textContent = "Add the Pax8 Company ID to this client before pulling Pax8 costs.";
+    }
+    return;
+  }
+
+  if (status) {
+    status.className = "audit-status";
+    status.textContent = "Pulling Pax8 subscription costs...";
+  }
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Pulling...";
+  }
+
+  try {
+    const response = await fetch(`/api/pax8-subscriptions?companyId=${encodeURIComponent(client.pax8CompanyId)}`, { cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Pax8 pull failed.");
+
+    state.pax8Costs = (state.pax8Costs || []).filter(cost => !(cost.clientId === clientId && cost.month === month));
+    state.pax8Costs.push({
+      id: id("pax8"),
+      clientId,
+      month,
+      companyId: data.companyId,
+      source: data.source || "Pax8",
+      pulledAt: data.pulledAt || new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      rows: data.rows || [],
+      totals: data.totals || {}
+    });
+    saveState();
+    renderAudit365();
+    if (status) {
+      status.className = "audit-status ready";
+      status.textContent = `Pax8 costs pulled for ${client.name}.`;
+    }
+  } catch (error) {
+    if (status) {
+      status.className = "audit-status review";
+      status.textContent = error instanceof Error ? error.message : "Pax8 pull failed.";
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Pull Pax8 Costs";
+    }
+  }
+}
+
 function importAuditCsv(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -1359,6 +1515,7 @@ document.addEventListener("click", event => {
   if (target.id === "generate-monthly") generateMonthlyInvoice();
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
   if (target.id === "audit-pull-graph") pullMicrosoft365Audit();
+  if (target.id === "audit-pull-pax8") pullPax8Costs();
   if (target.id === "add-line-item") {
     document.getElementById("line-editor-rows")?.insertAdjacentHTML("beforeend", lineEditorRow());
     updateEditorTotal();
