@@ -94,40 +94,75 @@
     </section>
 
     <section id="audit365" class="view">
-      <div class="section-head">
-        <h2>Microsoft 365 License Audit</h2>
-        <div class="toolbar">
-          <select id="audit-client"></select>
-          <input id="audit-month" type="month">
-          <label class="file-button primary-button">
-            Import CSV
+      <section class="audit-workspace">
+        <div class="audit-hero">
+          <div>
+            <p class="eyebrow">Monthly MSP billing</p>
+            <h2>Microsoft 365 License Audit</h2>
+            <p class="subtle">Import the latest Microsoft 365 export for the billing month, review any exceptions, then generate the invoice.</p>
+          </div>
+          <button id="audit-create-invoice" class="primary">Create Invoice From Audit</button>
+        </div>
+
+        <div class="audit-steps">
+          <div class="audit-step">
+            <span>1</span>
+            <strong>Choose client and month</strong>
+            <p>Use the month you are invoicing, even if users changed later.</p>
+          </div>
+          <div class="audit-step">
+            <span>2</span>
+            <strong>Import latest CSV</strong>
+            <p>Re-importing the same month uses the newest audit for invoice totals.</p>
+          </div>
+          <div class="audit-step">
+            <span>3</span>
+            <strong>Create invoice</strong>
+            <p>Only create/send after Review Needed is clear.</p>
+          </div>
+        </div>
+
+        <div class="audit-controls">
+          <div class="field">
+            <label for="audit-client">Client</label>
+            <select id="audit-client"></select>
+          </div>
+          <div class="field">
+            <label for="audit-month">Billing month</label>
+            <input id="audit-month" type="month">
+          </div>
+          <label class="field import-field" for="audit-csv">
+            <span>Microsoft 365 CSV</span>
+            <strong>Import CSV</strong>
             <input id="audit-csv" type="file" accept=".csv,text/csv">
           </label>
+          <div class="audit-status" id="audit-status">No audit imported for this client/month yet.</div>
         </div>
-      </div>
-      <div class="metric-grid">
-        <article class="metric">
-          <span>Full Users</span>
-          <strong id="audit-full">0</strong>
-        </article>
-        <article class="metric">
-          <span>Light Users</span>
-          <strong id="audit-light">0</strong>
-        </article>
-        <article class="metric">
-          <span>Service Accounts</span>
-          <strong id="audit-service">0</strong>
-        </article>
-        <article class="metric">
-          <span>Invoice Total</span>
-          <strong id="audit-total">$0</strong>
-        </article>
-      </div>
-      <div class="split">
+
+        <div class="metric-grid audit-metrics">
+          <article class="metric">
+            <span>Full Users</span>
+            <strong id="audit-full">0</strong>
+          </article>
+          <article class="metric">
+            <span>Light Users</span>
+            <strong id="audit-light">0</strong>
+          </article>
+          <article class="metric">
+            <span>Service Accounts</span>
+            <strong id="audit-service">0</strong>
+          </article>
+          <article class="metric total-metric">
+            <span>Invoice Total</span>
+            <strong id="audit-total">$0</strong>
+          </article>
+        </div>
+      </section>
+
+      <div class="split audit-review-grid">
         <section>
           <div class="section-head">
             <h2>Audit Summary</h2>
-            <button id="audit-create-invoice" class="primary">Create Invoice From Audit</button>
           </div>
           <div id="audit-summary" class="stack"></div>
         </section>
@@ -138,6 +173,7 @@
           <div id="audit-review" class="stack"></div>
         </section>
       </div>
+
       <div class="section-head table-heading">
         <h2>Classified Users</h2>
       </div>

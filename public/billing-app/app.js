@@ -230,6 +230,19 @@ function renderAudit365() {
   document.getElementById("audit-light").textContent = counts["Email User"] || 0;
   document.getElementById("audit-service").textContent = counts["Service Account"] || 0;
   document.getElementById("audit-total").textContent = money.format(total);
+  const auditStatus = document.getElementById("audit-status");
+  if (auditStatus) {
+    auditStatus.className = "audit-status";
+    if (!audit) {
+      auditStatus.textContent = "No audit imported for this client/month yet.";
+    } else if (audit.reviewCount) {
+      auditStatus.classList.add("review");
+      auditStatus.textContent = `${audit.reviewCount} row${audit.reviewCount === 1 ? "" : "s"} need review before invoicing.`;
+    } else {
+      auditStatus.classList.add("ready");
+      auditStatus.textContent = `${audit.rows.length} rows imported. Ready to create invoice.`;
+    }
+  }
 
   document.getElementById("audit-summary").innerHTML = audit ? `
     <div class="item">
