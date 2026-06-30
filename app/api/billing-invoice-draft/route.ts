@@ -85,53 +85,152 @@ function invoiceTotal(invoice: InvoicePayload) {
   );
 }
 
-function pdfLine(y: number, value: string, x = 54, size = 11) {
-  return `BT /F1 ${size} Tf ${x} ${y} Td (${text(value)}) Tj ET\n`;
-}
-
 function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const total = Number(invoice.total ?? invoiceTotal(invoice));
-  let content = "";
-  content += pdfLine(742, "GOLDEN STATE VISIONS", 54, 18);
-  content += pdfLine(720, "info@gsvisions.com  |  (916) 432-3373", 54, 10);
-  content += pdfLine(742, "INVOICE", 430, 26);
-  content += pdfLine(704, `Invoice #: ${invoice.number || ""}`, 360, 11);
-  content += pdfLine(686, `Date: ${invoice.date || ""}`, 360, 11);
-  content += pdfLine(668, `Due Date: ${invoice.dueDate || ""}`, 360, 11);
-  content += pdfLine(650, `Invoice Month: ${invoice.month || ""}`, 360, 11);
+  const page = { width: 612, height: 792 };
+  const ink = "0.11 0.15 0.19";
+  const gold = "1 0.78 0.17";
+  const goldText = "0.64 0.44 0";
+  const headerFill = "0.89 0.92 0.95";
+  const line = "0.07 0.09 0.12";
+  const margin = 40;
 
-  content += pdfLine(620, "Bill To", 54, 13);
-  const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
-  billTo.slice(0, 6).forEach((line, index) => {
-    content += pdfLine(600 - index * 16, line, 54, 11);
-  });
-
-  content += pdfLine(486, "Description", 54, 12);
-  content += pdfLine(486, "Qty", 340, 12);
-  content += pdfLine(486, "Rate", 410, 12);
-  content += pdfLine(486, "Amount", 485, 12);
-  content += "48 478 m 548 478 l S\n";
-
-  let y = 456;
-  for (const item of (invoice.items || []).slice(0, 16)) {
-    const amount = Number(item.qty || 0) * Number(item.rate || 0);
-    content += pdfLine(y, String(item.description || "").slice(0, 44), 54, 10);
-    content += pdfLine(y, String(item.qty ?? ""), 348, 10);
-    content += pdfLine(y, money(Number(item.rate || 0)), 405, 10);
-    content += pdfLine(y, money(amount), 485, 10);
-    y -= 18;
+  function approxWidth(value: string, size: number) {
+    return value.length * size * 0.52;
   }
 
-  content += "330 122 m 548 122 l S\n";
-  content += pdfLine(100, "Total Due", 380, 16);
-  content += pdfLine(100, money(total), 485, 16);
+  function centerX(value: string, x: number, width: number, size: number) {
+    return x + (width - approxWidth(value, size)) / 2;
+  }
+
+  function rightX(value: string, x: number, width: number, size: number) {
+    return x + width - approxWidth(value, size) - 6;
+  }
+
+  function drawText(value: string, x: number, y: number, size = 11, color = ink, font = "F1") {
+    return `BT /${font} ${size} Tf ${color} rg ${x} ${y} Td (${text(value)}) Tj ET\n`;
+  }
+
+  function drawTextRight(value: string, x: number, y: number, width: number, size = 11, color = ink, font = "F1") {
+    return drawText(value, rightX(value, x, width, size), y, size, color, font);
+  }
+
+  function drawTextCenter(value: string, x: number, y: number, width: number, size = 11, color = ink, font = "F1") {
+    return drawText(value, centerX(value, x, width, size), y, size, color, font);
+  }
+
+  function rect(x: number, y: number, width: number, height: number, fill = "", stroke = line) {
+    const fillPart = fill ? `${fill} rg ` : "";
+    const operator = fill ? "B" : "S";
+    return `q ${stroke} RG ${fillPart}${x} ${y} ${width} ${height} re ${operator} Q\n`;
+  }
+
+  function hline(x1: number, y: number, x2: number, stroke = line, width = 1) {
+    return `q ${stroke} RG ${width} w ${x1} ${y} m ${x2} ${y} l S Q\n`;
+  }
+
+  function vline(x: number, y1: number, y2: number, stroke = line, width = 1) {
+    return `q ${stroke} RG ${width} w ${x} ${y1} m ${x} ${y2} l S Q\n`;
+  }
+
+  function brandMark(x: number, y: number) {
+    // A compact gold line mark keeps the attachment on-brand without relying on browser-only assets.
+    let mark = "";
+    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 45} m ${x + 38} ${y + 70} l ${x + 68} ${y + 45} l ${x + 96} ${y + 62} l ${x + 132} ${y + 42} l S Q\n`;
+    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 32} m ${x + 132} ${y + 32} l S Q\n`;
+    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 20} m ${x + 55} ${y + 20} l ${x + 70} ${y + 8} l ${x + 120} ${y + 8} l S Q\n`;
+    mark += drawText("GOLDEN STATE VISIONS", x, y - 18, 18, goldText, "F2");
+    mark += drawText("MANAGED IT SERVICES & CYBERSECURITY", x + 16, y - 34, 7, goldText);
+    return mark;
+  }
+
+  let content = "";
+  content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
+  content += brandMark(margin, 675);
+  content += drawText("info@gsvisions.com", margin, 593, 12);
+  content += drawText("(916) 432-3373", margin, 565, 12);
+
+  content += drawText("INVOICE", 434, 705, 30, ink, "F2");
+  const metaX = 350;
+  const metaValueX = 455;
+  [
+    ["Invoice #", invoice.number || ""],
+    ["Date", invoice.date || ""],
+    ["Due Date", invoice.dueDate || ""],
+    ["Invoice Month", invoice.month || ""],
+  ].forEach(([label, value], index) => {
+    const y = 655 - index * 26;
+    content += drawTextRight(label, metaX, y, 90, 12, ink, "F2");
+    content += drawText(value, metaValueX, y, 12);
+  });
+
+  const tableX = margin;
+  const tableW = page.width - margin * 2;
+  const billY = 475;
+  const billH = 112;
+  content += rect(tableX, billY, tableW, billH);
+  content += rect(tableX, billY + billH - 28, tableW, 28, headerFill);
+  content += drawTextCenter("Bill To", tableX, billY + billH - 19, tableW, 12, ink, "F2");
+  const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
+  billTo.slice(0, 6).forEach((line, index) => {
+    content += drawText(line, tableX + 8, billY + billH - 50 - index * 16, 12);
+  });
+
+  content += drawText("Monthly IT Services", tableX, 420, 18, ink, "F2");
+  const items = (invoice.items || []).slice(0, 14);
+  const rowH = 27;
+  const headerH = 30;
+  const itemsY = 170;
+  const itemsH = headerH + rowH * Math.max(items.length, 1);
+  const col = {
+    desc: tableX,
+    qty: tableX + 350,
+    rate: tableX + 420,
+    amount: tableX + 490,
+  };
+  const width = {
+    desc: 350,
+    qty: 70,
+    rate: 70,
+    amount: tableW - 490,
+  };
+
+  content += rect(tableX, itemsY, tableW, itemsH);
+  content += rect(tableX, itemsY + itemsH - headerH, tableW, headerH, headerFill);
+  content += vline(col.qty, itemsY, itemsY + itemsH);
+  content += vline(col.rate, itemsY, itemsY + itemsH);
+  content += vline(col.amount, itemsY, itemsY + itemsH);
+  content += drawTextCenter("Description", col.desc, itemsY + itemsH - 20, width.desc, 12, ink, "F2");
+  content += drawTextCenter("Qty", col.qty, itemsY + itemsH - 20, width.qty, 12, ink, "F2");
+  content += drawTextCenter("Rate", col.rate, itemsY + itemsH - 20, width.rate, 12, ink, "F2");
+  content += drawTextCenter("Amount", col.amount, itemsY + itemsH - 20, width.amount, 12, ink, "F2");
+
+  let y = itemsY + itemsH - headerH;
+  for (const item of (invoice.items || []).slice(0, 16)) {
+    if (y - rowH < itemsY) break;
+    const amount = Number(item.qty || 0) * Number(item.rate || 0);
+    content += hline(tableX, y, tableX + tableW);
+    const textY = y - 18;
+    content += drawText(String(item.description || "").slice(0, 58), col.desc + 8, textY, 11);
+    content += drawTextCenter(String(item.qty ?? ""), col.qty, textY, width.qty, 11);
+    content += drawTextCenter(money(Number(item.rate || 0)), col.rate, textY, width.rate, 11);
+    content += drawTextCenter(money(amount), col.amount, textY, width.amount, 11);
+    y -= rowH;
+  }
+
+  const totalY = 112;
+  content += rect(tableX, totalY, tableW, 36, gold);
+  content += vline(tableX + tableW - 115, totalY, totalY + 36);
+  content += drawTextRight("Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
+  content += drawTextCenter(money(total), tableX + tableW - 115, totalY + 12, 115, 16, ink, "F2");
 
   const stream = `q\n1 1 1 rg 0 0 612 792 re f\n0 0 0 RG 0 0 0 rg\n${content}Q`;
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
     `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`,
   ];
 
