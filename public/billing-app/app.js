@@ -183,6 +183,17 @@ function migrateDefaultRecords() {
       client.ninjaOneOrgId = defaults.ninjaOneOrgId;
       changed = true;
     }
+    if (Array.isArray(client.internalCosts)) {
+      const filteredCosts = client.internalCosts.filter(cost => {
+        const label = `${cost.source || ""} ${cost.name || ""}`;
+        const amount = Number(cost.qty || 0) * Number(cost.unitCost || 0);
+        return !(amount === 0 && /antivirus endpoint protection|ninjaone endpoint management|ninjaone data backup/i.test(label));
+      });
+      if (filteredCosts.length !== client.internalCosts.length) {
+        client.internalCosts = filteredCosts;
+        changed = true;
+      }
+    }
   });
   if (changed) saveState();
 }
@@ -475,7 +486,12 @@ function clientDetailDashboard(client) {
           </div>
         </section>
       </div>
-      <div class="section-head table-heading"><h2>Tracked Vendor Costs</h2></div>
+      <div class="section-head table-heading">
+        <div>
+          <h2>Tracked Vendor Costs</h2>
+          <p class="subtle">Pax8 is pulled from Pax8. NinjaOne is calculated from this client&apos;s editable internal-cost pricing rules and the latest NinjaOne audit counts.</p>
+        </div>
+      </div>
       <div class="table-card">
         <table>
           <thead><tr><th>Service</th><th>Source</th><th class="num">Qty</th><th class="num">Unit Cost</th><th class="num">Monthly Cost</th></tr></thead>
