@@ -580,25 +580,27 @@ button.danger {
 }
 
 .invoice-editor {
-  gap: 18px;
+  display: block;
+  padding: 24px;
 }
 
 .invoice-edit-head {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(300px, 420px);
-  gap: 32px;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 420px);
+  gap: 44px;
   align-items: start;
+  margin-bottom: 22px;
 }
 
 .invoice-edit-logo {
-  width: 300px;
+  width: 280px;
   max-width: 100%;
   height: auto;
   display: block;
 }
 
 .invoice-edit-contact {
-  margin-top: 18px;
+  margin-top: 16px;
   font-size: 18px;
   line-height: 1.5;
 }
@@ -615,14 +617,16 @@ button.danger {
 }
 
 .invoice-edit-meta h3 {
-  margin: 0 0 10px;
+  margin: 0 0 18px;
   text-align: right;
-  font-size: 32px;
+  font-size: 30px;
   letter-spacing: 0;
+  line-height: 1;
 }
 
 .invoice-edit-bill {
-  max-width: 560px;
+  max-width: 620px;
+  margin: 0 0 30px;
 }
 
 .invoice-edit-address {
@@ -635,20 +639,25 @@ button.danger {
 }
 
 .invoice-edit-section h3 {
-  margin: 12px 0 18px;
+  margin: 0 0 18px;
   font-size: 28px;
 }
 
 .line-editor {
   border: 1px solid var(--ink);
   background: #fff;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .line-editor-head,
 .line-editor-row {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 110px 140px 150px 46px;
+  grid-template-columns: 42px minmax(320px, 1fr) 90px 110px 130px 42px;
   align-items: stretch;
+  min-width: 734px;
+  width: 100%;
 }
 
 .line-editor-head {
@@ -665,6 +674,8 @@ button.danger {
   border-right: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
   border-radius: 0;
+  min-width: 0;
+  width: auto;
 }
 
 .line-editor-head span {
@@ -672,7 +683,7 @@ button.danger {
 }
 
 .line-editor-head span:last-child,
-.line-editor-row button {
+.line-editor-row button:last-child {
   border-right: 0;
 }
 
@@ -685,6 +696,7 @@ button.danger {
 .line-editor-row input {
   min-height: 42px;
   padding: 8px;
+  background: #fff;
 }
 
 .line-editor-row input[name="itemQty"],
@@ -698,6 +710,24 @@ button.danger {
   align-items: center;
   justify-content: center;
   padding: 8px;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--muted);
+  background: #fff;
+  font-size: 16px;
+}
+
+.line-editor-row.dragging {
+  opacity: .55;
+  background: #fff7db;
+}
+
+.line-editor-row.dragging input,
+.line-editor-row.dragging output,
+.line-editor-row.dragging button {
+  background: #fff7db;
 }
 
 .line-editor-tools {
@@ -855,5 +885,22 @@ button.danger {
   }
   .audit-hero button {
     width: 100%;
+  }
+  dialog {
+    width: min(760px, calc(100vw - 24px));
+  }
+  .invoice-edit-head {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .invoice-edit-meta {
+    justify-self: stretch;
+    width: 100%;
+  }
+  .invoice-edit-meta h3 {
+    text-align: left;
+  }
+  .invoice-edit-bill {
+    max-width: none;
   }
 }

@@ -599,7 +599,7 @@ function editorFields(mode, item) {
       <div class="invoice-edit-section full">
         <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
         <div class="line-editor" id="line-editor">
-          <div class="line-editor-head"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>
+          <div class="line-editor-head"><span></span><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>
           <div id="line-editor-rows">
             ${lineEditorRows(item.items || [])}
           </div>
@@ -653,7 +653,8 @@ function lineEditorRows(items) {
 
 function lineEditorRow(item = {}) {
   return `
-    <div class="line-editor-row">
+    <div class="line-editor-row" draggable="true">
+      <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
       <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
       <input name="itemQty" aria-label="Quantity" type="number" step="0.01" min="0" value="${escapeHtml(item.qty ?? 1)}">
       <input name="itemRate" aria-label="Rate" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
@@ -1071,6 +1072,31 @@ document.addEventListener("change", event => {
     if (address) address.innerHTML = lines(client?.billTo || client?.name || "Select a client");
   }
   if (event.target.closest("#line-editor-rows")) updateEditorTotal();
+});
+
+document.addEventListener("dragstart", event => {
+  const row = event.target.closest?.(".line-editor-row");
+  if (!row) return;
+  row.classList.add("dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", "");
+});
+
+document.addEventListener("dragover", event => {
+  const rowsContainer = event.target.closest?.("#line-editor-rows");
+  if (!rowsContainer) return;
+  event.preventDefault();
+  const dragging = rowsContainer.querySelector(".dragging");
+  const targetRow = event.target.closest(".line-editor-row");
+  if (!dragging || !targetRow || dragging === targetRow) return;
+  const targetBox = targetRow.getBoundingClientRect();
+  const afterTarget = event.clientY > targetBox.top + targetBox.height / 2;
+  rowsContainer.insertBefore(dragging, afterTarget ? targetRow.nextSibling : targetRow);
+});
+
+document.addEventListener("dragend", event => {
+  const row = event.target.closest?.(".line-editor-row");
+  if (row) row.classList.remove("dragging");
 });
 
 document.querySelectorAll(".nav-link").forEach(button => button.addEventListener("click", () => setView(button.dataset.view)));
