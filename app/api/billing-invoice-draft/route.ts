@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { inflateSync, deflateSync } from "node:zlib";
 import { verifyBillingSession } from "../../billing/billingAuth";
 
 const GRAPH_ROOT = "https://graph.microsoft.com/v1.0";
@@ -70,6 +73,10 @@ function text(value: unknown) {
   return String(value ?? "").replace(/[()\\]/g, "\\$&");
 }
 
+function pdfByteLength(value: string) {
+  return Buffer.byteLength(value, "latin1");
+}
+
 function money(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -85,12 +92,106 @@ function invoiceTotal(invoice: InvoicePayload) {
   );
 }
 
+function paethPredictor(left: number, above: number, upperLeft: number) {
+  const p = left + above - upperLeft;
+  const pa = Math.abs(p - left);
+  const pb = Math.abs(p - above);
+  const pc = Math.abs(p - upperLeft);
+  if (pa <= pb && pa <= pc) return left;
+  if (pb <= pc) return above;
+  return upperLeft;
+}
+
+function pdfLogoImageObject() {
+  const png = readFileSync(join(process.cwd(), "public/billing-app/assets/gsv-logo.png"));
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let colorType = 0;
+  const idat: Buffer[] = [];
+
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const data = png.subarray(dataStart, dataEnd);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      const bitDepth = data[8];
+      colorType = data[9];
+      const interlace = data[12];
+      if (bitDepth !== 8 || colorType !== 6 || interlace !== 0) {
+        throw new Error("Unsupported logo PNG format.");
+      }
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    offset = dataEnd + 4;
+  }
+
+  if (!width || !height || colorType !== 6 || !idat.length) {
+    throw new Error("Could not read logo PNG.");
+  }
+
+  const inflated = inflateSync(Buffer.concat(idat));
+  const bytesPerPixel = 4;
+  const stride = width * bytesPerPixel;
+  const raw = Buffer.alloc(width * height * bytesPerPixel);
+  let source = 0;
+  let target = 0;
+  for (let y = 0; y < height; y += 1) {
+    const filter = inflated[source];
+    source += 1;
+    for (let x = 0; x < stride; x += 1) {
+      const value = inflated[source + x];
+      const left = x >= bytesPerPixel ? raw[target + x - bytesPerPixel] : 0;
+      const above = y > 0 ? raw[target + x - stride] : 0;
+      const upperLeft = y > 0 && x >= bytesPerPixel ? raw[target + x - stride - bytesPerPixel] : 0;
+      if (filter === 0) raw[target + x] = value;
+      else if (filter === 1) raw[target + x] = (value + left) & 255;
+      else if (filter === 2) raw[target + x] = (value + above) & 255;
+      else if (filter === 3) raw[target + x] = (value + Math.floor((left + above) / 2)) & 255;
+      else if (filter === 4) raw[target + x] = (value + paethPredictor(left, above, upperLeft)) & 255;
+      else throw new Error("Unsupported logo PNG filter.");
+    }
+    source += stride;
+    target += stride;
+  }
+
+  const imageWidth = 1200;
+  const imageHeight = Math.round(height * (imageWidth / width));
+  const rgb = Buffer.alloc(imageWidth * imageHeight * 3);
+  for (let targetY = 0; targetY < imageHeight; targetY += 1) {
+    const sourceY = Math.min(height - 1, Math.floor(targetY * height / imageHeight));
+    for (let targetX = 0; targetX < imageWidth; targetX += 1) {
+      const sourceX = Math.min(width - 1, Math.floor(targetX * width / imageWidth));
+      const sourceIndex = (sourceY * width + sourceX) * 4;
+      const targetIndex = (targetY * imageWidth + targetX) * 3;
+      const alpha = raw[sourceIndex + 3] / 255;
+      rgb[targetIndex] = Math.round(raw[sourceIndex] * alpha + 255 * (1 - alpha));
+      rgb[targetIndex + 1] = Math.round(raw[sourceIndex + 1] * alpha + 255 * (1 - alpha));
+      rgb[targetIndex + 2] = Math.round(raw[sourceIndex + 2] * alpha + 255 * (1 - alpha));
+    }
+  }
+
+  const stream = deflateSync(rgb);
+  return {
+    width: imageWidth,
+    height: imageHeight,
+    object: `<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${stream.length} >>\nstream\n${stream.toString("binary")}\nendstream`,
+  };
+}
+
 function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const total = Number(invoice.total ?? invoiceTotal(invoice));
+  const logo = pdfLogoImageObject();
   const page = { width: 612, height: 792 };
   const ink = "0.11 0.15 0.19";
   const gold = "1 0.78 0.17";
-  const goldText = "0.64 0.44 0";
   const headerFill = "0.89 0.92 0.95";
   const line = "0.07 0.09 0.12";
   const margin = 40;
@@ -133,20 +234,14 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
     return `q ${stroke} RG ${width} w ${x} ${y1} m ${x} ${y2} l S Q\n`;
   }
 
-  function brandMark(x: number, y: number) {
-    // A compact gold line mark keeps the attachment on-brand without relying on browser-only assets.
-    let mark = "";
-    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 45} m ${x + 38} ${y + 70} l ${x + 68} ${y + 45} l ${x + 96} ${y + 62} l ${x + 132} ${y + 42} l S Q\n`;
-    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 32} m ${x + 132} ${y + 32} l S Q\n`;
-    mark += `q ${goldText} RG 3 w ${x + 8} ${y + 20} m ${x + 55} ${y + 20} l ${x + 70} ${y + 8} l ${x + 120} ${y + 8} l S Q\n`;
-    mark += drawText("GOLDEN STATE VISIONS", x, y - 18, 18, goldText, "F2");
-    mark += drawText("MANAGED IT SERVICES & CYBERSECURITY", x + 16, y - 34, 7, goldText);
-    return mark;
+  function drawLogo(x: number, y: number, width: number) {
+    const height = width * (logo.height / logo.width);
+    return `q ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
   }
 
   let content = "";
   content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
-  content += brandMark(margin, 675);
+  content += drawLogo(margin, 650, 240);
   content += drawText("info@gsvisions.com", margin, 593, 12);
   content += drawText("(916) 432-3373", margin, 565, 12);
 
@@ -228,25 +323,26 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> /XObject << /Im1 6 0 R >> >> /Contents 7 0 R >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
-    `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`,
+    logo.object,
+    `<< /Length ${pdfByteLength(stream)} >>\nstream\n${stream}\nendstream`,
   ];
 
   let pdf = "%PDF-1.4\n";
   const offsets = [0];
   objects.forEach((object, index) => {
-    offsets.push(Buffer.byteLength(pdf));
+    offsets.push(pdfByteLength(pdf));
     pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
   });
-  const xref = Buffer.byteLength(pdf);
+  const xref = pdfByteLength(pdf);
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
   offsets.slice(1).forEach((offset) => {
     pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
   });
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return Buffer.from(pdf, "utf8");
+  return Buffer.from(pdf, "latin1");
 }
 
 export async function POST(request: Request) {
