@@ -427,8 +427,21 @@ function createInvoiceFromAudit() {
 
 function renderInvoices() {
   const filter = document.getElementById("invoice-filter").value;
+  const clientFilter = document.getElementById("invoice-client-filter").value;
+  const dateFrom = document.getElementById("invoice-date-from").value;
+  const dateTo = document.getElementById("invoice-date-to").value;
+  const search = document.getElementById("invoice-search").value.trim().toLowerCase();
+  renderInvoiceClientFilter(clientFilter);
   const rows = state.invoices
     .filter(inv => filter === "all" || computedInvoiceStatus(inv) === filter)
+    .filter(inv => !clientFilter || inv.clientId === clientFilter)
+    .filter(inv => !dateFrom || inv.date >= dateFrom)
+    .filter(inv => !dateTo || inv.date <= dateTo)
+    .filter(inv => {
+      if (!search) return true;
+      return [inv.number, inv.type, clientName(inv.clientId), inv.status]
+        .some(value => String(value || "").toLowerCase().includes(search));
+    })
     .sort((a, b) => b.date.localeCompare(a.date))
     .map(inv => {
       const status = computedInvoiceStatus(inv);
@@ -446,6 +459,7 @@ function renderInvoices() {
           <td>
             <div class="row-actions">
               <button data-preview-invoice="${inv.id}">Preview</button>
+              <button data-pdf-invoice="${inv.id}">PDF</button>
               <button data-edit-invoice="${inv.id}">Edit</button>
               <button data-pay-invoice="${inv.id}">Pay</button>
               <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
@@ -460,6 +474,17 @@ function renderInvoices() {
       <tbody>${rows || `<tr><td colspan="8">No invoices found.</td></tr>`}</tbody>
     </table>
   `;
+}
+
+function renderInvoiceClientFilter(selected = "") {
+  const selectNode = document.getElementById("invoice-client-filter");
+  if (!selectNode) return;
+  const options = [
+    `<option value="">All companies</option>`,
+    ...state.clients.map(client => `<option value="${client.id}" ${selected === client.id ? "selected" : ""}>${escapeHtml(client.name)}</option>`)
+  ].join("");
+  if (selectNode.innerHTML !== options) selectNode.innerHTML = options;
+  selectNode.value = selected;
 }
 
 function renderQuotes() {
@@ -535,10 +560,12 @@ function openEditor(mode, existing = {}) {
   const dialog = document.getElementById("editor");
   const fields = document.getElementById("editor-fields");
   const deleteButton = document.getElementById("editor-delete");
+  const pdfButton = document.getElementById("editor-pdf");
   document.getElementById("editor-title").textContent = editorTitle(mode);
   fields.className = mode === "invoice" || mode === "quote" ? "form-grid invoice-editor" : "form-grid";
   fields.innerHTML = editorFields(mode, existing);
   deleteButton.hidden = !(mode === "invoice" && existing.id);
+  pdfButton.hidden = mode !== "invoice";
   dialog.showModal();
   updateEditorTotal();
 }
@@ -790,6 +817,23 @@ function deleteInvoice(invoiceId) {
   render();
 }
 
+function invoiceFromEditor() {
+  const form = document.getElementById("editor-form");
+  const data = Object.fromEntries(new FormData(form).entries());
+  return {
+    id: editing.id || id("preview"),
+    number: data.number,
+    clientId: data.clientId,
+    date: data.date,
+    dueDate: data.dueDate,
+    month: data.date?.slice(0, 7),
+    status: data.status,
+    type: "Manual",
+    items: editorLineItems(),
+    notes: data.notes
+  };
+}
+
 function generateMonthlyInvoice() {
   const client = state.clients.find(c => c.status === "active") || state.clients[0];
   if (!client) return;
@@ -851,6 +895,16 @@ function previewDocument(type, idValue) {
   document.getElementById("document-preview").showModal();
 }
 
+function exportDocumentPdf(type, doc) {
+  if (!doc) return;
+  const client = clientById(doc.clientId);
+  document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
+  document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  const preview = document.getElementById("document-preview");
+  if (!preview.open) preview.showModal();
+  window.setTimeout(() => window.print(), 150);
+}
+
 function renderDocument(type, doc, client) {
   const title = type === "quote" ? "QUOTE" : "INVOICE";
   return `
@@ -895,6 +949,14 @@ function renderDocument(type, doc, client) {
         </table>
         <div class="doc-total"><span>Total Due</span><strong>${money.format(invoiceTotal(doc))}</strong></div>
       </div>
+      ${doc.notes ? `
+        <div class="doc-block">
+          <table class="doc-table">
+            <thead><tr><th>Notes</th></tr></thead>
+            <tbody><tr><td>${lines(doc.notes)}</td></tr></tbody>
+          </table>
+        </div>
+      ` : ""}
     </div>
   `;
 }
@@ -1039,6 +1101,7 @@ document.addEventListener("click", event => {
     updateEditorTotal();
   }
   if (target.id === "editor-delete" && editing.mode === "invoice" && editing.id) deleteInvoice(editing.id);
+  if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "print-document") window.print();
@@ -1057,8 +1120,17 @@ document.addEventListener("click", event => {
     openEditor("payment", { invoiceId: inv.id, date: today, method: "Check", amount: invoiceTotal(inv) - paidAmount(inv.id) });
   }
   if (target.dataset.previewInvoice) previewDocument("invoice", target.dataset.previewInvoice);
+  if (target.dataset.pdfInvoice) exportDocumentPdf("invoice", state.invoices.find(inv => inv.id === target.dataset.pdfInvoice));
   if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote);
   if (target.dataset.convertQuote) convertQuote(target.dataset.convertQuote);
+  if (target.id === "invoice-clear-filters") {
+    document.getElementById("invoice-client-filter").value = "";
+    document.getElementById("invoice-filter").value = "all";
+    document.getElementById("invoice-date-from").value = "";
+    document.getElementById("invoice-date-to").value = "";
+    document.getElementById("invoice-search").value = "";
+    renderInvoices();
+  }
 });
 
 document.addEventListener("input", event => {
@@ -1100,7 +1172,10 @@ document.addEventListener("dragend", event => {
 });
 
 document.querySelectorAll(".nav-link").forEach(button => button.addEventListener("click", () => setView(button.dataset.view)));
-document.getElementById("invoice-filter").addEventListener("change", renderInvoices);
+["invoice-filter", "invoice-client-filter", "invoice-date-from", "invoice-date-to"].forEach(idValue => {
+  document.getElementById(idValue).addEventListener("change", renderInvoices);
+});
+document.getElementById("invoice-search").addEventListener("input", renderInvoices);
 document.getElementById("audit-client").addEventListener("change", renderAudit365);
 document.getElementById("audit-month").value = today.slice(0, 7);
 document.getElementById("audit-csv").addEventListener("change", event => {

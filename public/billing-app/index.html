@@ -185,6 +185,16 @@
       <div class="section-head">
         <h2>Invoices</h2>
         <div class="toolbar">
+          <button id="generate-monthly" class="primary">Invoice Latest 365 Audit</button>
+        </div>
+      </div>
+      <div class="filter-panel">
+        <div class="field">
+          <label for="invoice-client-filter">Company</label>
+          <select id="invoice-client-filter"></select>
+        </div>
+        <div class="field">
+          <label for="invoice-filter">Status</label>
           <select id="invoice-filter">
             <option value="all">All invoices</option>
             <option value="draft">Draft</option>
@@ -192,8 +202,20 @@
             <option value="paid">Paid</option>
             <option value="overdue">Overdue</option>
           </select>
-          <button id="generate-monthly" class="primary">Invoice Latest 365 Audit</button>
         </div>
+        <div class="field">
+          <label for="invoice-date-from">From</label>
+          <input id="invoice-date-from" type="date">
+        </div>
+        <div class="field">
+          <label for="invoice-date-to">To</label>
+          <input id="invoice-date-to" type="date">
+        </div>
+        <div class="field grow">
+          <label for="invoice-search">Search</label>
+          <input id="invoice-search" type="search" placeholder="Invoice #, company, or type">
+        </div>
+        <button id="invoice-clear-filters" type="button">Clear</button>
       </div>
       <div id="invoice-list" class="table-card"></div>
     </section>
@@ -239,6 +261,7 @@
       <div id="editor-fields" class="form-grid"></div>
       <div class="modal-actions" id="editor-actions">
         <button id="editor-delete" class="danger ghost" type="button" hidden>Delete Invoice</button>
+        <button id="editor-pdf" type="button" hidden>Export PDF</button>
         <button value="cancel">Cancel</button>
         <button id="editor-save" value="default" class="primary">Save</button>
       </div>

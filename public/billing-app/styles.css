@@ -402,6 +402,36 @@ section {
   margin-bottom: 14px;
 }
 
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.1fr) 150px 150px 150px minmax(220px, 1.4fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.filter-panel .field {
+  gap: 4px;
+}
+
+.filter-panel label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.filter-panel input,
+.filter-panel select {
+  min-height: 36px;
+}
+
+.filter-panel button {
+  white-space: nowrap;
+}
+
 .stack {
   display: grid;
   gap: 10px;
@@ -852,7 +882,7 @@ button.danger {
     display: block;
     background: #fff;
   }
-  .sidebar, .topbar, dialog .modal-head, dialog .modal-actions {
+  .sidebar, .topbar, #editor, dialog .modal-head, dialog .modal-actions {
     display: none;
   }
   dialog, #document-preview {
@@ -873,7 +903,7 @@ button.danger {
   .sidebar {
     min-height: auto;
   }
-  .metric-grid, .split, .audit-steps, .audit-controls {
+  .metric-grid, .split, .audit-steps, .audit-controls, .filter-panel {
     grid-template-columns: 1fr;
   }
   .audit-step {
