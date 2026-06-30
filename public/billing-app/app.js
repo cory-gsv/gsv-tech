@@ -884,29 +884,39 @@ function markInvoiceSent(invoiceId) {
   render();
 }
 
-function sendInvoice(invoiceId, invoiceOverride = null) {
+async function sendInvoice(invoiceId, invoiceOverride = null) {
   const invoice = invoiceOverride || state.invoices.find(inv => inv.id === invoiceId);
   if (!invoice) return;
   const client = clientById(invoice.clientId);
-  const to = clientEmail(client);
-  const subject = `Invoice ${invoice.number} from Golden State Visions`;
-  const body = [
-    `Hi ${client?.name || ""},`,
-    "",
-    `Invoice ${invoice.number} is ready.`,
-    `Total due: ${money.format(invoiceTotal(invoice))}`,
-    `Due date: ${formatDate(invoice.dueDate)}`,
-    "",
-    "Please remit payment by check.",
-    "",
-    "Thank you,",
-    "Golden State Visions",
-    "info@gsvisions.com",
-    "(916) 432-3373"
-  ].join("\n");
-  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
-  window.setTimeout(() => {
+
+  if (!clientEmail(client)) {
+    window.alert("This client does not have an email address saved.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/billing-invoice-draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        invoice: {
+          number: invoice.number,
+          date: invoice.date,
+          dueDate: invoice.dueDate,
+          month: invoice.month,
+          items: invoice.items,
+          total: invoiceTotal(invoice)
+        },
+        client: {
+          name: client?.name || "",
+          email: clientEmail(client),
+          billTo: client?.billTo || ""
+        }
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Outlook draft creation failed.");
+    if (data.webLink) window.open(data.webLink, "_blank", "noopener");
     if (!window.confirm(`Mark invoice ${invoice.number} as sent?`)) return;
     if (invoiceOverride) {
       invoice.status = "sent";
@@ -919,7 +929,9 @@ function sendInvoice(invoiceId, invoiceOverride = null) {
       return;
     }
     markInvoiceSent(invoice.id);
-  }, 500);
+  } catch (error) {
+    window.alert(error instanceof Error ? error.message : "Outlook draft creation failed.");
+  }
 }
 
 function invoiceFromEditor() {
