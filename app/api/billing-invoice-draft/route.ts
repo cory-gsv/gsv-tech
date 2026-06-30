@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     const pdf = generateInvoicePdf(invoice, client);
     const subject = `Invoice ${invoice.number || ""} from Golden State Visions`;
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
-    const senderName = "Golden State Visions Billing";
+    const senderName = "Golden State Visions";
     const body = [
       `<p>Hi ${client.name || ""},</p>`,
       `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
