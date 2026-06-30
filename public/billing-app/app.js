@@ -47,8 +47,6 @@ const defaultData = {
         copilot: 0
       },
       ninjaOnePricing: [
-        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 10, unitCost: 7.1, active: true },
-        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "fixed", qty: 18, unitCost: 4.6, active: true },
         { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
         { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
         { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
@@ -194,6 +192,15 @@ function migrateDefaultRecords() {
         changed = true;
       }
     }
+    if (client.id === "client_nyssco" && Array.isArray(client.ninjaOnePricing)) {
+      const filteredNinjaOnePricing = client.ninjaOnePricing.filter(rule => {
+        return !/sentinelone complete|bitdefender gravityzone/i.test(rule.name || "");
+      });
+      if (filteredNinjaOnePricing.length !== client.ninjaOnePricing.length) {
+        client.ninjaOnePricing = filteredNinjaOnePricing;
+        changed = true;
+      }
+    }
   });
   if (changed) saveState();
 }
@@ -261,8 +268,9 @@ function manualCostTotal(clientId) {
 }
 
 function ninjaOneAuditRows(clientId, month = today.slice(0, 7)) {
+  const client = clientById(clientId);
   const audit = latestNinjaOneAudit(clientId, month);
-  if (audit?.pricingRows?.length) return audit.pricingRows;
+  if (audit && Array.isArray(client?.ninjaOnePricing)) return priceNinjaOneRows(client, audit);
   return activeClientCosts(clientId).filter(cost => /ninja/i.test(`${cost.source} ${cost.name}`));
 }
 
@@ -486,10 +494,34 @@ function clientDetailDashboard(client) {
           </div>
         </section>
       </div>
+      ${ninjaOne ? `
+        <div class="section-head table-heading"><h2>NinjaOne Audit Summary</h2></div>
+        <div class="metric-grid client-metrics">
+          <article class="metric"><span>Total Devices Seen</span><strong>${ninjaOne.totals?.devices || 0}</strong></article>
+          <article class="metric"><span>Endpoint Devices</span><strong>${ninjaOne.totals?.endpoints || 0}</strong></article>
+          <article class="metric"><span>Server / VM Devices</span><strong>${ninjaOne.totals?.servers || 0}</strong></article>
+          <article class="metric"><span>Other Devices</span><strong>${ninjaOne.totals?.other || 0}</strong></article>
+          <article class="metric"><span>Offline</span><strong>${ninjaOne.totals?.offline || 0}</strong></article>
+        </div>
+        <div class="split">
+          <section>
+            <div class="item">
+              <div class="item-line"><strong>Device classes returned by NinjaOne</strong></div>
+              <div class="subtle">${countList(ninjaOne.totals?.byClass || {})}</div>
+            </div>
+          </section>
+          <section>
+            <div class="item">
+              <div class="item-line"><strong>Policies returned by NinjaOne</strong></div>
+              <div class="subtle">${countList(ninjaOne.totals?.byPolicy || {})}</div>
+            </div>
+          </section>
+        </div>
+      ` : ""}
       <div class="section-head table-heading">
         <div>
           <h2>Tracked Vendor Costs</h2>
-          <p class="subtle">Pax8 is pulled from Pax8. NinjaOne is calculated from this client&apos;s editable internal-cost pricing rules and the latest NinjaOne audit counts.</p>
+          <p class="subtle">Pax8 is pulled from Pax8. NinjaOne costs below are pricing rules only. They are not proof that SentinelOne, Bitdefender, or backup is installed unless the NinjaOne audit summary/devices prove it.</p>
         </div>
       </div>
       <div class="table-card">
@@ -500,7 +532,7 @@ function clientDetailDashboard(client) {
               <tr><td>${escapeHtml(row.productName)}</td><td>Pax8</td><td class="num">${row.quantity}</td><td class="num">${costMoney.format(row.unitPartnerCost || 0)}</td><td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td></tr>
             `).join("")}
             ${ninjaOneAuditRows(client.id, month).map(row => `
-              <tr><td>${escapeHtml(row.name)}</td><td>NinjaOne</td><td class="num">${row.qty}</td><td class="num">${costMoney.format(row.unitCost)}</td><td class="num">${costMoney.format(row.amount)}</td></tr>
+              <tr><td>${escapeHtml(row.name)}</td><td>${row.qtySource === "fixed" ? "NinjaOne pricing rule" : "NinjaOne audit count"}</td><td class="num">${row.qty}</td><td class="num">${costMoney.format(row.unitCost)}</td><td class="num">${costMoney.format(row.amount)}</td></tr>
             `).join("")}
             ${costs.filter(cost => !/ninja/i.test(`${cost.source} ${cost.name}`)).map(cost => `
               <tr><td>${escapeHtml(cost.name)}</td><td>${escapeHtml(cost.source)}</td><td class="num">${cost.qty}</td><td class="num">${costMoney.format(cost.unitCost)}</td><td class="num">${costMoney.format(cost.amount)}</td></tr>
@@ -622,6 +654,15 @@ function latestNinjaOneAudit(clientId, month = "") {
     .filter(audit => (!clientId || audit.clientId === clientId) && (!month || audit.month === month))
     .slice()
     .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
+}
+
+function countList(counts = {}) {
+  const entries = Object.entries(counts)
+    .filter(([, count]) => Number(count || 0) > 0)
+    .sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0));
+  return entries.length
+    ? entries.map(([label, count]) => `${escapeHtml(label)}: ${count}`).join("<br>")
+    : "None found";
 }
 
 function ninjaOneQtyForRule(rule, audit) {
