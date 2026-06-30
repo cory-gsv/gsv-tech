@@ -503,7 +503,7 @@ dialog {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0;
-  width: min(760px, calc(100vw - 32px));
+  width: min(980px, calc(100vw - 32px));
   color: var(--ink);
 }
 
@@ -565,6 +565,167 @@ textarea {
   gap: 10px;
   padding: 16px;
   border-top: 1px solid var(--line);
+}
+
+#editor-delete {
+  margin-right: auto;
+}
+
+.danger {
+  color: #9f2f24;
+}
+
+button.danger {
+  border-color: #e2b8b2;
+}
+
+.invoice-editor {
+  gap: 18px;
+}
+
+.invoice-edit-head {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 420px);
+  gap: 32px;
+  align-items: start;
+}
+
+.invoice-edit-logo {
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.invoice-edit-contact {
+  margin-top: 18px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.invoice-edit-contact p {
+  margin: 0 0 8px;
+}
+
+.invoice-edit-meta {
+  display: grid;
+  gap: 10px;
+  justify-self: end;
+  width: min(100%, 420px);
+}
+
+.invoice-edit-meta h3 {
+  margin: 0 0 10px;
+  text-align: right;
+  font-size: 32px;
+  letter-spacing: 0;
+}
+
+.invoice-edit-bill {
+  max-width: 560px;
+}
+
+.invoice-edit-address {
+  border: 1px solid var(--ink);
+  border-top: 0;
+  padding: 10px;
+  min-height: 110px;
+  line-height: 1.45;
+  background: #fff;
+}
+
+.invoice-edit-section h3 {
+  margin: 12px 0 18px;
+  font-size: 28px;
+}
+
+.line-editor {
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+
+.line-editor-head,
+.line-editor-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 110px 140px 150px 46px;
+  align-items: stretch;
+}
+
+.line-editor-head {
+  background: var(--soft);
+  font-weight: 700;
+  text-align: center;
+}
+
+.line-editor-head span,
+.line-editor-row input,
+.line-editor-row output,
+.line-editor-row button {
+  border: 0;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+}
+
+.line-editor-head span {
+  padding: 9px 8px;
+}
+
+.line-editor-head span:last-child,
+.line-editor-row button {
+  border-right: 0;
+}
+
+.line-editor-row:last-child input,
+.line-editor-row:last-child output,
+.line-editor-row:last-child button {
+  border-bottom: 0;
+}
+
+.line-editor-row input {
+  min-height: 42px;
+  padding: 8px;
+}
+
+.line-editor-row input[name="itemQty"],
+.line-editor-row input[name="itemRate"],
+.line-editor-row output {
+  text-align: center;
+}
+
+.line-editor-row output {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.line-editor-tools {
+  margin-top: 10px;
+}
+
+.invoice-edit-total {
+  display: grid;
+  grid-template-columns: 1fr 170px;
+  margin-top: 18px;
+  border: 1px solid var(--ink);
+  background: var(--gold);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.invoice-edit-total span,
+.invoice-edit-total strong {
+  padding: 12px;
+}
+
+.invoice-edit-total span {
+  text-align: right;
+  border-right: 1px solid var(--ink);
+}
+
+.invoice-edit-total strong {
+  text-align: center;
 }
 
 #document-preview {

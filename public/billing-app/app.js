@@ -448,6 +448,7 @@ function renderInvoices() {
               <button data-preview-invoice="${inv.id}">Preview</button>
               <button data-edit-invoice="${inv.id}">Edit</button>
               <button data-pay-invoice="${inv.id}">Pay</button>
+              <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
             </div>
           </td>
         </tr>
@@ -533,9 +534,13 @@ function openEditor(mode, existing = {}) {
   editing = { mode, id: existing.id };
   const dialog = document.getElementById("editor");
   const fields = document.getElementById("editor-fields");
+  const deleteButton = document.getElementById("editor-delete");
   document.getElementById("editor-title").textContent = editorTitle(mode);
+  fields.className = mode === "invoice" || mode === "quote" ? "form-grid invoice-editor" : "form-grid";
   fields.innerHTML = editorFields(mode, existing);
+  deleteButton.hidden = !(mode === "invoice" && existing.id);
   dialog.showModal();
+  updateEditorTotal();
 }
 
 function editorTitle(mode) {
@@ -569,13 +574,41 @@ function editorFields(mode, item) {
   }
   if (mode === "invoice" || mode === "quote") {
     const numberPrefix = mode === "invoice" ? "GSV-INV" : "GSV-Q";
+    const title = typeLabel(mode);
     return `
-      ${select("clientId", "Client", clientOptions(item.clientId), false)}
-      ${field("number", mode === "invoice" ? "Invoice #" : "Quote #", item.number || `${numberPrefix}-${String(Date.now()).slice(-6)}`)}
-      ${field("date", "Date", item.date || today, "date")}
-      ${mode === "invoice" ? field("dueDate", "Due Date", item.dueDate || addDays(today, 15), "date") : field("title", "Project / Quote Title", item.title || "")}
-      ${select("status", "Status", statusOptions(mode, item.status), false)}
-      ${textarea("itemsText", "Line Items: description | qty | rate", itemsToText(item.items || []), true)}
+      <div class="invoice-edit-head full">
+        <div>
+          <img class="invoice-edit-logo" src="assets/gsv-logo.png" alt="Golden State Visions">
+          <div class="invoice-edit-contact">
+            <p>info@gsvisions.com</p>
+            <p>(916) 432-3373</p>
+          </div>
+        </div>
+        <div class="invoice-edit-meta">
+          <h3>${title}</h3>
+          ${field("number", mode === "invoice" ? "Invoice #" : "Quote #", item.number || `${numberPrefix}-${String(Date.now()).slice(-6)}`)}
+          ${field("date", "Date", item.date || today, "date")}
+          ${mode === "invoice" ? field("dueDate", "Due Date", item.dueDate || addDays(today, 15), "date") : field("title", "Project / Quote Title", item.title || "")}
+          ${select("status", "Status", statusOptions(mode, item.status), false)}
+        </div>
+      </div>
+      <div class="invoice-edit-bill full">
+        ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
+        <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || "Select a client")}</div>
+      </div>
+      <div class="invoice-edit-section full">
+        <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
+        <div class="line-editor" id="line-editor">
+          <div class="line-editor-head"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>
+          <div id="line-editor-rows">
+            ${lineEditorRows(item.items || [])}
+          </div>
+        </div>
+        <div class="line-editor-tools">
+          <button id="add-line-item" type="button">Add Row</button>
+        </div>
+        <div class="invoice-edit-total"><span>Total Due</span><strong id="editor-total">$0</strong></div>
+      </div>
       ${textarea("notes", "Notes", item.notes || "", true)}
     `;
   }
@@ -597,6 +630,10 @@ function statusOptions(mode, selected) {
   return values.map(v => `<option value="${v}" ${selected === v ? "selected" : ""}>${v}</option>`).join("");
 }
 
+function typeLabel(mode) {
+  return mode === "quote" ? "QUOTE" : "INVOICE";
+}
+
 function field(name, label, value, type = "text") {
   return `<div class="field"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`;
 }
@@ -607,6 +644,47 @@ function textarea(name, label, value, full = false) {
 
 function select(name, label, options, full = false) {
   return `<div class="field ${full ? "full" : ""}"><label for="${name}">${label}</label><select id="${name}" name="${name}">${options}</select></div>`;
+}
+
+function lineEditorRows(items) {
+  const source = items.length ? items : [{ description: "", qty: 1, rate: 0 }];
+  return source.map(item => lineEditorRow(item)).join("");
+}
+
+function lineEditorRow(item = {}) {
+  return `
+    <div class="line-editor-row">
+      <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
+      <input name="itemQty" aria-label="Quantity" type="number" step="0.01" min="0" value="${escapeHtml(item.qty ?? 1)}">
+      <input name="itemRate" aria-label="Rate" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
+      <output class="line-amount">${money.format(Number(item.qty || 0) * Number(item.rate || 0))}</output>
+      <button type="button" class="icon danger" data-remove-line aria-label="Remove line item">×</button>
+    </div>
+  `;
+}
+
+function editorLineItems() {
+  return [...document.querySelectorAll("#line-editor-rows .line-editor-row")]
+    .map(row => ({
+      description: row.querySelector('[name="itemDescription"]').value.trim(),
+      qty: Number(row.querySelector('[name="itemQty"]').value || 0),
+      rate: Number(row.querySelector('[name="itemRate"]').value || 0)
+    }))
+    .filter(item => item.description || item.qty || item.rate);
+}
+
+function updateEditorTotal() {
+  const totalNode = document.getElementById("editor-total");
+  if (!totalNode) return;
+  let total = 0;
+  document.querySelectorAll("#line-editor-rows .line-editor-row").forEach(row => {
+    const qty = Number(row.querySelector('[name="itemQty"]').value || 0);
+    const rate = Number(row.querySelector('[name="itemRate"]').value || 0);
+    const amount = qty * rate;
+    row.querySelector(".line-amount").textContent = money.format(amount);
+    total += amount;
+  });
+  totalNode.textContent = money.format(total);
 }
 
 function itemsToText(items) {
@@ -652,7 +730,7 @@ function saveEditor() {
       month: data.date?.slice(0, 7),
       status: data.status,
       type: "Manual",
-      items: textToItems(data.itemsText),
+      items: editorLineItems(),
       notes: data.notes
     };
     upsert(state.invoices, invoice);
@@ -665,7 +743,7 @@ function saveEditor() {
       date: data.date,
       title: data.title,
       status: data.status,
-      items: textToItems(data.itemsText),
+      items: editorLineItems(),
       notes: data.notes
     };
     upsert(state.quotes, quote);
@@ -693,6 +771,22 @@ function upsert(collection, item) {
   const index = collection.findIndex(existing => existing.id === item.id);
   if (index >= 0) collection[index] = item;
   else collection.push(item);
+}
+
+function deleteInvoice(invoiceId) {
+  const invoice = state.invoices.find(inv => inv.id === invoiceId);
+  if (!invoice) return;
+  const ok = window.confirm(`Delete invoice ${invoice.number}? This will also remove payments linked to this invoice.`);
+  if (!ok) return;
+  state.invoices = state.invoices.filter(inv => inv.id !== invoiceId);
+  state.payments = state.payments.filter(payment => payment.invoiceId !== invoiceId);
+  state.audits365.forEach(audit => {
+    if (audit.invoiceId === invoiceId) audit.invoiceId = "";
+  });
+  saveState();
+  const editor = document.getElementById("editor");
+  if (editor.open) editor.close();
+  render();
 }
 
 function generateMonthlyInvoice() {
@@ -933,6 +1027,17 @@ document.addEventListener("click", event => {
   if (target.id === "generate-monthly") generateMonthlyInvoice();
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
   if (target.id === "audit-pull-graph") pullMicrosoft365Audit();
+  if (target.id === "add-line-item") {
+    document.getElementById("line-editor-rows")?.insertAdjacentHTML("beforeend", lineEditorRow());
+    updateEditorTotal();
+  }
+  if (target.dataset.removeLine !== undefined) {
+    const rows = document.querySelectorAll("#line-editor-rows .line-editor-row");
+    if (rows.length > 1) target.closest(".line-editor-row")?.remove();
+    else target.closest(".line-editor-row")?.querySelectorAll("input").forEach(input => input.value = input.name === "itemQty" ? "1" : "");
+    updateEditorTotal();
+  }
+  if (target.id === "editor-delete" && editing.mode === "invoice" && editing.id) deleteInvoice(editing.id);
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "print-document") window.print();
@@ -944,6 +1049,7 @@ document.addEventListener("click", event => {
   if (target.dataset.clientInvoice) openEditor("invoice", { clientId: target.dataset.clientInvoice, date: today, dueDate: addDays(today, 15), status: "draft", items: [] });
   if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
+  if (target.dataset.deleteInvoice) deleteInvoice(target.dataset.deleteInvoice);
   if (target.dataset.editQuote) openEditor("quote", state.quotes.find(q => q.id === target.dataset.editQuote));
   if (target.dataset.payInvoice) {
     const inv = state.invoices.find(invoice => invoice.id === target.dataset.payInvoice);
@@ -952,6 +1058,19 @@ document.addEventListener("click", event => {
   if (target.dataset.previewInvoice) previewDocument("invoice", target.dataset.previewInvoice);
   if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote);
   if (target.dataset.convertQuote) convertQuote(target.dataset.convertQuote);
+});
+
+document.addEventListener("input", event => {
+  if (event.target.closest("#line-editor-rows")) updateEditorTotal();
+});
+
+document.addEventListener("change", event => {
+  if (event.target.id === "clientId") {
+    const address = document.querySelector(".invoice-edit-address");
+    const client = clientById(event.target.value);
+    if (address) address.innerHTML = lines(client?.billTo || client?.name || "Select a client");
+  }
+  if (event.target.closest("#line-editor-rows")) updateEditorTotal();
 });
 
 document.querySelectorAll(".nav-link").forEach(button => button.addEventListener("click", () => setView(button.dataset.view)));
