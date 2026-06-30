@@ -370,7 +370,7 @@ export async function POST(request: Request) {
 
     const accessToken = await graphToken();
     const pdf = generateInvoicePdf(invoice, client);
-    const subject = `Invoice ${invoice.number || ""} from Golden State Visions`;
+    const subject = `Monthly IT Services Invoice (${invoice.number || ""})`;
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
     const senderName = "Golden State Visions";
     const body = [
