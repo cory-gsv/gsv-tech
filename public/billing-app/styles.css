@@ -687,7 +687,7 @@ button.danger {
   height: 18px;
 }
 
-.check-field:has(input:not(:checked)) + .field {
+.invoice-edit-address-grid .check-field:has(input:not(:checked)) + .field {
   display: none;
 }
 

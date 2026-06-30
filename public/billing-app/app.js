@@ -12,6 +12,7 @@ const defaultData = {
       phone: "(916) 652-1300",
       terms: "Net 15",
       status: "active",
+      m365TenantKey: "default",
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -19,6 +20,24 @@ const defaultData = {
         copilot: 30
       },
       notes: "Pays by check."
+    },
+    {
+      id: "client_nyssco",
+      name: "New York Style Sausage Company",
+      billTo: "Accounts Payable\nNew York Style Sausage Factory\n1228 Reamwood Ave\nSunnyvale, CA 94089\n408-745-7675\nap@newyorkstylesausage.com",
+      email: "ap@newyorkstylesausage.com",
+      phone: "408-745-7675",
+      terms: "Net 15",
+      status: "active",
+      licenseAuditBilling: false,
+      m365TenantKey: "nyssco",
+      mspRates: {
+        fullUser: 0,
+        lightUser: 0,
+        serviceAccount: 0,
+        copilot: 0
+      },
+      notes: "Microsoft 365 audit is visibility only for this client, not invoice generation. Ship/contact from June invoice: Pasquale Bitonti, pasquale@newyorkstylesausage.com."
     }
   ],
   serviceAgreements: [
@@ -26,7 +45,11 @@ const defaultData = {
     { id: "svc_moxie_light", clientId: "client_moxie", name: "Monthly IT (Light User)", qty: 25, rate: 20, active: true },
     { id: "svc_moxie_service", clientId: "client_moxie", name: "Monthly IT (Service Account)", qty: 1, rate: 10, active: true },
     { id: "svc_moxie_copilot", clientId: "client_moxie", name: "Copilot Add-on license billing", qty: 2, rate: 30, active: true },
-    { id: "svc_moxie_credit", clientId: "client_moxie", name: "Credit: Moxie-paid direct Microsoft licenses", qty: 1, rate: -164, active: true }
+    { id: "svc_moxie_credit", clientId: "client_moxie", name: "Credit: Moxie-paid direct Microsoft licenses", qty: 1, rate: -164, active: true },
+    { id: "svc_nyssco_monthly_it", clientId: "client_nyssco", name: "Monthly IT Support", qty: 1, rate: 2000, active: true },
+    { id: "svc_nyssco_backup", clientId: "client_nyssco", name: "Managed offsite backup protection", qty: 1, rate: 175, active: true },
+    { id: "svc_nyssco_o365", clientId: "client_nyssco", name: "Office 365", qty: 1, rate: 150, active: true },
+    { id: "svc_nyssco_domain", clientId: "client_nyssco", name: "Domain Registration Service", qty: 1, rate: 85, active: false }
   ],
   invoices: [
     {
@@ -46,6 +69,26 @@ const defaultData = {
         { description: "Credit: Moxie-paid direct Microsoft licenses", qty: 1, rate: -164 }
       ],
       notes: ""
+    },
+    {
+      id: "inv_nyssco_2026_06",
+      number: "GSV-NYSSCO-2026-06",
+      clientId: "client_nyssco",
+      date: "2026-05-31",
+      dueDate: "2026-06-15",
+      month: "2026-06",
+      subject: "Monthly IT Services Invoice (GSV-NYSSCO-2026-06)",
+      status: "ready",
+      type: "Monthly MSP",
+      showShipTo: true,
+      shipTo: "Pasquale Bitonti\nNew York Style Sausage Factory\n1228 Reamwood Ave\nSunnyvale, CA 94089\n408-745-7675\npasquale@newyorkstylesausage.com",
+      items: [
+        { description: "Monthly IT Support", qty: 1, rate: 2000 },
+        { description: "Managed offsite backup protection", qty: 1, rate: 175 },
+        { description: "Office 365", qty: 1, rate: 150 },
+        { description: "Domain Registration Service", qty: 1, rate: 85 }
+      ],
+      notes: "Imported from NYSSCO Monthly IT Support - June invoice. 365 audit is visibility only for this client."
     }
   ],
   quotes: [],
@@ -54,6 +97,7 @@ const defaultData = {
 };
 
 let state = loadState();
+migrateDefaultRecords();
 let activeView = "dashboard";
 let editing = null;
 let previewing = null;
@@ -70,6 +114,20 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem("gsvBillingHub", JSON.stringify(state, null, 2));
+}
+
+function migrateDefaultRecords() {
+  let changed = false;
+  for (const key of ["clients", "serviceAgreements", "invoices"]) {
+    if (!Array.isArray(state[key])) state[key] = [];
+    for (const record of defaultData[key]) {
+      if (!state[key].some(existing => existing.id === record.id)) {
+        state[key].push(structuredClone(record));
+        changed = true;
+      }
+    }
+  }
+  if (changed) saveState();
 }
 
 function id(prefix) {
@@ -100,7 +158,7 @@ function invoiceTotal(invoice) {
 
 function currentMspItems(clientId, month = today.slice(0, 7)) {
   const audit = latestAudit(clientId, month);
-  if (audit) return auditInvoiceItems(audit);
+  if (audit && clientById(clientId)?.licenseAuditBilling !== false) return auditInvoiceItems(audit);
   return state.serviceAgreements
     .filter(s => s.clientId === clientId && s.active)
     .map(s => ({ description: s.name, qty: Number(s.qty || 0), rate: Number(s.rate || 0) }));
@@ -434,6 +492,10 @@ function createInvoiceFromAudit() {
   const audit = latestAudit(clientId, month);
   if (!audit) return;
   const client = clientById(audit.clientId);
+  if (client?.licenseAuditBilling === false) {
+    window.alert("This client's Microsoft 365 audit is visibility only. Create the monthly invoice from the client's recurring services instead.");
+    return;
+  }
   const slug = (client?.name || "CLIENT").split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
   const invoice = {
     id: id("inv"),
@@ -630,6 +692,8 @@ function editorFields(mode, item) {
       ${field("email", "Email", item.email || "")}
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
+      ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
+      ${checkbox("licenseAuditBilling", "Use Microsoft 365 audit to generate monthly invoice", item.licenseAuditBilling !== false)}
       <div class="field full pricing-editor">
         <h3>Monthly MSP License Pricing</h3>
         <div class="pricing-grid">
@@ -819,6 +883,8 @@ function saveEditor() {
       email: data.email,
       phone: data.phone,
       terms: data.terms,
+      m365TenantKey: data.m365TenantKey || "default",
+      licenseAuditBilling: data.licenseAuditBilling === "on",
       mspRates: {
         fullUser: Number(data.rateFullUser || 0),
         lightUser: Number(data.rateLightUser || 0),
@@ -1000,8 +1066,9 @@ function generateMonthlyInvoice() {
   const client = state.clients.find(c => c.status === "active") || state.clients[0];
   if (!client) return;
   const month = new Date().toISOString().slice(0, 7);
+  const useAuditBilling = client.licenseAuditBilling !== false;
   const audit = latestAudit(client.id, month);
-  if (!audit) {
+  if (useAuditBilling && !audit) {
     setView("audit365");
     document.getElementById("audit-client").value = client.id;
     document.getElementById("audit-month").value = month;
@@ -1009,6 +1076,7 @@ function generateMonthlyInvoice() {
     window.alert("Import this month's Microsoft 365 audit before generating the monthly MSP invoice.");
     return;
   }
+  const items = useAuditBilling && audit ? auditInvoiceItems(audit) : currentMspItems(client.id, month);
   const invoice = {
     id: id("inv"),
     number: `GSV-${client.name.split(/\s+/)[0].toUpperCase()}-${month}`,
@@ -1016,13 +1084,14 @@ function generateMonthlyInvoice() {
     date: today,
     dueDate: addDays(today, 15),
     month,
-    status: audit.reviewCount ? "draft" : "ready",
+    status: audit?.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
-    items: auditInvoiceItems(audit),
-    notes: audit.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
+    subject: defaultDocumentSubject("invoice", { number: `GSV-${client.name.split(/\s+/)[0].toUpperCase()}-${month}` }),
+    items,
+    notes: audit?.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
   };
   state.invoices.push(invoice);
-  audit.invoiceId = invoice.id;
+  if (audit && useAuditBilling) audit.invoiceId = invoice.id;
   saveState();
   setView("invoices");
 }
@@ -1234,7 +1303,9 @@ async function pullMicrosoft365Audit() {
   }
 
   try {
-    const response = await fetch("/api/m365-audit", { cache: "no-store" });
+    const client = clientById(clientId);
+    const tenant = encodeURIComponent(client?.m365TenantKey || "default");
+    const response = await fetch(`/api/m365-audit?tenant=${tenant}`, { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Microsoft 365 pull failed.");
 

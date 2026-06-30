@@ -43,13 +43,22 @@ function envValue(...keys: string[]) {
   return "";
 }
 
-async function graphToken() {
-  const tenantId = envValue("MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
-  const clientId = envValue("MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
-  const clientSecret = envValue("MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
+function tenantEnvValue(tenantKey: string, ...keys: string[]) {
+  const normalized = tenantKey.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+  if (normalized && normalized !== "DEFAULT") {
+    const value = envValue(...keys.map(key => `${normalized}_${key}`));
+    if (value) return value;
+  }
+  return envValue(...keys);
+}
+
+async function graphToken(tenantKey = "default") {
+  const tenantId = tenantEnvValue(tenantKey, "MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
+  const clientId = tenantEnvValue(tenantKey, "MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
+  const clientSecret = tenantEnvValue(tenantKey, "MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
 
   if (!tenantId || !clientId || !clientSecret) {
-    throw new Error("Missing Microsoft Graph app credentials.");
+    throw new Error(`Missing Microsoft Graph app credentials for tenant key "${tenantKey}".`);
   }
 
   const body = new URLSearchParams({
@@ -104,7 +113,7 @@ function friendlySkuName(skuPartNumber: string) {
   return FRIENDLY_SKU_NAMES[skuPartNumber] || skuPartNumber;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const cookieStore = await cookies();
     const isAuthed = await verifyBillingSession(
@@ -115,7 +124,8 @@ export async function GET() {
       return NextResponse.json({ error: "Billing Hub login required." }, { status: 401 });
     }
 
-    const accessToken = await graphToken();
+    const tenantKey = new URL(request.url).searchParams.get("tenant") || "default";
+    const accessToken = await graphToken(tenantKey);
     const skus = await graphGetAll<GraphSku>(
       accessToken,
       "/subscribedSkus?$select=skuId,skuPartNumber",
