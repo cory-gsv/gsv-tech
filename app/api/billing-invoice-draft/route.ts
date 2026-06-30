@@ -85,6 +85,11 @@ function invoiceTotal(invoice: InvoicePayload) {
   );
 }
 
+function outlookSharedDraftLink(mailbox: string, messageId: string, fallback: string) {
+  if (!mailbox || !messageId) return fallback;
+  return `https://outlook.office.com/mail/${encodeURIComponent(mailbox)}/drafts/id/${encodeURIComponent(messageId)}`;
+}
+
 function pdfLine(y: number, value: string, x = 54, size = 11) {
   return `BT /F1 ${size} Tf ${x} ${y} Td (${text(value)}) Tj ET\n`;
 }
@@ -177,12 +182,13 @@ export async function POST(request: Request) {
     const pdf = generateInvoicePdf(invoice, client);
     const subject = `Invoice ${invoice.number || ""} from Golden State Visions`;
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
+    const senderName = "Golden State Visions Billing";
     const body = [
       `<p>Hi ${client.name || ""},</p>`,
       `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
       `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
       "<p>Please remit payment by check.</p>",
-      "<p>Thank you,<br>Golden State Visions<br>info@gsvisions.com<br>(916) 432-3373</p>",
+      `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
     ].join("");
 
     const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {
@@ -196,6 +202,9 @@ export async function POST(request: Request) {
         body: { contentType: "HTML", content: body },
         toRecipients: [
           { emailAddress: { address: client.email, name: client.name || client.email } },
+        ],
+        replyTo: [
+          { emailAddress: { address: fromMailbox, name: senderName } },
         ],
         attachments: [
           {
@@ -221,7 +230,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: data.id,
-      webLink: data.webLink || "",
+      webLink: outlookSharedDraftLink(fromMailbox, data.id, data.webLink || ""),
       message: "Outlook draft created with invoice PDF attached.",
     });
   } catch (error) {
