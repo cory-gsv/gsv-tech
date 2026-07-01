@@ -362,6 +362,7 @@ function renderDashboard() {
   const pax8 = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + pax8CostTotal(client.id), 0);
   const ninjaOne = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + ninjaOneCostTotal(client.id), 0);
   const vendorCosts = state.clients.filter(c => c.status === "active").reduce((sum, client) => sum + otherManualCostTotal(client.id), 0);
+  const margin = msp - pax8 - ninjaOne - vendorCosts;
   const draftQuotes = state.quotes.filter(q => q.status === "draft").length;
 
   document.getElementById("metric-open").textContent = money.format(open);
@@ -370,6 +371,7 @@ function renderDashboard() {
   document.getElementById("metric-pax8").textContent = costMoney.format(pax8);
   document.getElementById("metric-ninjaone").textContent = costMoney.format(ninjaOne);
   document.getElementById("metric-vendor-costs").textContent = costMoney.format(vendorCosts);
+  document.getElementById("metric-margin").textContent = costMoney.format(margin);
   document.getElementById("metric-quotes").textContent = draftQuotes;
 
   document.getElementById("dashboard-invoices").innerHTML = invoices
@@ -439,7 +441,7 @@ function renderClients() {
           <button data-client-dashboard="${client.id}">Dashboard</button>
           <button data-edit-client="${client.id}">Edit</button>
           <button data-audit-services="${client.id}">Audit Services</button>
-          <button data-client-invoice="${client.id}">Invoice</button>
+          <button data-client-invoice="${client.id}">Auto Generate Invoice</button>
           <button data-client-quote="${client.id}">Quote</button>
         </div>
       </article>
@@ -463,6 +465,7 @@ function clientDetailDashboard(client) {
         </div>
         <div class="toolbar">
           <button data-audit-services="${client.id}" class="primary">Audit Services</button>
+          <button data-client-invoice="${client.id}" class="primary">Auto Generate Invoice</button>
           <button data-edit-client="${client.id}">Edit Client</button>
         </div>
       </div>
@@ -1514,10 +1517,13 @@ function invoiceFromEditor() {
   };
 }
 
-function generateMonthlyInvoice() {
-  const client = state.clients.find(c => c.status === "active") || state.clients[0];
+function monthlyInvoiceNumber(client, month) {
+  const slug = (client?.name || "CLIENT").split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return `GSV-${slug}-${month}`;
+}
+
+function createMonthlyInvoiceForClient(client, month) {
   if (!client) return;
-  const month = new Date().toISOString().slice(0, 7);
   const useAuditBilling = client.licenseAuditBilling !== false;
   const audit = latestAudit(client.id, month);
   if (useAuditBilling && !audit) {
@@ -1527,23 +1533,56 @@ function generateMonthlyInvoice() {
     return;
   }
   const items = useAuditBilling && audit ? auditInvoiceItems(audit) : currentMspItems(client.id, month);
+  const number = monthlyInvoiceNumber(client, month);
+  const existingInvoice = state.invoices
+    .filter(inv => inv.clientId === client.id && inv.month === month && inv.type === "Monthly MSP")
+    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
   const invoice = {
-    id: id("inv"),
-    number: `GSV-${client.name.split(/\s+/)[0].toUpperCase()}-${month}`,
+    ...existingInvoice,
+    id: existingInvoice?.id || id("inv"),
+    number: existingInvoice?.number || number,
     clientId: client.id,
     date: today,
     dueDate: addDays(today, 15),
     month,
     status: audit?.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
-    subject: defaultDocumentSubject("invoice", { number: `GSV-${client.name.split(/\s+/)[0].toUpperCase()}-${month}` }),
+    subject: existingInvoice?.subject || defaultDocumentSubject("invoice", { number }),
     items,
     notes: audit?.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
   };
-  state.invoices.push(invoice);
+  if (existingInvoice) upsert(state.invoices, invoice);
+  else state.invoices.push(invoice);
   if (audit && useAuditBilling) audit.invoiceId = invoice.id;
   saveState();
   setView("invoices");
+}
+
+async function generateMonthlyInvoice(clientId = "", options = {}) {
+  const client = (clientId && clientById(clientId)) || (selectedClientId && clientById(selectedClientId)) || state.clients.find(c => c.status === "active") || state.clients[0];
+  if (!client) return;
+  const month = new Date().toISOString().slice(0, 7);
+  const button = clientId ? document.querySelector(`[data-client-invoice="${clientId}"]`) : document.getElementById("generate-monthly");
+  if (options.refreshAudit) {
+    if (button) {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "Auditing...";
+    }
+    const errors = await runServicesAudit([client.id], month);
+    if (errors.length) {
+      if (button) {
+        button.disabled = false;
+        button.classList.remove("is-loading");
+        button.textContent = "Auto Generate Invoice";
+      }
+      saveState();
+      render();
+      window.alert(`Invoice was not created because the services audit had ${errors.length} issue${errors.length === 1 ? "" : "s"}:\n\n${errors.join("\n")}`);
+      return;
+    }
+  }
+  createMonthlyInvoiceForClient(client, month);
 }
 
 function convertQuote(quoteId) {
@@ -1909,16 +1948,7 @@ async function pullPax8Costs() {
   }
 }
 
-async function auditServices(clientId = "") {
-  const month = today.slice(0, 7);
-  const clientIds = activeClientIds(clientId);
-  const buttons = document.querySelectorAll(clientId ? `[data-audit-services="${clientId}"]` : `[data-audit-services], #audit-services-all`);
-  buttons.forEach(button => {
-    button.disabled = true;
-    button.classList.add("is-loading");
-    button.textContent = "Auditing...";
-  });
-
+async function runServicesAudit(clientIds, month) {
   const errors = [];
   for (const idValue of clientIds) {
     try {
@@ -1939,6 +1969,20 @@ async function auditServices(clientId = "") {
       errors.push(error instanceof Error ? error.message : `${clientName(idValue)} NinjaOne pull failed.`);
     }
   }
+  return errors;
+}
+
+async function auditServices(clientId = "") {
+  const month = today.slice(0, 7);
+  const clientIds = activeClientIds(clientId);
+  const buttons = document.querySelectorAll(clientId ? `[data-audit-services="${clientId}"]` : `[data-audit-services], #audit-services-all`);
+  buttons.forEach(button => {
+    button.disabled = true;
+    button.classList.add("is-loading");
+    button.textContent = "Auditing...";
+  });
+
+  const errors = await runServicesAudit(clientIds, month);
 
   saveState();
   render();
@@ -1983,7 +2027,7 @@ document.addEventListener("click", event => {
   if (target.id === "new-quote" || target.id === "add-quote") openEditor("quote", { date: today, status: "draft", items: [] });
   if (target.id === "add-client") openEditor("client", { status: "active", terms: "Net 15" });
   if (target.id === "record-payment") openEditor("payment", { date: today, method: "Check" });
-  if (target.id === "generate-monthly") generateMonthlyInvoice();
+  if (target.id === "generate-monthly") generateMonthlyInvoice("", { refreshAudit: true });
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
   if (target.id === "audit-pull-graph") pullMicrosoft365Audit();
   if (target.id === "audit-pull-pax8") pullPax8Costs();
@@ -2016,7 +2060,7 @@ document.addEventListener("click", event => {
     selectedClientId = target.dataset.clientDashboard;
     setView("clients");
   }
-  if (target.dataset.clientInvoice) openEditor("invoice", { clientId: target.dataset.clientInvoice, date: today, dueDate: addDays(today, 15), status: "draft", items: [] });
+  if (target.dataset.clientInvoice) generateMonthlyInvoice(target.dataset.clientInvoice, { refreshAudit: true });
   if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
   if (target.dataset.deleteInvoice) deleteInvoice(target.dataset.deleteInvoice);
