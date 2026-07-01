@@ -33,6 +33,7 @@ const defaultData = {
       name: "New York Style Sausage Company",
       billTo: "Accounts Payable\nNew York Style Sausage Factory\n1228 Reamwood Ave\nSunnyvale, CA 94089\n408-745-7675\nap@newyorkstylesausage.com",
       email: "ap@newyorkstylesausage.com",
+      ccEmail: "pasquale@newyorkstylesausage.com",
       phone: "408-745-7675",
       terms: "Net 15",
       status: "active",
@@ -146,7 +147,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = structuredClone(record[field]);
             changed = true;
@@ -428,7 +429,7 @@ function renderClients() {
         </div>
         <div class="client-card-metrics">
           <div><span>Monthly billing</span><strong>${money.format(monthly)}</strong></div>
-          <div><span>Pax8</span><strong>${costMoney.format(pax8)}</strong></div>
+          <div><span>365 cost</span><strong>${costMoney.format(pax8)}</strong></div>
           <div><span>NinjaOne</span><strong>${costMoney.format(ninjaOne)}</strong></div>
           <div><span>Other costs</span><strong>${costMoney.format(manual)}</strong></div>
           <div><span>Est. margin</span><strong>${costMoney.format(margin)}</strong></div>
@@ -471,7 +472,8 @@ function clientDetailDashboard(client) {
       </div>
       <div class="metric-grid client-metrics">
         <article class="metric"><span>Monthly Billing</span><strong>${money.format(currentMspTotal(client.id))}</strong></article>
-        <article class="metric"><span>Pax8 Cost</span><strong>${costMoney.format(pax8CostTotal(client.id))}</strong></article>
+        <article class="metric"><span>Microsoft 365 Cost</span><strong>${costMoney.format(pax8CostTotal(client.id))}</strong></article>
+        <article class="metric"><span>365 Source</span><strong>Pax8</strong></article>
         <article class="metric"><span>NinjaOne Cost</span><strong>${costMoney.format(ninjaOneCostTotal(client.id))}</strong></article>
         <article class="metric"><span>Other Vendor Costs</span><strong>${costMoney.format(otherManualCostTotal(client.id))}</strong></article>
         <article class="metric"><span>Estimated Margin</span><strong>${costMoney.format(costMargin(client.id))}</strong></article>
@@ -1090,6 +1092,7 @@ function editorFields(mode, item) {
       ${field("name", "Client Name", item.name || "")}
       ${field("status", "Status", item.status || "active")}
       ${field("email", "Email", item.email || "")}
+      ${field("ccEmail", "Invoice CC Email(s)", item.ccEmail || "")}
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
       ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
@@ -1217,6 +1220,13 @@ function clientEmail(client) {
   return (client?.billTo || "").match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "";
 }
 
+function clientCcEmails(client) {
+  return String(client?.ccEmail || "")
+    .split(/[,\n;]/)
+    .map(email => email.trim())
+    .filter(Boolean);
+}
+
 function textarea(name, label, value, full = false) {
   return `<div class="field ${full ? "full" : ""}"><label for="${name}">${label}</label><textarea id="${name}" name="${name}">${escapeHtml(value)}</textarea></div>`;
 }
@@ -1327,6 +1337,7 @@ function saveEditor() {
       name: data.name,
       status: data.status || "active",
       email: data.email,
+      ccEmail: data.ccEmail,
       phone: data.phone,
       terms: data.terms,
       m365TenantKey: data.m365TenantKey || "default",
@@ -1476,6 +1487,7 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
         client: {
           name: client?.name || "",
           email: clientEmail(client),
+          ccEmails: clientCcEmails(client),
           billTo: client?.billTo || ""
         }
       })
@@ -1672,7 +1684,7 @@ function renderDocument(type, doc, client) {
         </div>
       </div>
       <div class="doc-block doc-address-grid">
-        <table class="doc-table">
+        <table class="doc-table doc-items">
           <thead><tr><th>Bill To</th></tr></thead>
           <tbody><tr><td>${lines(client?.billTo || client?.name || "")}</td></tr></tbody>
         </table>

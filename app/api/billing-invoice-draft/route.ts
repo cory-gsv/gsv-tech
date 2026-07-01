@@ -28,6 +28,7 @@ type InvoicePayload = {
 type ClientPayload = {
   name?: string;
   email?: string;
+  ccEmails?: string[];
   billTo?: string;
 };
 
@@ -194,7 +195,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const logo = pdfLogoImageObject();
   const page = { width: 612, height: 792 };
   const ink = "0.11 0.15 0.19";
-  const gold = "1 0.78 0.17";
+  const gold = "1 0.7804 0.1725";
   const headerFill = "0.89 0.92 0.95";
   const line = "0.07 0.09 0.12";
   const margin = 40;
@@ -408,6 +409,9 @@ export async function POST(request: Request) {
         toRecipients: [
           { emailAddress: { address: client.email, name: client.name || client.email } },
         ],
+        ccRecipients: (client.ccEmails || [])
+          .filter(Boolean)
+          .map((email) => ({ emailAddress: { address: email } })),
         bccRecipients: [
           { emailAddress: { address: "cory@gsvisions.com", name: "Cory" } },
         ],
