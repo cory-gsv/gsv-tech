@@ -48,6 +48,8 @@ const defaultData = {
         copilot: 0
       },
       ninjaOnePricing: [
+        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 0, unitCost: 7.1, active: true },
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
         { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
         { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
         { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
@@ -177,6 +179,14 @@ function migrateDefaultRecords() {
     if (defaults?.ninjaOnePricing && (!Array.isArray(client.ninjaOnePricing) || !client.ninjaOnePricing.length)) {
       client.ninjaOnePricing = structuredClone(defaults.ninjaOnePricing);
       changed = true;
+    } else if (defaults?.ninjaOnePricing && Array.isArray(client.ninjaOnePricing)) {
+      defaults.ninjaOnePricing.forEach(rule => {
+        const exists = client.ninjaOnePricing.some(existing => existing.name === rule.name);
+        if (!exists) {
+          client.ninjaOnePricing.push(structuredClone(rule));
+          changed = true;
+        }
+      });
     }
     if (defaults?.ninjaOneOrgId && !client.ninjaOneOrgId) {
       client.ninjaOneOrgId = defaults.ninjaOneOrgId;
@@ -190,15 +200,6 @@ function migrateDefaultRecords() {
       });
       if (filteredCosts.length !== client.internalCosts.length) {
         client.internalCosts = filteredCosts;
-        changed = true;
-      }
-    }
-    if (client.id === "client_nyssco" && Array.isArray(client.ninjaOnePricing)) {
-      const filteredNinjaOnePricing = client.ninjaOnePricing.filter(rule => {
-        return !/sentinelone complete|bitdefender gravityzone/i.test(rule.name || "");
-      });
-      if (filteredNinjaOnePricing.length !== client.ninjaOnePricing.length) {
-        client.ninjaOnePricing = filteredNinjaOnePricing;
         changed = true;
       }
     }
@@ -508,25 +509,11 @@ function clientDetailDashboard(client) {
           <article class="metric"><span>Other Devices</span><strong>${ninjaOne.totals?.other || 0}</strong></article>
           <article class="metric"><span>Offline</span><strong>${ninjaOne.totals?.offline || 0}</strong></article>
         </div>
-        <div class="split">
-          <section>
-            <div class="item">
-              <div class="item-line"><strong>Device classes returned by NinjaOne</strong></div>
-              <div class="subtle">${countList(ninjaOne.totals?.byClass || {})}</div>
-            </div>
-          </section>
-          <section>
-            <div class="item">
-              <div class="item-line"><strong>Policies returned by NinjaOne</strong></div>
-              <div class="subtle">${countList(ninjaOne.totals?.byPolicy || {})}</div>
-            </div>
-          </section>
-        </div>
       ` : ""}
       <div class="section-head table-heading">
         <div>
           <h2>Tracked Vendor Costs</h2>
-          <p class="subtle">Pax8 is pulled from Pax8. NinjaOne costs below are pricing rules only. They are not proof that SentinelOne, Bitdefender, or backup is installed unless the NinjaOne audit summary/devices prove it.</p>
+          <p class="subtle">Pax8 is pulled from Pax8. NinjaOne costs below are pricing rules matched to the latest device audit. The device table shows what NinjaOne actually returned.</p>
         </div>
       </div>
       <div class="table-card">
@@ -659,15 +646,6 @@ function latestNinjaOneAudit(clientId, month = "") {
     .filter(audit => (!clientId || audit.clientId === clientId) && (!month || audit.month === month))
     .slice()
     .sort((a, b) => `${b.month}-${b.createdAt}`.localeCompare(`${a.month}-${a.createdAt}`))[0];
-}
-
-function countList(counts = {}) {
-  const entries = Object.entries(counts)
-    .filter(([, count]) => Number(count || 0) > 0)
-    .sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0));
-  return entries.length
-    ? entries.map(([label, count]) => `${escapeHtml(label)}: ${count}`).join("<br>")
-    : "None found";
 }
 
 function ninjaOneQtyForRule(rule, audit) {
