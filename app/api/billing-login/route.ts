@@ -11,7 +11,11 @@ export async function POST(request: NextRequest) {
   } catch {
     form = new FormData()
   }
+  const username = String(form.get("username") || "").trim()
   const password = String(form.get("password") || "").trim()
+  const validUsername = String(
+    process.env.BILLING_HUB_USERNAME || process.env.GSV_BILLING_USERNAME || ""
+  ).trim()
   const validPasswords = [
     process.env.BILLING_HUB_PASSWORD,
     process.env.GSV_BILLING_PASSWORD,
@@ -29,7 +33,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  if (!validPasswords.includes(password)) {
+  if ((validUsername && username !== validUsername) || !validPasswords.includes(password)) {
     return NextResponse.redirect(new URL("/billing?error=wrong", request.url), {
       status: 303,
     })

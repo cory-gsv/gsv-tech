@@ -11,7 +11,7 @@ function errorMessage(error?: string) {
     return "The server cannot see the Billing Hub environment variables yet. Redeploy after saving the Vercel variables."
   }
   if (error === "wrong") {
-    return "That password did not work."
+    return "That username or password did not work."
   }
   return ""
 }
@@ -32,6 +32,14 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           <h1>Billing Hub</h1>
           <p>Private invoices, quotes, payments, and Microsoft 365 MSP billing.</p>
           <form action="/api/billing-login" method="post">
+            <label htmlFor="billing-username">Username</label>
+            <input
+              id="billing-username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+            />
             <label htmlFor="billing-password">Password</label>
             <input
               id="billing-password"
