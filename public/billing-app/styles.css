@@ -620,6 +620,10 @@ section {
   box-shadow: 0 0 0 2px rgba(255, 199, 44, .28);
 }
 
+.client-billing-label {
+  margin-top: -6px;
+}
+
 .client-card-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

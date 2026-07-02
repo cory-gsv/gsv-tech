@@ -58,6 +58,54 @@ const defaultData = {
         { name: "Domain registration/service", source: "Domain", qty: 0, unitCost: 0, active: true }
       ],
       notes: "Microsoft 365 audit is visibility only for this client, not invoice generation. Ship/contact from June invoice: Pasquale Bitonti, pasquale@newyorkstylesausage.com."
+    },
+    {
+      id: "client_giorgios",
+      name: "Giorgios Italian Food",
+      billTo: "Giorgios Italian Food",
+      email: "",
+      phone: "",
+      terms: "Net 15",
+      status: "active",
+      billingClientId: "client_nyssco",
+      m365TenantKey: "",
+      licenseAuditBilling: false,
+      mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
+      ninjaOnePricing: [],
+      internalCosts: [],
+      notes: "Service/client profile only. Invoices roll up to New York Style Sausage Company."
+    },
+    {
+      id: "client_mike_d_sells",
+      name: "Mike D Sells",
+      billTo: "Mike D Sells",
+      email: "",
+      phone: "",
+      terms: "Net 15",
+      status: "active",
+      billingClientId: "client_nyssco",
+      m365TenantKey: "",
+      licenseAuditBilling: false,
+      mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
+      ninjaOnePricing: [],
+      internalCosts: [],
+      notes: "Service/client profile only. Invoices roll up to New York Style Sausage Company."
+    },
+    {
+      id: "client_sausage_sams",
+      name: "Sausage Sams",
+      billTo: "Sausage Sams",
+      email: "",
+      phone: "",
+      terms: "Net 15",
+      status: "active",
+      billingClientId: "client_nyssco",
+      m365TenantKey: "",
+      licenseAuditBilling: false,
+      mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
+      ninjaOnePricing: [],
+      internalCosts: [],
+      notes: "Service/client profile only. Invoices roll up to New York Style Sausage Company."
     }
   ],
   serviceAgreements: [
@@ -149,7 +197,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = structuredClone(record[field]);
             changed = true;
@@ -219,6 +267,27 @@ function clientById(clientId) {
   return state.clients.find(c => c.id === clientId);
 }
 
+function billingClientFor(clientId) {
+  const client = clientById(clientId);
+  return clientById(client?.billingClientId) || client;
+}
+
+function childClientsForBilling(clientId) {
+  return state.clients.filter(client => client.billingClientId === clientId);
+}
+
+function billingGroupClientIds(clientId) {
+  return [clientId, ...childClientsForBilling(clientId).map(client => client.id)];
+}
+
+function billingGroupLabel(clientId) {
+  const children = childClientsForBilling(clientId);
+  if (children.length) return `${children.length} company${children.length === 1 ? "" : "ies"} billed here`;
+  const payer = billingClientFor(clientId);
+  if (payer?.id && payer.id !== clientId) return `Bills to ${payer.name}`;
+  return "";
+}
+
 function clientMspRates(clientId) {
   const rates = clientById(clientId)?.mspRates || {};
   return {
@@ -243,6 +312,10 @@ function currentMspItems(clientId, month = today.slice(0, 7)) {
 
 function currentMspTotal(clientId, month = today.slice(0, 7)) {
   return currentMspItems(clientId, month).reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+}
+
+function currentMspRollupTotal(clientId, month = today.slice(0, 7)) {
+  return billingGroupClientIds(clientId).reduce((sum, id) => sum + currentMspTotal(id, month), 0);
 }
 
 function clientInvoices(clientId) {
@@ -296,6 +369,22 @@ function clientCostTotal(clientId, month = today.slice(0, 7)) {
 
 function costMargin(clientId, month = today.slice(0, 7)) {
   return currentMspTotal(clientId, month) - clientCostTotal(clientId, month);
+}
+
+function rollupPax8CostTotal(clientId, month = today.slice(0, 7)) {
+  return billingGroupClientIds(clientId).reduce((sum, id) => sum + pax8CostTotal(id, month), 0);
+}
+
+function rollupNinjaOneCostTotal(clientId, month = today.slice(0, 7)) {
+  return billingGroupClientIds(clientId).reduce((sum, id) => sum + ninjaOneCostTotal(id, month), 0);
+}
+
+function rollupOtherManualCostTotal(clientId) {
+  return billingGroupClientIds(clientId).reduce((sum, id) => sum + otherManualCostTotal(id), 0);
+}
+
+function rollupCostMargin(clientId, month = today.slice(0, 7)) {
+  return currentMspRollupTotal(clientId, month) - rollupPax8CostTotal(clientId, month) - rollupNinjaOneCostTotal(clientId, month) - rollupOtherManualCostTotal(clientId);
 }
 
 function activeClientIds(clientId = "") {
@@ -440,12 +529,14 @@ function renderClients() {
     const margin = costMargin(client.id);
     const invoices = clientInvoices(client.id);
     const open = invoices.filter(inv => computedInvoiceStatus(inv) !== "paid").reduce((sum, inv) => sum + invoiceTotal(inv) - paidAmount(inv.id), 0);
+    const billingLabel = billingGroupLabel(client.id);
     return `
       <article class="item client-card ${selectedClientId === client.id ? "selected" : ""}" data-client-dashboard-card="${client.id}">
         <div class="item-line">
           <strong>${escapeHtml(client.name)}</strong>
           <span class="badge ${client.status}">${escapeHtml(client.status)}</span>
         </div>
+        ${billingLabel ? `<div class="subtle client-billing-label">${escapeHtml(billingLabel)}</div>` : ""}
         <div class="client-card-metrics">
           <div><span>Monthly billing</span><strong>${money.format(monthly)}</strong></div>
           <div><span>365 cost</span><strong>${costMoney.format(pax8)}</strong></div>
@@ -476,12 +567,20 @@ function clientDetailDashboard(client) {
   const ninjaOne = latestNinjaOneAudit(client.id, month);
   const costs = activeClientCosts(client.id);
   const recentInvoices = clientInvoices(client.id).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const billingLabel = billingGroupLabel(client.id);
+  const hasBillingChildren = childClientsForBilling(client.id).length > 0;
+  const monthlyTotal = hasBillingChildren ? currentMspRollupTotal(client.id) : currentMspTotal(client.id);
+  const microsoftCostTotal = hasBillingChildren ? rollupPax8CostTotal(client.id) : pax8CostTotal(client.id);
+  const ninjaOneTotal = hasBillingChildren ? rollupNinjaOneCostTotal(client.id) : ninjaOneCostTotal(client.id);
+  const otherCostTotal = hasBillingChildren ? rollupOtherManualCostTotal(client.id) : otherManualCostTotal(client.id);
+  const marginTotal = hasBillingChildren ? rollupCostMargin(client.id) : costMargin(client.id);
   return `
     <section class="client-dashboard">
       <div class="section-head">
         <div>
           <p class="eyebrow">Client dashboard</p>
           <h2>${escapeHtml(client.name)}</h2>
+          ${billingLabel ? `<p class="subtle">${escapeHtml(billingLabel)}</p>` : ""}
         </div>
         <div class="toolbar">
           <button data-audit-services="${client.id}" class="primary">Audit Services</button>
@@ -490,12 +589,12 @@ function clientDetailDashboard(client) {
         </div>
       </div>
       <div class="metric-grid client-metrics">
-        <article class="metric"><span>Monthly Billing</span><strong>${money.format(currentMspTotal(client.id))}</strong></article>
-        <article class="metric"><span>Microsoft 365 Cost</span><strong>${costMoney.format(pax8CostTotal(client.id))}</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "Monthly Billing Rollup" : "Monthly Billing"}</span><strong>${money.format(monthlyTotal)}</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "Microsoft 365 Cost Rollup" : "Microsoft 365 Cost"}</span><strong>${costMoney.format(microsoftCostTotal)}</strong></article>
         <article class="metric"><span>365 Source</span><strong>Pax8</strong></article>
-        <article class="metric"><span>NinjaOne Cost</span><strong>${costMoney.format(ninjaOneCostTotal(client.id))}</strong></article>
-        <article class="metric"><span>Other Vendor Costs</span><strong>${costMoney.format(otherManualCostTotal(client.id))}</strong></article>
-        <article class="metric"><span>Estimated Margin</span><strong>${costMoney.format(costMargin(client.id))}</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "NinjaOne Cost Rollup" : "NinjaOne Cost"}</span><strong>${costMoney.format(ninjaOneTotal)}</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "Other Vendor Costs Rollup" : "Other Vendor Costs"}</span><strong>${costMoney.format(otherCostTotal)}</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "Estimated Margin Rollup" : "Estimated Margin"}</span><strong>${costMoney.format(marginTotal)}</strong></article>
       </div>
       <div class="split">
         <section>
@@ -1067,6 +1166,15 @@ function clientOptions(selected) {
   return state.clients.map(c => `<option value="${c.id}" ${selected === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("");
 }
 
+function billingClientOptions(selected, currentClientId = "") {
+  return [
+    `<option value="" ${!selected ? "selected" : ""}>Bills to itself</option>`,
+    ...state.clients
+      .filter(client => client.id !== currentClientId && !client.billingClientId)
+      .map(client => `<option value="${client.id}" ${selected === client.id ? "selected" : ""}>${escapeHtml(client.name)}</option>`)
+  ].join("");
+}
+
 function invoiceOptions(selected) {
   return state.invoices.map(inv => `<option value="${inv.id}" ${selected === inv.id ? "selected" : ""}>${escapeHtml(inv.number)} - ${escapeHtml(clientName(inv.clientId))}</option>`).join("");
 }
@@ -1084,6 +1192,7 @@ function editorFields(mode, item) {
       ${field("ccEmail", "Invoice CC Email(s)", item.ccEmail || "")}
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
+      ${select("billingClientId", "Bills To Client", billingClientOptions(item.billingClientId || "", item.id), false)}
       ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
       ${field("pax8CompanyId", "Pax8 Company ID", item.pax8CompanyId || "")}
       ${field("ninjaOneOrgId", "NinjaOne Organization ID", item.ninjaOneOrgId || "", "number")}
@@ -1329,6 +1438,7 @@ function saveEditor() {
       ccEmail: data.ccEmail,
       phone: data.phone,
       terms: data.terms,
+      billingClientId: data.billingClientId || "",
       m365TenantKey: data.m365TenantKey || "default",
       pax8CompanyId: data.pax8CompanyId || "",
       ninjaOneOrgId: Number(data.ninjaOneOrgId || 0),
@@ -1523,38 +1633,65 @@ function monthlyInvoiceNumber(client, month) {
   return `GSV-${slug}-${month}`;
 }
 
+function monthlyInvoiceItemsForBillingClient(client, month) {
+  const billingClient = billingClientFor(client.id);
+  const sourceIds = billingGroupClientIds(billingClient.id);
+  return sourceIds.flatMap(sourceId => {
+    const sourceClient = clientById(sourceId);
+    const items = currentMspItems(sourceId, month);
+    if (sourceId === billingClient.id || !items.length) return items;
+    return items.map(item => ({
+      ...item,
+      description: `${sourceClient.name}: ${item.description}`
+    }));
+  });
+}
+
+function monthlyInvoiceNeedsAudit(client, month) {
+  const sourceIds = billingGroupClientIds(billingClientFor(client.id).id);
+  return sourceIds.some(sourceId => clientById(sourceId)?.licenseAuditBilling !== false && !latestAudit(sourceId, month));
+}
+
+function monthlyInvoiceReviewCount(client, month) {
+  const sourceIds = billingGroupClientIds(billingClientFor(client.id).id);
+  return sourceIds.reduce((sum, sourceId) => sum + Number(latestAudit(sourceId, month)?.reviewCount || 0), 0);
+}
+
 function createMonthlyInvoiceForClient(client, month) {
   if (!client) return;
-  const useAuditBilling = client.licenseAuditBilling !== false;
-  const audit = latestAudit(client.id, month);
-  if (useAuditBilling && !audit) {
+  const billingClient = billingClientFor(client.id);
+  if (monthlyInvoiceNeedsAudit(client, month)) {
     selectedClientId = client.id;
     setView("clients");
     window.alert("Run Audit Services for this client before generating the monthly MSP invoice.");
     return;
   }
-  const items = useAuditBilling && audit ? auditInvoiceItems(audit) : currentMspItems(client.id, month);
-  const number = monthlyInvoiceNumber(client, month);
+  const items = monthlyInvoiceItemsForBillingClient(client, month);
+  const reviewCount = monthlyInvoiceReviewCount(client, month);
+  const number = monthlyInvoiceNumber(billingClient, month);
   const existingInvoice = state.invoices
-    .filter(inv => inv.clientId === client.id && inv.month === month && inv.type === "Monthly MSP")
+    .filter(inv => inv.clientId === billingClient.id && inv.month === month && inv.type === "Monthly MSP")
     .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
   const invoice = {
     ...existingInvoice,
     id: existingInvoice?.id || id("inv"),
     number: existingInvoice?.number || number,
-    clientId: client.id,
+    clientId: billingClient.id,
     date: today,
     dueDate: addDays(today, 15),
     month,
-    status: audit?.reviewCount ? "draft" : "ready",
+    status: reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
     subject: existingInvoice?.subject || defaultDocumentSubject("invoice", { number }),
     items,
-    notes: audit?.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
+    notes: reviewCount ? `${reviewCount} Microsoft 365 audit rows need review before sending.` : ""
   };
   if (existingInvoice) upsert(state.invoices, invoice);
   else state.invoices.push(invoice);
-  if (audit && useAuditBilling) audit.invoiceId = invoice.id;
+  billingGroupClientIds(billingClient.id).forEach(sourceId => {
+    const audit = latestAudit(sourceId, month);
+    if (audit && clientById(sourceId)?.licenseAuditBilling !== false) audit.invoiceId = invoice.id;
+  });
   saveState();
   setView("invoices");
 }
@@ -1564,13 +1701,14 @@ async function generateMonthlyInvoice(clientId = "", options = {}) {
   if (!client) return;
   const month = new Date().toISOString().slice(0, 7);
   const button = clientId ? document.querySelector(`[data-client-invoice="${clientId}"]`) : document.getElementById("generate-monthly");
+  const auditClientIds = billingGroupClientIds(billingClientFor(client.id).id);
   if (options.refreshAudit) {
     if (button) {
       button.disabled = true;
       button.classList.add("is-loading");
       button.textContent = "Auditing...";
     }
-    const errors = await runServicesAudit([client.id], month);
+    const errors = await runServicesAudit(auditClientIds, month);
     if (errors.length) {
       if (button) {
         button.disabled = false;
@@ -1821,7 +1959,8 @@ async function pullMicrosoft365Audit() {
 
 async function pullMicrosoft365AuditForClient(clientId, month) {
   const client = clientById(clientId);
-  const tenant = encodeURIComponent(client?.m365TenantKey || "default");
+  if (!client?.m365TenantKey) return null;
+  const tenant = encodeURIComponent(client.m365TenantKey);
   const response = await fetch(`/api/m365-audit?tenant=${tenant}`, { cache: "no-store" });
   const data = await response.json();
   if (!response.ok) throw new Error(`${client?.name || "Client"} Microsoft 365: ${data.error || "pull failed"}`);
@@ -1975,7 +2114,8 @@ async function runServicesAudit(clientIds, month) {
 
 async function auditServices(clientId = "") {
   const month = today.slice(0, 7);
-  const clientIds = activeClientIds(clientId);
+  const client = clientById(clientId);
+  const clientIds = clientId && client ? billingGroupClientIds(billingClientFor(client.id).id) : activeClientIds(clientId);
   const buttons = document.querySelectorAll(clientId ? `[data-audit-services="${clientId}"]` : `[data-audit-services], #audit-services-all`);
   buttons.forEach(button => {
     button.disabled = true;
