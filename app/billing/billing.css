@@ -36,6 +36,38 @@
   line-height: 1.45;
 }
 
+.gsv-billing-login__microsoft {
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+  margin-bottom: 18px;
+  border: 1px solid #1f2933;
+  background: #1f2933;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.gsv-billing-login__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  color: #52616f;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.gsv-billing-login__divider::before,
+.gsv-billing-login__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #d8e0e8;
+}
+
 .gsv-billing-login__card form {
   display: grid;
   gap: 10px;

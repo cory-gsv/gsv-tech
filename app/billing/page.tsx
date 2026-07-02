@@ -13,6 +13,21 @@ function errorMessage(error?: string) {
   if (error === "wrong") {
     return "That username or password did not work."
   }
+  if (error === "msmissing") {
+    return "Microsoft login is missing its server settings."
+  }
+  if (error === "msdenied") {
+    return "Microsoft login was cancelled or denied."
+  }
+  if (error === "msstate") {
+    return "Microsoft login expired. Try again."
+  }
+  if (error === "mstoken") {
+    return "Microsoft login could not be completed. Check the app redirect URI."
+  }
+  if (error === "msunauthorized") {
+    return "That Microsoft account is not allowed into Billing Hub."
+  }
   return ""
 }
 
@@ -31,6 +46,10 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           <img src="/images/gsv-logo.png" alt="Golden State Visions" />
           <h1>Billing Hub</h1>
           <p>Private invoices, quotes, payments, and Microsoft 365 MSP billing.</p>
+          <a className="gsv-billing-login__microsoft" href="/api/billing-microsoft-login">
+            Sign in with Microsoft
+          </a>
+          <div className="gsv-billing-login__divider">Backup login</div>
           <form action="/api/billing-login" method="post">
             <label htmlFor="billing-username">Username</label>
             <input
