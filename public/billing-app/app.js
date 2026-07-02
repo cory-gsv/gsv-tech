@@ -85,6 +85,7 @@ const defaultData = {
       status: "active",
       billingClientId: "client_nyssco",
       m365TenantKey: "mike_d_sells",
+      pax8CompanyId: "a91818ab-d8c2-42dc-93f6-0c9d07b4ad06",
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [],
@@ -101,6 +102,7 @@ const defaultData = {
       status: "active",
       billingClientId: "client_nyssco",
       m365TenantKey: "sausage_sams",
+      pax8CompanyId: "d521e3c6-8f4d-4d54-8d7c-b399d64b8bd2",
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [],
@@ -220,11 +222,17 @@ function migrateDefaultRecords() {
   }
   const pax8CompanyIdFixes = {
     "1933729": "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
-    "1933703": "6e6399cf-8808-4c9c-bcce-19e6386e6589"
+    "1933703": "6e6399cf-8808-4c9c-bcce-19e6386e6589",
+    client_mike_d_sells: "a91818ab-d8c2-42dc-93f6-0c9d07b4ad06",
+    client_sausage_sams: "d521e3c6-8f4d-4d54-8d7c-b399d64b8bd2"
   };
   state.clients.forEach(client => {
     if (pax8CompanyIdFixes[client.pax8CompanyId]) {
       client.pax8CompanyId = pax8CompanyIdFixes[client.pax8CompanyId];
+      changed = true;
+    }
+    if (pax8CompanyIdFixes[client.id] && !client.pax8CompanyId) {
+      client.pax8CompanyId = pax8CompanyIdFixes[client.id];
       changed = true;
     }
     const defaults = defaultData.clients.find(defaultClient => defaultClient.id === client.id);
@@ -365,6 +373,13 @@ function otherManualCostTotal(clientId) {
 
 function pax8CostTotal(clientId, month = today.slice(0, 7)) {
   return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPartnerCost || 0);
+}
+
+function pax8CostLabel(clientId, month = today.slice(0, 7)) {
+  const client = clientById(clientId);
+  if (!client?.pax8CompanyId) return "No Pax8 link";
+  if (!latestPax8Costs(clientId, month)) return "Not pulled";
+  return costMoney.format(pax8CostTotal(clientId, month));
 }
 
 function clientCostTotal(clientId, month = today.slice(0, 7)) {
@@ -527,7 +542,7 @@ function renderClients() {
   document.getElementById("client-list").innerHTML = state.clients.map(client => {
     const audit = latestAudit(client.id, today.slice(0, 7));
     const monthly = currentMspTotal(client.id);
-    const pax8 = pax8CostTotal(client.id);
+    const pax8 = pax8CostLabel(client.id);
     const ninjaOne = ninjaOneCostTotal(client.id);
     const manual = otherManualCostTotal(client.id);
     const margin = costMargin(client.id);
@@ -543,7 +558,7 @@ function renderClients() {
         ${billingLabel ? `<div class="subtle client-billing-label">${escapeHtml(billingLabel)}</div>` : ""}
         <div class="client-card-metrics">
           <div><span>Monthly billing</span><strong>${money.format(monthly)}</strong></div>
-          <div><span>365 cost</span><strong>${costMoney.format(pax8)}</strong></div>
+          <div><span>365 cost</span><strong>${escapeHtml(pax8)}</strong></div>
           <div><span>NinjaOne</span><strong>${costMoney.format(ninjaOne)}</strong></div>
           <div><span>Other costs</span><strong>${costMoney.format(manual)}</strong></div>
           <div><span>Est. margin</span><strong>${costMoney.format(margin)}</strong></div>
@@ -575,6 +590,7 @@ function clientDetailDashboard(client) {
   const hasBillingChildren = childClientsForBilling(client.id).length > 0;
   const monthlyTotal = hasBillingChildren ? currentMspRollupTotal(client.id) : currentMspTotal(client.id);
   const microsoftCostTotal = hasBillingChildren ? rollupPax8CostTotal(client.id) : pax8CostTotal(client.id);
+  const microsoftCostLabel = hasBillingChildren ? costMoney.format(microsoftCostTotal) : pax8CostLabel(client.id, month);
   const ninjaOneTotal = hasBillingChildren ? rollupNinjaOneCostTotal(client.id) : ninjaOneCostTotal(client.id);
   const otherCostTotal = hasBillingChildren ? rollupOtherManualCostTotal(client.id) : otherManualCostTotal(client.id);
   const marginTotal = hasBillingChildren ? rollupCostMargin(client.id) : costMargin(client.id);
@@ -594,8 +610,8 @@ function clientDetailDashboard(client) {
       </div>
       <div class="metric-grid client-metrics">
         <article class="metric"><span>${hasBillingChildren ? "Monthly Billing Rollup" : "Monthly Billing"}</span><strong>${money.format(monthlyTotal)}</strong></article>
-        <article class="metric"><span>${hasBillingChildren ? "Microsoft 365 Cost Rollup" : "Microsoft 365 Cost"}</span><strong>${costMoney.format(microsoftCostTotal)}</strong></article>
-        <article class="metric"><span>365 Source</span><strong>Pax8</strong></article>
+        <article class="metric"><span>${hasBillingChildren ? "Microsoft 365 Cost Rollup" : "Microsoft 365 Cost"}</span><strong>${escapeHtml(microsoftCostLabel)}</strong></article>
+        <article class="metric"><span>365 Source</span><strong>${client.pax8CompanyId || hasBillingChildren ? "Pax8" : "Not linked"}</strong></article>
         <article class="metric"><span>${hasBillingChildren ? "NinjaOne Cost Rollup" : "NinjaOne Cost"}</span><strong>${costMoney.format(ninjaOneTotal)}</strong></article>
         <article class="metric"><span>${hasBillingChildren ? "Other Vendor Costs Rollup" : "Other Vendor Costs"}</span><strong>${costMoney.format(otherCostTotal)}</strong></article>
         <article class="metric"><span>${hasBillingChildren ? "Estimated Margin Rollup" : "Estimated Margin"}</span><strong>${costMoney.format(marginTotal)}</strong></article>
