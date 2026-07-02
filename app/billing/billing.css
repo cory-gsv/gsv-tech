@@ -37,15 +37,66 @@
 }
 
 .gsv-billing-login__microsoft {
-  display: grid;
-  place-items: center;
-  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 58px;
   margin-bottom: 18px;
-  border: 1px solid #1f2933;
-  background: #1f2933;
-  color: #fff;
+  border: 1px solid #d8e0e8;
+  background: #ffffff;
+  color: #1f2933;
   text-decoration: none;
+  padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(31, 41, 51, .08);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.gsv-billing-login__microsoft:hover,
+.gsv-billing-login__microsoft:focus-visible {
+  border-color: #64748b;
+  box-shadow: 0 8px 22px rgba(31, 41, 51, .14);
+  transform: translateY(-1px);
+}
+
+.gsv-billing-login__microsoft-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 11px);
+  grid-template-rows: repeat(2, 11px);
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.gsv-billing-login__microsoft-mark span:nth-child(1) {
+  background: #f25022;
+}
+
+.gsv-billing-login__microsoft-mark span:nth-child(2) {
+  background: #7fba00;
+}
+
+.gsv-billing-login__microsoft-mark span:nth-child(3) {
+  background: #00a4ef;
+}
+
+.gsv-billing-login__microsoft-mark span:nth-child(4) {
+  background: #ffb900;
+}
+
+.gsv-billing-login__microsoft strong,
+.gsv-billing-login__microsoft small {
+  display: block;
+}
+
+.gsv-billing-login__microsoft strong {
   font-weight: 900;
+  line-height: 1.2;
+}
+
+.gsv-billing-login__microsoft small {
+  margin-top: 2px;
+  color: #52616f;
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .gsv-billing-login__divider {

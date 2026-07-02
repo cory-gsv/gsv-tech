@@ -47,7 +47,16 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           <h1>Billing Hub</h1>
           <p>Private invoices, quotes, payments, and Microsoft 365 MSP billing.</p>
           <a className="gsv-billing-login__microsoft" href="/api/billing-microsoft-login">
-            Sign in with Microsoft
+            <span className="gsv-billing-login__microsoft-mark" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
+            <span>
+              <strong>Sign in with Microsoft 365</strong>
+              <small>Use your Golden State Visions account</small>
+            </span>
           </a>
           <div className="gsv-billing-login__divider">Backup login</div>
           <form action="/api/billing-login" method="post">
