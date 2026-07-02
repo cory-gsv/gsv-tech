@@ -380,18 +380,22 @@ function renderDashboard() {
     .slice()
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5)
-    .map(inv => `
-      <div class="item">
-        <div class="item-line">
+    .map(inv => {
+      const status = computedInvoiceStatus(inv);
+      return `
+      <div class="item dashboard-invoice-item">
+        <div class="item-line dashboard-invoice-main">
           <strong>${escapeHtml(inv.number)}</strong>
-          <span class="badge ${computedInvoiceStatus(inv)}">${computedInvoiceStatus(inv)}</span>
+          <span class="badge ${status}">${status}</span>
         </div>
         <div class="item-line subtle">
           <span>${escapeHtml(clientName(inv.clientId))}</span>
-          <span>${money.format(invoiceTotal(inv))}</span>
+          <strong>${money.format(invoiceTotal(inv))}</strong>
         </div>
+        ${invoiceActionButtons(inv)}
       </div>
-    `).join("") || `<p class="subtle">No invoices yet.</p>`;
+    `;
+    }).join("") || `<p class="subtle">No invoices yet.</p>`;
 
   const activity = [
     ...state.payments.map(p => ({ date: p.date, text: `Payment ${money.format(Number(p.amount || 0))} for ${invoiceNumber(p.invoiceId)}` })),
@@ -407,6 +411,20 @@ function renderDashboard() {
 
 function invoiceNumber(invoiceId) {
   return state.invoices.find(inv => inv.id === invoiceId)?.number || "unlinked invoice";
+}
+
+function invoiceActionButtons(inv) {
+  const status = computedInvoiceStatus(inv);
+  return `
+    <div class="row-actions invoice-actions">
+      <button data-preview-invoice="${inv.id}">Preview</button>
+      <button data-pdf-invoice="${inv.id}">PDF</button>
+      <button data-edit-invoice="${inv.id}">Edit</button>
+      ${status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
+      <button data-pay-invoice="${inv.id}">Pay</button>
+      <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
+    </div>
+  `;
 }
 
 function renderClients() {
@@ -927,14 +945,7 @@ function renderInvoices() {
           <td class="num">${money.format(total)}</td>
           <td class="num">${money.format(paid)}</td>
           <td>
-            <div class="row-actions">
-              <button data-preview-invoice="${inv.id}">Preview</button>
-              <button data-pdf-invoice="${inv.id}">PDF</button>
-              <button data-edit-invoice="${inv.id}">Edit</button>
-              ${status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
-              <button data-pay-invoice="${inv.id}">Pay</button>
-              <button class="danger ghost" data-delete-invoice="${inv.id}">Delete</button>
-            </div>
+            ${invoiceActionButtons(inv)}
           </td>
         </tr>
       `;

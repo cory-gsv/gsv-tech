@@ -504,6 +504,15 @@ section {
   gap: 12px;
 }
 
+.dashboard-invoice-item {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-invoice-main strong {
+  overflow-wrap: anywhere;
+}
+
 .subtle {
   color: var(--muted);
 }
@@ -656,6 +665,10 @@ td.num, th.num {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.invoice-actions {
+  margin-top: 2px;
 }
 
 .export-panel {
