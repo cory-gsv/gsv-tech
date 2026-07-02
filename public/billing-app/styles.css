@@ -122,16 +122,34 @@ nav {
 .sidebar-footer {
   margin-top: auto;
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-footer button, .sidebar-footer label {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 12px;
   color: #d7dee8;
   text-align: left;
+  border-color: transparent;
+  background: transparent;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sidebar-footer button:hover, .sidebar-footer label:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-footer form {
   margin: 0;
+  width: 100%;
 }
 
 .file-button input {

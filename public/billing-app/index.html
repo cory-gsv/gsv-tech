@@ -24,14 +24,14 @@
       <button class="nav-link" data-view="exports">Year-End Export</button>
     </nav>
     <div class="sidebar-footer">
-      <form action="/api/billing-logout" method="post" target="_top">
-        <button class="ghost" type="submit">Log Out</button>
-      </form>
       <button id="save-snapshot" class="ghost">Download Backup</button>
       <label class="ghost file-button">
         Restore Backup
         <input id="restore-snapshot" type="file" accept="application/json">
       </label>
+      <form action="/api/billing-logout" method="post" target="_top">
+        <button class="ghost" type="submit">Log Out</button>
+      </form>
     </div>
   </aside>
 
