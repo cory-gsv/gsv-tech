@@ -68,7 +68,7 @@ const defaultData = {
       terms: "Net 15",
       status: "active",
       billingClientId: "client_nyssco",
-      m365TenantKey: "",
+      m365TenantKey: "giorgios",
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [],
@@ -84,7 +84,7 @@ const defaultData = {
       terms: "Net 15",
       status: "active",
       billingClientId: "client_nyssco",
-      m365TenantKey: "",
+      m365TenantKey: "mike_d_sells",
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [],
@@ -100,7 +100,7 @@ const defaultData = {
       terms: "Net 15",
       status: "active",
       billingClientId: "client_nyssco",
-      m365TenantKey: "",
+      m365TenantKey: "sausage_sams",
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [],
@@ -202,6 +202,10 @@ function migrateDefaultRecords() {
             existing[field] = structuredClone(record[field]);
             changed = true;
           }
+        }
+        if (!existing.m365TenantKey && record.m365TenantKey) {
+          existing.m365TenantKey = record.m365TenantKey;
+          changed = true;
         }
       }
     }
@@ -1193,7 +1197,8 @@ function editorFields(mode, item) {
       ${field("phone", "Phone", item.phone || "")}
       ${field("terms", "Terms", item.terms || "Net 15")}
       ${select("billingClientId", "Bills To Client", billingClientOptions(item.billingClientId || "", item.id), false)}
-      ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "default")}
+      ${field("m365TenantKey", "Microsoft 365 Tenant Key", item.m365TenantKey || "")}
+      <p class="field-note full">Use a short key like nyssco, giorgios, mike_d_sells, or sausage_sams. Leave blank if this client does not have its own Microsoft 365 tenant yet.</p>
       ${field("pax8CompanyId", "Pax8 Company ID", item.pax8CompanyId || "")}
       ${field("ninjaOneOrgId", "NinjaOne Organization ID", item.ninjaOneOrgId || "", "number")}
       ${checkbox("licenseAuditBilling", "Use Microsoft 365 audit to generate monthly invoice", item.licenseAuditBilling !== false)}
@@ -1439,7 +1444,7 @@ function saveEditor() {
       phone: data.phone,
       terms: data.terms,
       billingClientId: data.billingClientId || "",
-      m365TenantKey: data.m365TenantKey || "default",
+      m365TenantKey: String(data.m365TenantKey || "").trim(),
       pax8CompanyId: data.pax8CompanyId || "",
       ninjaOneOrgId: Number(data.ninjaOneOrgId || 0),
       licenseAuditBilling: data.licenseAuditBilling === "on",
@@ -1932,7 +1937,8 @@ async function pullMicrosoft365Audit() {
 
   try {
     const client = clientById(clientId);
-    const tenant = encodeURIComponent(client?.m365TenantKey || "default");
+    if (!client?.m365TenantKey) throw new Error(`${client?.name || "This client"} does not have a Microsoft 365 tenant key yet.`);
+    const tenant = encodeURIComponent(client.m365TenantKey);
     const response = await fetch(`/api/m365-audit?tenant=${tenant}`, { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Microsoft 365 pull failed.");

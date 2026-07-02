@@ -744,6 +744,17 @@ dialog::backdrop {
   grid-column: 1 / -1;
 }
 
+.field-note {
+  margin: -8px 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.field-note.full {
+  grid-column: 1 / -1;
+}
+
 label {
   font-weight: 600;
 }

@@ -52,13 +52,21 @@ function tenantEnvValue(tenantKey: string, ...keys: string[]) {
   return envValue(...keys);
 }
 
+function tenantEnvPrefix(tenantKey: string) {
+  return tenantKey.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
+}
+
 async function graphToken(tenantKey = "default") {
   const tenantId = tenantEnvValue(tenantKey, "MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
   const clientId = tenantEnvValue(tenantKey, "MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
   const clientSecret = tenantEnvValue(tenantKey, "MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
 
   if (!tenantId || !clientId || !clientSecret) {
-    throw new Error(`Missing Microsoft Graph app credentials for tenant key "${tenantKey}".`);
+    const prefix = tenantEnvPrefix(tenantKey);
+    const expected = prefix && prefix !== "DEFAULT"
+      ? `${prefix}_MS_TENANT_ID / ${prefix}_MS_CLIENT_ID / ${prefix}_MS_CLIENT_SECRET`
+      : "MS_TENANT_ID / MS_CLIENT_ID / MS_CLIENT_SECRET";
+    throw new Error(`Missing Microsoft Graph app credentials for tenant key "${tenantKey}". Add ${expected} in Vercel.`);
   }
 
   const body = new URLSearchParams({
