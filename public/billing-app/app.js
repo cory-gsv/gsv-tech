@@ -40,20 +40,13 @@ const defaultData = {
       licenseAuditBilling: false,
       m365TenantKey: "nyssco",
       pax8CompanyId: "6e6399cf-8808-4c9c-bcce-19e6386e6589",
-      ninjaOneOrgId: 2,
       mspRates: {
         fullUser: 0,
         lightUser: 0,
         serviceAccount: 0,
         copilot: 0
       },
-      ninjaOnePricing: [
-        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 0, unitCost: 7.1, active: true },
-        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
-        { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
-        { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
-        { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
-      ],
+      ninjaOnePricing: [],
       internalCosts: [
         { name: "Domain registration/service", source: "Domain", qty: 0, unitCost: 0, active: true }
       ],
@@ -69,9 +62,17 @@ const defaultData = {
       status: "active",
       billingClientId: "client_nyssco",
       m365TenantKey: "giorgios",
+      pax8CompanyId: "e90f1be4-c060-4fe9-aee1-c243e0b246ac",
+      ninjaOneOrgId: 4,
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
-      ninjaOnePricing: [],
+      ninjaOnePricing: [
+        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 0, unitCost: 7.1, active: true },
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
+        { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
+        { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
+        { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
+      ],
       internalCosts: [],
       notes: "Service/client profile only. Invoices roll up to New York Style Sausage Company."
     },
@@ -223,6 +224,7 @@ function migrateDefaultRecords() {
   const pax8CompanyIdFixes = {
     "1933729": "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
     "1933703": "6e6399cf-8808-4c9c-bcce-19e6386e6589",
+    client_giorgios: "e90f1be4-c060-4fe9-aee1-c243e0b246ac",
     client_mike_d_sells: "a91818ab-d8c2-42dc-93f6-0c9d07b4ad06",
     client_sausage_sams: "d521e3c6-8f4d-4d54-8d7c-b399d64b8bd2"
   };
@@ -264,6 +266,42 @@ function migrateDefaultRecords() {
       }
     }
   });
+  const nyss = state.clients.find(client => client.id === "client_nyssco");
+  const giorgios = state.clients.find(client => client.id === "client_giorgios");
+  const giorgiosDefaults = defaultData.clients.find(client => client.id === "client_giorgios");
+  if (giorgios && giorgiosDefaults) {
+    if (!giorgios.pax8CompanyId) {
+      giorgios.pax8CompanyId = giorgiosDefaults.pax8CompanyId;
+      changed = true;
+    }
+    if (!giorgios.ninjaOneOrgId || giorgios.ninjaOneOrgId === 2) {
+      giorgios.ninjaOneOrgId = giorgiosDefaults.ninjaOneOrgId;
+      changed = true;
+    }
+    if (!Array.isArray(giorgios.ninjaOnePricing) || !giorgios.ninjaOnePricing.length) {
+      giorgios.ninjaOnePricing = structuredClone(giorgiosDefaults.ninjaOnePricing);
+      changed = true;
+    }
+  }
+  if (nyss) {
+    if (nyss.ninjaOneOrgId === 2) {
+      delete nyss.ninjaOneOrgId;
+      changed = true;
+    }
+    if (Array.isArray(nyss.ninjaOnePricing) && nyss.ninjaOnePricing.length) {
+      nyss.ninjaOnePricing = [];
+      changed = true;
+    }
+  }
+  if (Array.isArray(state.ninjaOneAudits)) {
+    state.ninjaOneAudits.forEach(audit => {
+      if (audit.clientId === "client_nyssco" && Number(audit.organizationId || 0) === 2) {
+        audit.clientId = "client_giorgios";
+        audit.organizationId = giorgiosDefaults?.ninjaOneOrgId || 4;
+        changed = true;
+      }
+    });
+  }
   if (changed) saveState();
 }
 
@@ -551,8 +589,11 @@ function renderClients() {
     const billingLabel = billingGroupLabel(client.id);
     return `
       <article class="item client-card ${selectedClientId === client.id ? "selected" : ""}" data-client-dashboard-card="${client.id}">
-        <div class="item-line">
-          <strong>${escapeHtml(client.name)}</strong>
+        <div class="item-line client-card-title">
+          <div class="client-card-heading">
+            <button type="button" class="drag-handle client-card-drag" draggable="true" data-client-card-drag="${client.id}" aria-label="Drag to reorder client">☰</button>
+            <strong>${escapeHtml(client.name)}</strong>
+          </div>
           <span class="badge ${client.status}">${escapeHtml(client.status)}</span>
         </div>
         ${billingLabel ? `<div class="subtle client-billing-label">${escapeHtml(billingLabel)}</div>` : ""}
@@ -2268,6 +2309,16 @@ document.addEventListener("change", event => {
 });
 
 document.addEventListener("dragstart", event => {
+  const clientHandle = event.target.closest?.("[data-client-card-drag]");
+  if (clientHandle) {
+    const card = clientHandle.closest(".client-card[data-client-dashboard-card]");
+    if (!card) return;
+    card.classList.add("dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", card.dataset.clientDashboardCard || "");
+    return;
+  }
+
   const row = event.target.closest?.(".line-editor-row");
   if (!row) return;
   row.classList.add("dragging");
@@ -2276,6 +2327,22 @@ document.addEventListener("dragstart", event => {
 });
 
 document.addEventListener("dragover", event => {
+  const clientList = event.target.closest?.("#client-list");
+  if (clientList) {
+    const dragging = clientList.querySelector(".client-card.dragging");
+    if (!dragging) return;
+    event.preventDefault();
+    const targetCard = event.target.closest(".client-card[data-client-dashboard-card]");
+    if (!targetCard || targetCard === dragging) return;
+    const targetBox = targetCard.getBoundingClientRect();
+    const pointerSameRow = event.clientY >= targetBox.top && event.clientY <= targetBox.bottom;
+    const afterTarget = pointerSameRow
+      ? event.clientX > targetBox.left + targetBox.width / 2
+      : event.clientY > targetBox.top + targetBox.height / 2;
+    clientList.insertBefore(dragging, afterTarget ? targetCard.nextSibling : targetCard);
+    return;
+  }
+
   const rowsContainer = event.target.closest?.("#line-editor-rows");
   if (!rowsContainer) return;
   event.preventDefault();
@@ -2288,6 +2355,25 @@ document.addEventListener("dragover", event => {
 });
 
 document.addEventListener("dragend", event => {
+  const card = event.target.closest?.("[data-client-card-drag]")?.closest(".client-card[data-client-dashboard-card]");
+  if (card) {
+    card.classList.remove("dragging");
+    const clientList = document.getElementById("client-list");
+    const orderedIds = [...clientList.querySelectorAll(".client-card[data-client-dashboard-card]")]
+      .map(item => item.dataset.clientDashboardCard)
+      .filter(Boolean);
+    if (orderedIds.length) {
+      const byId = new Map(state.clients.map(client => [client.id, client]));
+      state.clients = orderedIds.map(idValue => byId.get(idValue)).filter(Boolean);
+      byId.forEach((client, idValue) => {
+        if (!orderedIds.includes(idValue)) state.clients.push(client);
+      });
+      saveState();
+      renderClients();
+    }
+    return;
+  }
+
   const row = event.target.closest?.(".line-editor-row");
   if (row) row.classList.remove("dragging");
 });

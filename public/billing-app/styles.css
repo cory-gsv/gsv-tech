@@ -615,9 +615,38 @@ section {
   cursor: pointer;
 }
 
+.client-card.dragging {
+  opacity: .62;
+  background: #fff7db;
+}
+
 .client-card.selected {
   border-color: var(--gold);
   box-shadow: 0 0 0 2px rgba(255, 199, 44, .28);
+}
+
+.client-card-title {
+  align-items: flex-start;
+}
+
+.client-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.client-card-heading strong {
+  min-width: 0;
+}
+
+.client-card-drag {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  line-height: 1;
 }
 
 .client-billing-label {
