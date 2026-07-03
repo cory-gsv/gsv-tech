@@ -432,6 +432,29 @@ function pax8CostTotal(clientId, month = today.slice(0, 7)) {
   return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPartnerCost || 0);
 }
 
+function markedUpMicrosoft365Amount(amount) {
+  return Math.round(Number(amount || 0) * 1.4 * 100) / 100;
+}
+
+function pax8CustomerTotal(clientId, month = today.slice(0, 7)) {
+  return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPrice || 0);
+}
+
+function microsoft365BillingTotal(clientId, month = today.slice(0, 7)) {
+  return markedUpMicrosoft365Amount(pax8CustomerTotal(clientId, month));
+}
+
+function currentBillingTotal(clientId, month = today.slice(0, 7)) {
+  const serviceItemsTotal = currentMspItems(clientId, month)
+    .filter(item => !isGeneric365ServiceItem(item))
+    .reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+  return serviceItemsTotal + microsoft365BillingTotal(clientId, month);
+}
+
+function rollupBillingTotal(clientId, month = today.slice(0, 7)) {
+  return billingGroupClientIds(clientId).reduce((sum, id) => sum + currentBillingTotal(id, month), 0);
+}
+
 function pax8CostLabel(clientId, month = today.slice(0, 7)) {
   const client = clientById(clientId);
   if (!client?.pax8CompanyId) return "No Pax8 link";
@@ -444,7 +467,7 @@ function clientCostTotal(clientId, month = today.slice(0, 7)) {
 }
 
 function costMargin(clientId, month = today.slice(0, 7)) {
-  return currentMspTotal(clientId, month) - clientCostTotal(clientId, month);
+  return currentBillingTotal(clientId, month) - clientCostTotal(clientId, month);
 }
 
 function rollupPax8CostTotal(clientId, month = today.slice(0, 7)) {
@@ -460,7 +483,7 @@ function rollupOtherManualCostTotal(clientId) {
 }
 
 function rollupCostMargin(clientId, month = today.slice(0, 7)) {
-  return currentMspRollupTotal(clientId, month) - rollupPax8CostTotal(clientId, month) - rollupNinjaOneCostTotal(clientId, month) - rollupOtherManualCostTotal(clientId);
+  return rollupBillingTotal(clientId, month) - rollupPax8CostTotal(clientId, month) - rollupNinjaOneCostTotal(clientId, month) - rollupOtherManualCostTotal(clientId);
 }
 
 function activeClientIds(clientId = "") {
@@ -1721,10 +1744,6 @@ function quoteNumber(client, month) {
 
 function isGeneric365ServiceItem(item) {
   return /office\s*365|microsoft\s*365/i.test(item?.description || "");
-}
-
-function markedUpMicrosoft365Amount(amount) {
-  return Math.round(Number(amount || 0) * 1.4 * 100) / 100;
 }
 
 function monthlyServiceQuoteItemsForBillingClient(client, month) {
