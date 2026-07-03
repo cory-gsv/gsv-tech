@@ -1,4 +1,4 @@
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
@@ -1723,6 +1723,10 @@ function isGeneric365ServiceItem(item) {
   return /office\s*365|microsoft\s*365/i.test(item?.description || "");
 }
 
+function markedUpMicrosoft365Amount(amount) {
+  return Math.round(Number(amount || 0) * 1.4 * 100) / 100;
+}
+
 function monthlyServiceQuoteItemsForBillingClient(client, month) {
   const billingClient = billingClientFor(client.id);
   const sourceIds = billingGroupClientIds(billingClient.id);
@@ -1747,9 +1751,9 @@ function microsoft365BillingItemsForBillingClient(client, month) {
       .reduce((sum, row) => sum + Number(row.monthlyPrice || 0), 0);
     if (!microsoft365Total) return [];
     return [{
-      description: `Microsoft 365 licensing - ${sourceClient.name}`,
+      description: `Microsoft 365 licensing (${sourceClient.name})`,
       qty: 1,
-      rate: microsoft365Total
+      rate: markedUpMicrosoft365Amount(microsoft365Total)
     }];
   });
 }
