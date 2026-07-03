@@ -1737,18 +1737,20 @@ function monthlyServiceQuoteItemsForBillingClient(client, month) {
   });
 }
 
-function microsoft365QuoteItemsForBillingClient(client, month) {
+function microsoft365BillingItemsForBillingClient(client, month) {
   const billingClient = billingClientFor(client.id);
   return billingGroupClientIds(billingClient.id).flatMap(sourceId => {
     const sourceClient = clientById(sourceId);
     const pax8 = latestPax8Costs(sourceId, month);
-    return (pax8?.rows || [])
+    const microsoft365Total = (pax8?.rows || [])
       .filter(row => Number(row.quantity || 0) > 0)
-      .map(row => ({
-        description: `Microsoft 365 - ${sourceClient.name} - ${row.productName}`,
-        qty: Number(row.quantity || 0),
-        rate: Number(row.unitPrice || 0)
-      }));
+      .reduce((sum, row) => sum + Number(row.monthlyPrice || 0), 0);
+    if (!microsoft365Total) return [];
+    return [{
+      description: `Microsoft 365 licensing - ${sourceClient.name}`,
+      qty: 1,
+      rate: microsoft365Total
+    }];
   });
 }
 
@@ -1769,7 +1771,7 @@ function createServicesQuoteForClient(client, month) {
   }
   const items = [
     ...monthlyServiceQuoteItemsForBillingClient(client, month),
-    ...microsoft365QuoteItemsForBillingClient(client, month)
+    ...microsoft365BillingItemsForBillingClient(client, month)
   ];
   const number = quoteNumber(billingClient, month);
   const quote = {
@@ -1793,15 +1795,19 @@ function createServicesQuoteForClient(client, month) {
 function monthlyInvoiceItemsForBillingClient(client, month) {
   const billingClient = billingClientFor(client.id);
   const sourceIds = billingGroupClientIds(billingClient.id);
-  return sourceIds.flatMap(sourceId => {
+  const serviceItems = sourceIds.flatMap(sourceId => {
     const sourceClient = clientById(sourceId);
-    const items = currentMspItems(sourceId, month);
+    const items = currentMspItems(sourceId, month).filter(item => !isGeneric365ServiceItem(item));
     if (sourceId === billingClient.id || !items.length) return items;
     return items.map(item => ({
       ...item,
       description: `${sourceClient.name}: ${item.description}`
     }));
   });
+  return [
+    ...serviceItems,
+    ...microsoft365BillingItemsForBillingClient(client, month)
+  ];
 }
 
 function monthlyInvoiceNeedsAudit(client, month) {
