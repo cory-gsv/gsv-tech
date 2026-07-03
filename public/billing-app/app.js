@@ -40,13 +40,19 @@ const defaultData = {
       licenseAuditBilling: false,
       m365TenantKey: "nyssco",
       pax8CompanyId: "6e6399cf-8808-4c9c-bcce-19e6386e6589",
+      ninjaOneOrgId: 2,
       mspRates: {
         fullUser: 0,
         lightUser: 0,
         serviceAccount: 0,
         copilot: 0
       },
-      ninjaOnePricing: [],
+      ninjaOnePricing: [
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
+        { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
+        { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
+        { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
+      ],
       internalCosts: [
         { name: "Domain registration/service", source: "Domain", qty: 0, unitCost: 0, active: true }
       ],
@@ -67,11 +73,7 @@ const defaultData = {
       licenseAuditBilling: false,
       mspRates: { fullUser: 0, lightUser: 0, serviceAccount: 0, copilot: 0 },
       ninjaOnePricing: [
-        { name: "Ninja MSP Pro with SentinelOne Complete + Purple AI", qtySource: "fixed", qty: 0, unitCost: 7.1, active: true },
-        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
-        { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
-        { name: "Storage 1TB", qtySource: "fixed", qty: 3, unitCost: 15, active: true },
-        { name: "Ninja PSA", qtySource: "fixed", qty: 3, unitCost: 0, active: true }
+        { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true }
       ],
       internalCosts: [],
       notes: "Service/client profile only. Invoices roll up to New York Style Sausage Company."
@@ -268,7 +270,26 @@ function migrateDefaultRecords() {
   });
   const nyss = state.clients.find(client => client.id === "client_nyssco");
   const giorgios = state.clients.find(client => client.id === "client_giorgios");
+  const nyssDefaults = defaultData.clients.find(client => client.id === "client_nyssco");
   const giorgiosDefaults = defaultData.clients.find(client => client.id === "client_giorgios");
+  if (nyss && nyssDefaults) {
+    if (!nyss.ninjaOneOrgId || nyss.ninjaOneOrgId !== nyssDefaults.ninjaOneOrgId) {
+      nyss.ninjaOneOrgId = nyssDefaults.ninjaOneOrgId;
+      changed = true;
+    }
+    const nyssRuleNames = new Set(nyssDefaults.ninjaOnePricing.map(rule => rule.name));
+    const currentRules = Array.isArray(nyss.ninjaOnePricing) ? nyss.ninjaOnePricing : [];
+    const cleanedRules = currentRules.filter(rule => nyssRuleNames.has(rule.name));
+    nyssDefaults.ninjaOnePricing.forEach(rule => {
+      if (!cleanedRules.some(existing => existing.name === rule.name)) {
+        cleanedRules.push(structuredClone(rule));
+      }
+    });
+    if (JSON.stringify(currentRules) !== JSON.stringify(cleanedRules)) {
+      nyss.ninjaOnePricing = cleanedRules;
+      changed = true;
+    }
+  }
   if (giorgios && giorgiosDefaults) {
     if (!giorgios.pax8CompanyId) {
       giorgios.pax8CompanyId = giorgiosDefaults.pax8CompanyId;
@@ -278,26 +299,24 @@ function migrateDefaultRecords() {
       giorgios.ninjaOneOrgId = giorgiosDefaults.ninjaOneOrgId;
       changed = true;
     }
-    if (!Array.isArray(giorgios.ninjaOnePricing) || !giorgios.ninjaOnePricing.length) {
-      giorgios.ninjaOnePricing = structuredClone(giorgiosDefaults.ninjaOnePricing);
-      changed = true;
-    }
-  }
-  if (nyss) {
-    if (nyss.ninjaOneOrgId === 2) {
-      delete nyss.ninjaOneOrgId;
-      changed = true;
-    }
-    if (Array.isArray(nyss.ninjaOnePricing) && nyss.ninjaOnePricing.length) {
-      nyss.ninjaOnePricing = [];
+    const giorgiosRuleNames = new Set(giorgiosDefaults.ninjaOnePricing.map(rule => rule.name));
+    const currentRules = Array.isArray(giorgios.ninjaOnePricing) ? giorgios.ninjaOnePricing : [];
+    const cleanedRules = currentRules.filter(rule => giorgiosRuleNames.has(rule.name));
+    giorgiosDefaults.ninjaOnePricing.forEach(rule => {
+      if (!cleanedRules.some(existing => existing.name === rule.name)) {
+        cleanedRules.push(structuredClone(rule));
+      }
+    });
+    if (JSON.stringify(currentRules) !== JSON.stringify(cleanedRules)) {
+      giorgios.ninjaOnePricing = cleanedRules;
       changed = true;
     }
   }
   if (Array.isArray(state.ninjaOneAudits)) {
     state.ninjaOneAudits.forEach(audit => {
-      if (audit.clientId === "client_nyssco" && Number(audit.organizationId || 0) === 2) {
-        audit.clientId = "client_giorgios";
-        audit.organizationId = giorgiosDefaults?.ninjaOneOrgId || 4;
+      if (audit.clientId === "client_giorgios" && Number(audit.organizationId || 0) === 2) {
+        audit.clientId = "client_nyssco";
+        audit.organizationId = nyssDefaults?.ninjaOneOrgId || 2;
         changed = true;
       }
     });
