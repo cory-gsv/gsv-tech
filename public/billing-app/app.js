@@ -1714,6 +1714,82 @@ function monthlyInvoiceNumber(client, month) {
   return `GSV-${slug}-${month}`;
 }
 
+function quoteNumber(client, month) {
+  const slug = (client?.name || "CLIENT").split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return `GSV-Q-${slug}-${month}`;
+}
+
+function isGeneric365ServiceItem(item) {
+  return /office\s*365|microsoft\s*365/i.test(item?.description || "");
+}
+
+function monthlyServiceQuoteItemsForBillingClient(client, month) {
+  const billingClient = billingClientFor(client.id);
+  const sourceIds = billingGroupClientIds(billingClient.id);
+  return sourceIds.flatMap(sourceId => {
+    const sourceClient = clientById(sourceId);
+    const items = currentMspItems(sourceId, month).filter(item => !isGeneric365ServiceItem(item));
+    if (sourceId === billingClient.id || !items.length) return items;
+    return items.map(item => ({
+      ...item,
+      description: `${sourceClient.name}: ${item.description}`
+    }));
+  });
+}
+
+function microsoft365QuoteItemsForBillingClient(client, month) {
+  const billingClient = billingClientFor(client.id);
+  return billingGroupClientIds(billingClient.id).flatMap(sourceId => {
+    const sourceClient = clientById(sourceId);
+    const pax8 = latestPax8Costs(sourceId, month);
+    return (pax8?.rows || [])
+      .filter(row => Number(row.quantity || 0) > 0)
+      .map(row => ({
+        description: `Microsoft 365 - ${sourceClient.name} - ${row.productName}`,
+        qty: Number(row.quantity || 0),
+        rate: Number(row.unitPrice || 0)
+      }));
+  });
+}
+
+function servicesQuoteNeedsPax8(client, month) {
+  const billingClient = billingClientFor(client.id);
+  return billingGroupClientIds(billingClient.id)
+    .some(sourceId => clientById(sourceId)?.pax8CompanyId && !latestPax8Costs(sourceId, month));
+}
+
+function createServicesQuoteForClient(client, month) {
+  if (!client) return;
+  const billingClient = billingClientFor(client.id);
+  if (servicesQuoteNeedsPax8(client, month)) {
+    selectedClientId = client.id;
+    setView("clients");
+    window.alert("Run Audit Services first so the quote can use current Pax8/MSRP Microsoft 365 prices.");
+    return;
+  }
+  const items = [
+    ...monthlyServiceQuoteItemsForBillingClient(client, month),
+    ...microsoft365QuoteItemsForBillingClient(client, month)
+  ];
+  const number = quoteNumber(billingClient, month);
+  const quote = {
+    id: id("quote"),
+    number,
+    clientId: billingClient.id,
+    date: today,
+    title: "Monthly IT Services",
+    subject: `Monthly IT Services Quote (${number})`,
+    status: "draft",
+    items,
+    showShipTo: false,
+    shipTo: "",
+    notes: "Microsoft 365 line items use Pax8 customer/MSRP pricing from the latest services audit."
+  };
+  state.quotes.push(quote);
+  saveState();
+  openEditor("quote", quote);
+}
+
 function monthlyInvoiceItemsForBillingClient(client, month) {
   const billingClient = billingClientFor(client.id);
   const sourceIds = billingGroupClientIds(billingClient.id);
@@ -1803,6 +1879,34 @@ async function generateMonthlyInvoice(clientId = "", options = {}) {
     }
   }
   createMonthlyInvoiceForClient(client, month);
+}
+
+async function generateServicesQuote(clientId = "", options = {}) {
+  const client = (clientId && clientById(clientId)) || (selectedClientId && clientById(selectedClientId)) || state.clients.find(c => c.status === "active") || state.clients[0];
+  if (!client) return;
+  const month = new Date().toISOString().slice(0, 7);
+  const button = clientId ? document.querySelector(`[data-client-quote="${clientId}"]`) : null;
+  const auditClientIds = billingGroupClientIds(billingClientFor(client.id).id);
+  if (options.refreshAudit) {
+    if (button) {
+      button.disabled = true;
+      button.classList.add("is-loading");
+      button.textContent = "Auditing...";
+    }
+    const errors = await runServicesAudit(auditClientIds, month);
+    if (button) {
+      button.disabled = false;
+      button.classList.remove("is-loading");
+      button.textContent = "Quote";
+    }
+    if (errors.length) {
+      saveState();
+      render();
+      window.alert(`Quote was not created because the services audit had ${errors.length} issue${errors.length === 1 ? "" : "s"}:\n\n${errors.join("\n")}`);
+      return;
+    }
+  }
+  createServicesQuoteForClient(client, month);
 }
 
 function convertQuote(quoteId) {
@@ -2284,7 +2388,7 @@ document.addEventListener("click", event => {
     setView("clients");
   }
   if (target.dataset.clientInvoice) generateMonthlyInvoice(target.dataset.clientInvoice, { refreshAudit: true });
-  if (target.dataset.clientQuote) openEditor("quote", { clientId: target.dataset.clientQuote, date: today, status: "draft", items: [] });
+  if (target.dataset.clientQuote) generateServicesQuote(target.dataset.clientQuote, { refreshAudit: true });
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
   if (target.dataset.deleteInvoice) deleteInvoice(target.dataset.deleteInvoice);
   if (target.dataset.sendInvoice) sendInvoice(target.dataset.sendInvoice);

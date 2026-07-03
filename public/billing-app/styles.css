@@ -609,6 +609,10 @@ section {
   gap: 14px;
 }
 
+#client-detail:not(:empty) {
+  margin-top: 18px;
+}
+
 .client-card {
   display: grid;
   gap: 12px;
