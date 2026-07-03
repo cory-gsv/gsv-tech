@@ -441,7 +441,7 @@ function pax8CustomerTotal(clientId, month = today.slice(0, 7)) {
 }
 
 function microsoft365BillingTotal(clientId, month = today.slice(0, 7)) {
-  return markedUpMicrosoft365Amount(pax8CustomerTotal(clientId, month));
+  return markedUpMicrosoft365Amount(pax8CostTotal(clientId, month));
 }
 
 function currentBillingTotal(clientId, month = today.slice(0, 7)) {
@@ -1767,7 +1767,7 @@ function microsoft365BillingItemsForBillingClient(client, month) {
     const pax8 = latestPax8Costs(sourceId, month);
     const microsoft365Total = (pax8?.rows || [])
       .filter(row => Number(row.quantity || 0) > 0)
-      .reduce((sum, row) => sum + Number(row.monthlyPrice || 0), 0);
+      .reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
     if (!microsoft365Total) return [];
     return [{
       description: `Microsoft 365 licensing (${sourceClient.name})`,
