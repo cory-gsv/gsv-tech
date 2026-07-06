@@ -433,7 +433,7 @@ function pax8CostTotal(clientId, month = today.slice(0, 7)) {
 }
 
 function markedUpMicrosoft365Amount(amount) {
-  return Math.round(Number(amount || 0) * 1.4 * 100) / 100;
+  return Math.round(Number(amount || 0) * 1.5 * 100) / 100;
 }
 
 function pax8CustomerTotal(clientId, month = today.slice(0, 7)) {
