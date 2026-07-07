@@ -19,7 +19,9 @@ type InvoicePayload = {
   dueDate?: string;
   month?: string;
   subject?: string;
+  title?: string;
   items?: InvoiceItem[];
+  taxRate?: number;
   showShipTo?: boolean;
   shipTo?: string;
   total?: number;
@@ -85,7 +87,8 @@ function money(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value || 0);
 }
 
@@ -190,8 +193,9 @@ function pdfLogoImageObject() {
   };
 }
 
-function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
+function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, documentType: "invoice" | "quote" = "invoice") {
   const total = Number(invoice.total ?? invoiceTotal(invoice));
+  const isQuote = documentType === "quote";
   const logo = pdfLogoImageObject();
   const page = { width: 612, height: 792 };
   const ink = "0.11 0.15 0.19";
@@ -249,15 +253,21 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   content += drawText("billing@gsvisions.com", margin, 592, 12);
   content += drawText("(916) 432-3373", margin, 568, 12);
 
-  content += drawText("INVOICE", 434, 705, 30, ink, "F2");
+  content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 705, 30, ink, "F2");
   const metaX = 350;
   const metaValueX = 455;
-  [
-    ["Invoice #", invoice.number || ""],
-    ["Date", invoice.date || ""],
-    ["Due Date", invoice.dueDate || ""],
-    ["Invoice Month", invoice.month || ""],
-  ].forEach(([label, value], index) => {
+  const metaRows = isQuote
+    ? [
+        ["Quote #", invoice.number || ""],
+        ["Date", invoice.date || ""],
+      ]
+    : [
+        ["Invoice #", invoice.number || ""],
+        ["Date", invoice.date || ""],
+        ["Due Date", invoice.dueDate || ""],
+        ["Invoice Month", invoice.month || ""],
+      ];
+  metaRows.forEach(([label, value], index) => {
     const y = 655 - index * 26;
     content += drawTextRight(label, metaX, y, 90, 12, ink, "F2");
     content += drawText(value, metaValueX, y, 12);
@@ -287,7 +297,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
     });
   }
 
-  content += drawText("Monthly IT Services", tableX, 382, 18, ink, "F2");
+  content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, 382, 18, ink, "F2");
   const items = (invoice.items || []).slice(0, 14);
   const rowH = 27;
   const headerH = 30;
@@ -332,7 +342,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload) {
   const totalY = 58;
   content += rect(tableX, totalY, tableW, 36, gold);
   content += vline(tableX + tableW - 115, totalY, totalY + 36);
-  content += drawTextRight("Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
+  content += drawTextRight(isQuote ? "Total" : "Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
   content += drawTextCenter(money(total), tableX + tableW - 115, totalY + 12, 115, 16, ink, "F2");
 
   const stream = `q\n1 1 1 rg 0 0 612 792 re f\n0 0 0 RG 0 0 0 rg\n${content}Q`;
@@ -371,13 +381,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Billing Hub login required." }, { status: 401 });
     }
 
-    const { invoice, client } = await request.json() as {
+    const { documentType = "invoice", invoice, client } = await request.json() as {
+      documentType?: "invoice" | "quote";
       invoice?: InvoicePayload;
       client?: ClientPayload;
     };
     if (!invoice || !client?.email) {
-      return NextResponse.json({ error: "Invoice and client email are required." }, { status: 400 });
+      return NextResponse.json({ error: "Document and client email are required." }, { status: 400 });
     }
+    const isQuote = documentType === "quote";
 
     const fromMailbox = envValue("BILLING_SEND_FROM", "MS_SEND_FROM", "MICROSOFT_SEND_FROM");
     if (!fromMailbox) {
@@ -385,17 +397,24 @@ export async function POST(request: Request) {
     }
 
     const accessToken = await graphToken();
-    const pdf = generateInvoicePdf(invoice, client);
-    const subject = invoice.subject?.trim() || `Monthly IT Services Invoice (${invoice.number || ""})`;
+    const pdf = generateInvoicePdf(invoice, client, isQuote ? "quote" : "invoice");
+    const subject = invoice.subject?.trim() || (isQuote ? `Project Quote (${invoice.number || ""})` : `Monthly IT Services Invoice (${invoice.number || ""})`);
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
     const senderName = "Golden State Visions";
-    const body = [
-      `<p>Hi ${client.name || ""},</p>`,
-      `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
-      `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
-      `<p>Please remit payment by check.</p><p>Golden State Visions<br>757 Caber Drive<br>Lincoln, CA 95648</p>`,
-      `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
-    ].join("");
+    const body = isQuote
+      ? [
+          `<p>Hi ${client.name || ""},</p>`,
+          `<p>Quote <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
+          `<p>Total: <strong>${total}</strong></p>`,
+          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
+        ].join("")
+      : [
+          `<p>Hi ${client.name || ""},</p>`,
+          `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
+          `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
+          `<p>Please remit payment by check.</p><p>Golden State Visions<br>757 Caber Drive<br>Lincoln, CA 95648</p>`,
+          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
+        ].join("");
 
     const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {
       method: "POST",
@@ -421,7 +440,7 @@ export async function POST(request: Request) {
         attachments: [
           {
             "@odata.type": "#microsoft.graph.fileAttachment",
-            name: `${(invoice.number || "invoice").replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`,
+            name: `${(invoice.number || documentType).replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`,
             contentType: "application/pdf",
             contentBytes: pdf.toString("base64"),
           },
@@ -443,7 +462,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       id: data.id,
       webLink: data.webLink || "",
-      message: "Outlook draft created with invoice PDF attached.",
+      message: `Outlook draft created with ${isQuote ? "quote" : "invoice"} PDF attached.`,
     });
   } catch (error) {
     return NextResponse.json(

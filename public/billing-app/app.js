@@ -1202,6 +1202,7 @@ function renderQuotes() {
           <div class="row-actions">
             <button data-preview-quote="${quote.id}">Preview</button>
             <button data-edit-quote="${quote.id}">Edit</button>
+            ${quote.status !== "converted" && quote.status !== "declined" ? `<button data-send-quote="${quote.id}">Send</button>` : ""}
             ${quote.status !== "converted" ? `<button data-convert-quote="${quote.id}">Create Invoice</button>` : ""}
           </div>
         </td>
@@ -1270,7 +1271,7 @@ function openEditor(mode, existing = {}) {
   deleteButton.hidden = !(mode === "invoice" && existing.id);
   createInvoiceButton.hidden = !(mode === "quote" && existing.id && existing.status !== "converted");
   pdfButton.hidden = mode !== "invoice";
-  sendButton.hidden = !(mode === "invoice" && existing.id);
+  sendButton.hidden = !((mode === "invoice" || mode === "quote") && existing.id);
   dialog.showModal();
   updateEditorTotal();
 }
@@ -1767,8 +1768,9 @@ function markInvoiceSent(invoiceId) {
   render();
 }
 
-function setInvoiceSending(invoiceId, isSending) {
-  document.querySelectorAll(`[data-send-invoice="${invoiceId}"], #editor-send, #send-preview-document`).forEach(button => {
+function setDocumentSending(type, documentId, isSending) {
+  const dataAttr = type === "quote" ? "data-send-quote" : "data-send-invoice";
+  document.querySelectorAll(`[${dataAttr}="${documentId}"], #editor-send, #send-preview-document`).forEach(button => {
     button.disabled = isSending;
     button.classList.toggle("is-loading", isSending);
     if (isSending) {
@@ -1779,6 +1781,10 @@ function setInvoiceSending(invoiceId, isSending) {
       delete button.dataset.readyText;
     }
   });
+}
+
+function setInvoiceSending(invoiceId, isSending) {
+  setDocumentSending("invoice", invoiceId, isSending);
 }
 
 async function sendInvoice(invoiceId, invoiceOverride = null) {
@@ -1831,6 +1837,59 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
   }
 }
 
+async function sendQuote(quoteId, quoteOverride = null) {
+  const quote = quoteOverride || state.quotes.find(q => q.id === quoteId);
+  if (!quote) return;
+  const client = clientById(quote.clientId);
+
+  if (!clientEmail(client)) {
+    window.alert("This client does not have an email address saved.");
+    return;
+  }
+
+  setDocumentSending("quote", quoteId, true);
+  try {
+    const response = await fetch("/api/billing-invoice-draft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        documentType: "quote",
+        invoice: {
+          number: quote.number,
+          date: quote.date,
+          dueDate: "",
+          month: quote.date?.slice(0, 7),
+          subject: quote.subject,
+          title: quote.title,
+          items: quote.items,
+          taxRate: Number(quote.taxRate || 0),
+          showShipTo: quote.showShipTo,
+          shipTo: quote.shipTo,
+          total: invoiceTotal(quote)
+        },
+        client: {
+          name: client?.name || "",
+          email: clientEmail(client),
+          ccEmails: clientCcEmails(client),
+          billTo: client?.billTo || ""
+        }
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Outlook draft creation failed.");
+    quote.status = "sent";
+    quote.sentAt = new Date().toISOString();
+    upsert(state.quotes, quote);
+    saveState();
+    setDocumentSending("quote", quoteId, false);
+    window.alert("Email draft created in billing@gsvisions.com Drafts with the quote PDF attached.");
+    render();
+  } catch (error) {
+    setDocumentSending("quote", quoteId, false);
+    window.alert(error instanceof Error ? error.message : "Outlook draft creation failed.");
+  }
+}
+
 function invoiceFromEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
@@ -1851,6 +1910,27 @@ function invoiceFromEditor() {
     shipTo: data.shipTo,
     notes: data.notes,
     sentAt: existingInvoice?.sentAt || ""
+  };
+}
+
+function quoteFromEditor() {
+  const form = document.getElementById("editor-form");
+  const data = Object.fromEntries(new FormData(form).entries());
+  const existingQuote = state.quotes.find(quote => quote.id === editing.id);
+  return {
+    id: editing.id || id("preview"),
+    number: data.number,
+    clientId: data.clientId,
+    date: data.date,
+    title: data.title,
+    taxRate: Number(data.taxRate || 0),
+    subject: data.subject || defaultDocumentSubject("quote", data),
+    status: data.status,
+    items: editorLineItems(),
+    showShipTo: data.showShipTo === "on",
+    shipTo: data.shipTo,
+    notes: data.notes,
+    sentAt: existingQuote?.sentAt || ""
   };
 }
 
@@ -2133,7 +2213,10 @@ function previewDocument(type, idValue) {
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
   document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
-  document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
+  document.getElementById("send-preview-document").hidden =
+    type === "invoice"
+      ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
+      : doc.status === "converted" || doc.status === "declined";
   document.getElementById("document-preview").showModal();
 }
 
@@ -2144,7 +2227,10 @@ function exportDocumentPdf(type, doc) {
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
   document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
-  document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
+  document.getElementById("send-preview-document").hidden =
+    type === "invoice"
+      ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
+      : doc.status === "converted" || doc.status === "declined";
   const preview = document.getElementById("document-preview");
   if (!preview.open) preview.showModal();
   window.setTimeout(() => window.print(), 150);
@@ -2162,8 +2248,9 @@ function editPreviewDocument() {
 }
 
 function sendPreviewDocument() {
-  if (!previewing || previewing.type !== "invoice") return;
-  sendInvoice(previewing.id);
+  if (!previewing) return;
+  if (previewing.type === "quote") sendQuote(previewing.id);
+  else sendInvoice(previewing.id);
 }
 
 function createInvoiceFromPreviewQuote() {
@@ -2583,6 +2670,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-create-invoice" && editing.mode === "quote" && editing.id) createInvoiceFromEditorQuote();
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
+  if (target.id === "editor-send" && editing.mode === "quote" && editing.id) sendQuote(editing.id, quoteFromEditor());
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "edit-preview-document") editPreviewDocument();
@@ -2603,6 +2691,7 @@ document.addEventListener("click", event => {
   if (target.dataset.editInvoice) openEditor("invoice", state.invoices.find(inv => inv.id === target.dataset.editInvoice));
   if (target.dataset.deleteInvoice) deleteInvoice(target.dataset.deleteInvoice);
   if (target.dataset.sendInvoice) sendInvoice(target.dataset.sendInvoice);
+  if (target.dataset.sendQuote) sendQuote(target.dataset.sendQuote);
   if (target.dataset.editQuote) openEditor("quote", state.quotes.find(q => q.id === target.dataset.editQuote));
   if (target.dataset.payInvoice) {
     const inv = state.invoices.find(invoice => invoice.id === target.dataset.payInvoice);
