@@ -1882,7 +1882,7 @@ async function sendQuote(quoteId, quoteOverride = null) {
     upsert(state.quotes, quote);
     saveState();
     setDocumentSending("quote", quoteId, false);
-    window.alert("Email draft created in billing@gsvisions.com Drafts with the quote PDF attached.");
+    window.alert("Email draft created in cory@gsvisions.com Drafts with the quote PDF attached.");
     render();
   } catch (error) {
     setDocumentSending("quote", quoteId, false);

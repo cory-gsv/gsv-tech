@@ -193,7 +193,7 @@ function pdfLogoImageObject() {
   };
 }
 
-function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, documentType: "invoice" | "quote" = "invoice") {
+function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, documentType: "invoice" | "quote" = "invoice", contactEmail = "billing@gsvisions.com") {
   const total = Number(invoice.total ?? invoiceTotal(invoice));
   const isQuote = documentType === "quote";
   const logo = pdfLogoImageObject();
@@ -250,7 +250,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   let content = "";
   content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
   content += drawLogo(margin, 650, 240);
-  content += drawText("billing@gsvisions.com", margin, 592, 12);
+  content += drawText(contactEmail, margin, 592, 12);
   content += drawText("(916) 432-3373", margin, 568, 12);
 
   content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 705, 30, ink, "F2");
@@ -391,13 +391,15 @@ export async function POST(request: Request) {
     }
     const isQuote = documentType === "quote";
 
-    const fromMailbox = envValue("BILLING_SEND_FROM", "MS_SEND_FROM", "MICROSOFT_SEND_FROM");
+    const fromMailbox = isQuote
+      ? envValue("BILLING_QUOTE_SEND_FROM", "QUOTE_SEND_FROM") || "cory@gsvisions.com"
+      : envValue("BILLING_SEND_FROM", "MS_SEND_FROM", "MICROSOFT_SEND_FROM");
     if (!fromMailbox) {
       throw new Error("Missing BILLING_SEND_FROM mailbox for Outlook drafts.");
     }
 
     const accessToken = await graphToken();
-    const pdf = generateInvoicePdf(invoice, client, isQuote ? "quote" : "invoice");
+    const pdf = generateInvoicePdf(invoice, client, isQuote ? "quote" : "invoice", fromMailbox);
     const subject = invoice.subject?.trim() || (isQuote ? `Project Quote (${invoice.number || ""})` : `Monthly IT Services Invoice (${invoice.number || ""})`);
     const total = money(Number(invoice.total ?? invoiceTotal(invoice)));
     const senderName = "Golden State Visions";
