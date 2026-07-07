@@ -367,8 +367,25 @@ function clientMspRates(clientId) {
   };
 }
 
+function lineItemAmount(item) {
+  return Number(item.qty || 0) * Number(item.rate || 0);
+}
+
+function documentSubtotal(doc) {
+  return (doc.items || []).reduce((sum, item) => sum + lineItemAmount(item), 0);
+}
+
+function documentTaxTotal(doc) {
+  const taxRate = Number(doc.taxRate || 0);
+  if (!taxRate) return 0;
+  const taxableSubtotal = (doc.items || [])
+    .filter(item => item.taxable)
+    .reduce((sum, item) => sum + lineItemAmount(item), 0);
+  return Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
+}
+
 function invoiceTotal(invoice) {
-  return invoice.items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+  return documentSubtotal(invoice) + documentTaxTotal(invoice);
 }
 
 function currentMspItems(clientId, month = today.slice(0, 7)) {
@@ -1266,7 +1283,10 @@ function editorTitle(mode) {
 }
 
 function clientOptions(selected) {
-  return state.clients.map(c => `<option value="${c.id}" ${selected === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("");
+  return [
+    `<option value="" ${!selected ? "selected" : ""}>Select a client</option>`,
+    ...state.clients.map(c => `<option value="${c.id}" ${selected === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)
+  ].join("");
 }
 
 function billingClientOptions(selected, currentClientId = "") {
@@ -1344,6 +1364,7 @@ function editorFields(mode, item) {
           ${field("number", mode === "invoice" ? "Invoice #" : "Quote #", documentNumber)}
           ${field("date", "Date", item.date || today, "date")}
           ${mode === "invoice" ? field("dueDate", "Due Date", item.dueDate || addDays(today, 15), "date") : field("title", "Project / Quote Title", item.title || "")}
+          ${mode === "quote" ? field("taxRate", "Tax Rate %", item.taxRate ?? 0, "number") : ""}
           ${field("subject", "Email Subject", item.subject || defaultDocumentSubject(mode, { ...item, number: documentNumber }))}
           ${select("status", "Status", statusOptions(mode, item.status), false)}
         </div>
@@ -1351,7 +1372,10 @@ function editorFields(mode, item) {
       <div class="invoice-edit-bill full">
         <div class="invoice-edit-address-grid">
           <div>
-            ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
+            <div class="select-with-action">
+              ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
+              ${mode === "quote" ? `<button id="quick-add-client" type="button">Add Client</button>` : ""}
+            </div>
             <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || "Select a client")}</div>
           </div>
           <div>
@@ -1362,10 +1386,14 @@ function editorFields(mode, item) {
       </div>
       <div class="invoice-edit-section full">
         <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
-        <div class="line-editor" id="line-editor">
-          <div class="line-editor-head"><span></span><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>
+        <div class="line-editor ${mode === "quote" ? "quote-line-editor" : ""}" id="line-editor" data-mode="${mode}">
+          <div class="line-editor-head">
+            ${mode === "quote"
+              ? "<span></span><span>Description</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
+              : "<span></span><span>Description</span><span>Qty</span><span>Unit Price</span><span>Amount</span><span></span>"}
+          </div>
           <div id="line-editor-rows">
-            ${lineEditorRows(item.items || [])}
+            ${lineEditorRows(item.items || [], mode)}
           </div>
         </div>
         <div class="line-editor-tools">
@@ -1437,18 +1465,71 @@ function select(name, label, options, full = false) {
   return `<div class="field ${full ? "full" : ""}"><label for="${name}">${label}</label><select id="${name}" name="${name}">${options}</select></div>`;
 }
 
-function lineEditorRows(items) {
-  const source = items.length ? items : [{ description: "", qty: 1, rate: 0 }];
-  return source.map(item => lineEditorRow(item)).join("");
+function quickAddClientFromDocument() {
+  const name = window.prompt("Client name");
+  if (!name?.trim()) return;
+  const newClient = {
+    id: id("client"),
+    name: name.trim(),
+    status: "active",
+    terms: "Net 15",
+    billTo: name.trim(),
+    shipTo: "",
+    email: "",
+    ccEmail: "",
+    phone: "",
+    internalCosts: [],
+    mspRates: { fullUser: 70, lightUser: 20, serviceAccount: 10, copilot: 30 },
+    licenseAuditBilling: true
+  };
+  state.clients.push(newClient);
+  saveState();
+  const clientSelect = document.getElementById("clientId");
+  if (clientSelect) {
+    clientSelect.innerHTML = clientOptions(newClient.id);
+    clientSelect.value = newClient.id;
+  }
+  const address = document.querySelector(".invoice-edit-address");
+  if (address) address.innerHTML = lines(newClient.billTo);
+  const shipTo = document.getElementById("shipTo");
+  if (shipTo && !shipTo.value.trim()) shipTo.value = newClient.billTo;
 }
 
-function lineEditorRow(item = {}) {
+function lineEditorRows(items, mode = editing.mode) {
+  const source = items.length ? items : [{ description: "", qty: 1, rate: 0 }];
+  return source.map(item => lineEditorRow(item, mode)).join("");
+}
+
+function quoteLineRate(item) {
+  const unitCost = Number(item.unitCost || 0);
+  const markup = Number(item.markupPercent ?? item.markup ?? 0);
+  if ((item.rate === undefined || item.rate === "") && unitCost) return Math.round(unitCost * (1 + markup / 100) * 100) / 100;
+  return Number(item.rate || 0);
+}
+
+function lineEditorRow(item = {}, mode = editing.mode) {
+  const rate = mode === "quote" ? quoteLineRate(item) : Number(item.rate || 0);
+  if (mode === "quote") {
+    return `
+      <div class="line-editor-row quote-line-row" draggable="true">
+        <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
+        <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
+        <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
+        <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(item.unitCost ?? "")}">
+        <input name="itemMarkup" aria-label="Mark Up Percent" type="number" step="0.01" value="${escapeHtml(item.markupPercent ?? item.markup ?? "")}">
+        <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(rate)}">
+        <label class="line-taxable"><input name="itemTaxable" aria-label="Taxable" type="checkbox" ${item.taxable ? "checked" : ""}></label>
+        <output class="line-amount">${money.format(Number(item.qty || 0) * rate)}</output>
+        <button type="button" class="icon danger" data-remove-line aria-label="Remove line item">×</button>
+      </div>
+    `;
+  }
   return `
     <div class="line-editor-row" draggable="true">
       <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
       <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
-      <input name="itemQty" aria-label="Quantity" type="number" step="0.01" min="0" value="${escapeHtml(item.qty ?? 1)}">
-      <input name="itemRate" aria-label="Rate" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
+      <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
+      <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
       <output class="line-amount">${money.format(Number(item.qty || 0) * Number(item.rate || 0))}</output>
       <button type="button" class="icon danger" data-remove-line aria-label="Remove line item">×</button>
     </div>
@@ -1457,26 +1538,57 @@ function lineEditorRow(item = {}) {
 
 function editorLineItems() {
   return [...document.querySelectorAll("#line-editor-rows .line-editor-row")]
-    .map(row => ({
-      description: row.querySelector('[name="itemDescription"]').value.trim(),
-      qty: Number(row.querySelector('[name="itemQty"]').value || 0),
-      rate: Number(row.querySelector('[name="itemRate"]').value || 0)
-    }))
-    .filter(item => item.description || item.qty || item.rate);
+    .map(row => {
+      const item = {
+        description: row.querySelector('[name="itemDescription"]').value.trim(),
+        qty: Number(row.querySelector('[name="itemQty"]').value || 0),
+        rate: Number(row.querySelector('[name="itemRate"]').value || 0)
+      };
+      const unitCost = row.querySelector('[name="itemUnitCost"]');
+      const markup = row.querySelector('[name="itemMarkup"]');
+      const taxable = row.querySelector('[name="itemTaxable"]');
+      if (unitCost) item.unitCost = Number(unitCost.value || 0);
+      if (markup) item.markupPercent = Number(markup.value || 0);
+      if (taxable) item.taxable = taxable.checked;
+      return item;
+    })
+    .filter(item => item.description || item.qty || item.rate || item.unitCost || item.markupPercent);
 }
 
-function updateEditorTotal() {
+function syncQuoteLineMarkup(row, changedInput) {
+  if (!row.classList.contains("quote-line-row")) return;
+  const unitCostInput = row.querySelector('[name="itemUnitCost"]');
+  const markupInput = row.querySelector('[name="itemMarkup"]');
+  const rateInput = row.querySelector('[name="itemRate"]');
+  const unitCost = Number(unitCostInput?.value || 0);
+  if (!unitCostInput || !markupInput || !rateInput || !unitCost) return;
+  if (changedInput?.name === "itemUnitCost" || changedInput?.name === "itemMarkup") {
+    const markup = Number(markupInput.value || 0);
+    rateInput.value = (Math.round(unitCost * (1 + markup / 100) * 100) / 100).toFixed(2);
+  }
+  if (changedInput?.name === "itemRate") {
+    const rate = Number(rateInput.value || 0);
+    markupInput.value = (Math.round(((rate / unitCost) - 1) * 10000) / 100).toFixed(2);
+  }
+}
+
+function updateEditorTotal(changedInput) {
   const totalNode = document.getElementById("editor-total");
   if (!totalNode) return;
-  let total = 0;
+  let subtotal = 0;
+  let taxableSubtotal = 0;
   document.querySelectorAll("#line-editor-rows .line-editor-row").forEach(row => {
+    syncQuoteLineMarkup(row, changedInput && row.contains(changedInput) ? changedInput : null);
     const qty = Number(row.querySelector('[name="itemQty"]').value || 0);
     const rate = Number(row.querySelector('[name="itemRate"]').value || 0);
     const amount = qty * rate;
     row.querySelector(".line-amount").textContent = money.format(amount);
-    total += amount;
+    subtotal += amount;
+    if (row.querySelector('[name="itemTaxable"]')?.checked) taxableSubtotal += amount;
   });
-  totalNode.textContent = money.format(total);
+  const taxRate = Number(document.getElementById("taxRate")?.value || 0);
+  const tax = Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
+  totalNode.textContent = money.format(subtotal + tax);
 }
 
 function itemsToText(items) {
@@ -1533,6 +1645,10 @@ function addDays(dateText, days) {
 function saveEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
+  if ((editing.mode === "invoice" || editing.mode === "quote") && !data.clientId) {
+    window.alert("Select or add a client before saving.");
+    return;
+  }
   if (editing.mode === "client") {
       const client = {
       id: editing.id || id("client"),
@@ -1573,6 +1689,7 @@ function saveEditor() {
       status: data.status,
       type: existingInvoice?.type || "Manual",
       items: editorLineItems(),
+      taxRate: Number(existingInvoice?.taxRate || 0),
       showShipTo: data.showShipTo === "on",
       shipTo: data.shipTo,
       notes: data.notes,
@@ -1587,6 +1704,7 @@ function saveEditor() {
       clientId: data.clientId,
       date: data.date,
       title: data.title,
+      taxRate: Number(data.taxRate || 0),
       subject: data.subject || defaultDocumentSubject("quote", data),
       status: data.status,
       items: editorLineItems(),
@@ -1725,6 +1843,7 @@ function invoiceFromEditor() {
     status: data.status,
     type: existingInvoice?.type || "Manual",
     items: editorLineItems(),
+    taxRate: Number(existingInvoice?.taxRate || 0),
     showShipTo: data.showShipTo === "on",
     shipTo: data.shipTo,
     notes: data.notes,
@@ -1769,10 +1888,13 @@ function microsoft365BillingItemsForBillingClient(client, month) {
       .filter(row => Number(row.quantity || 0) > 0)
       .reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
     if (!microsoft365Total) return [];
+    const rate = markedUpMicrosoft365Amount(microsoft365Total);
     return [{
       description: `Microsoft 365 licensing (${sourceClient.name})`,
       qty: 1,
-      rate: markedUpMicrosoft365Amount(microsoft365Total)
+      unitCost: microsoft365Total,
+      markupPercent: 50,
+      rate
     }];
   });
 }
@@ -1953,6 +2075,7 @@ function convertQuote(quoteId) {
     type: "Project",
     subject: defaultDocumentSubject("invoice", { ...quote, number: invoiceNumber }),
     items: structuredClone(quote.items),
+    taxRate: Number(quote.taxRate || 0),
     showShipTo: quote.showShipTo,
     shipTo: quote.shipTo,
     notes: quote.notes
@@ -2005,6 +2128,10 @@ function sendPreviewDocument() {
 function renderDocument(type, doc, client) {
   const title = type === "quote" ? "QUOTE" : "INVOICE";
   const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "info@gsvisions.com";
+  const subtotal = documentSubtotal(doc);
+  const tax = documentTaxTotal(doc);
+  const total = invoiceTotal(doc);
+  const taxRate = Number(doc.taxRate || 0);
   return `
     <div class="doc">
       <div class="doc-head">
@@ -2038,20 +2165,26 @@ function renderDocument(type, doc, client) {
       </div>
       <div class="doc-block">
         <h2>${type === "quote" ? escapeHtml(doc.title || "Project Quote") : "Monthly IT Services"}</h2>
-        <table class="doc-table">
-          <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <table class="doc-table doc-items">
+          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
           <tbody>
-            ${doc.items.map(item => `
+            ${(doc.items || []).map(item => `
               <tr>
                 <td>${escapeHtml(item.description)}</td>
                 <td class="center">${item.qty || ""}</td>
                 <td class="center">${money.format(Number(item.rate || 0))}</td>
-                <td class="center">${money.format(Number(item.qty || 0) * Number(item.rate || 0))}</td>
+                <td class="center">${money.format(lineItemAmount(item))}</td>
               </tr>
             `).join("")}
           </tbody>
         </table>
-        <div class="doc-total"><span>Total Due</span><strong>${money.format(invoiceTotal(doc))}</strong></div>
+        ${tax ? `
+          <div class="doc-summary">
+            <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
+            <div><span>Tax (${taxRate.toFixed(2)}%)</span><strong>${money.format(tax)}</strong></div>
+            <div class="doc-total"><span>Total Due</span><strong>${money.format(total)}</strong></div>
+          </div>
+        ` : `<div class="doc-total"><span>Total Due</span><strong>${money.format(total)}</strong></div>`}
       </div>
       ${doc.notes ? `
         <div class="doc-block">
@@ -2382,6 +2515,7 @@ document.addEventListener("click", event => {
   if (target.id === "new-invoice") openEditor("invoice", { date: today, dueDate: addDays(today, 15), status: "draft", items: [] });
   if (target.id === "new-quote" || target.id === "add-quote") openEditor("quote", { date: today, status: "draft", items: [] });
   if (target.id === "add-client") openEditor("client", { status: "active", terms: "Net 15" });
+  if (target.id === "quick-add-client") quickAddClientFromDocument();
   if (target.id === "record-payment") openEditor("payment", { date: today, method: "Check" });
   if (target.id === "generate-monthly") generateMonthlyInvoice("", { refreshAudit: true });
   if (target.id === "audit-create-invoice") createInvoiceFromAudit();
@@ -2441,7 +2575,7 @@ document.addEventListener("click", event => {
 });
 
 document.addEventListener("input", event => {
-  if (event.target.closest("#line-editor-rows")) updateEditorTotal();
+  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate") updateEditorTotal(event.target);
 });
 
 document.addEventListener("change", event => {
@@ -2457,7 +2591,7 @@ document.addEventListener("change", event => {
     renderAudit365();
     renderClients();
   }
-  if (event.target.closest("#line-editor-rows")) updateEditorTotal();
+  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate") updateEditorTotal(event.target);
 });
 
 document.addEventListener("dragstart", event => {
