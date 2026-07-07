@@ -1202,7 +1202,7 @@ function renderQuotes() {
           <div class="row-actions">
             <button data-preview-quote="${quote.id}">Preview</button>
             <button data-edit-quote="${quote.id}">Edit</button>
-            <button data-convert-quote="${quote.id}">Convert</button>
+            ${quote.status !== "converted" ? `<button data-convert-quote="${quote.id}">Create Invoice</button>` : ""}
           </div>
         </td>
       </tr>
@@ -1261,12 +1261,14 @@ function openEditor(mode, existing = {}) {
   const dialog = document.getElementById("editor");
   const fields = document.getElementById("editor-fields");
   const deleteButton = document.getElementById("editor-delete");
+  const createInvoiceButton = document.getElementById("editor-create-invoice");
   const pdfButton = document.getElementById("editor-pdf");
   const sendButton = document.getElementById("editor-send");
   document.getElementById("editor-title").textContent = editorTitle(mode);
   fields.className = mode === "invoice" || mode === "quote" ? "form-grid invoice-editor" : "form-grid";
   fields.innerHTML = editorFields(mode, existing);
   deleteButton.hidden = !(mode === "invoice" && existing.id);
+  createInvoiceButton.hidden = !(mode === "quote" && existing.id && existing.status !== "converted");
   pdfButton.hidden = mode !== "invoice";
   sendButton.hidden = !(mode === "invoice" && existing.id);
   dialog.showModal();
@@ -1399,7 +1401,7 @@ function editorFields(mode, item) {
         <div class="line-editor-tools">
           <button id="add-line-item" type="button">Add Row</button>
         </div>
-        <div class="invoice-edit-total"><span>Total Due</span><strong id="editor-total">$0</strong></div>
+        <div class="invoice-edit-total"><span>${mode === "quote" ? "Total" : "Total Due"}</span><strong id="editor-total">$0</strong></div>
       </div>
       ${textarea("notes", "Notes", item.notes || "", true)}
     `;
@@ -1438,7 +1440,8 @@ function defaultDocumentSubject(mode, item = {}) {
 }
 
 function field(name, label, value, type = "text") {
-  return `<div class="field"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" value="${escapeHtml(value)}"></div>`;
+  const numberAttrs = type === "number" ? ' step="any"' : "";
+  return `<div class="field"><label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}"${numberAttrs} value="${escapeHtml(value)}"></div>`;
 }
 
 function checkbox(name, label, checked = false) {
@@ -2063,6 +2066,10 @@ async function generateServicesQuote(clientId = "", options = {}) {
 function convertQuote(quoteId) {
   const quote = state.quotes.find(q => q.id === quoteId);
   if (!quote) return;
+  if (quote.status === "converted") {
+    window.alert("This quote has already been converted to an invoice.");
+    return;
+  }
   const invoiceNumber = quote.number.replace("GSV-Q", "GSV-INV");
   const invoice = {
     id: id("inv"),
@@ -2083,7 +2090,39 @@ function convertQuote(quoteId) {
   quote.status = "converted";
   state.invoices.push(invoice);
   saveState();
+  const preview = document.getElementById("document-preview");
+  if (preview?.open) preview.close();
+  const editor = document.getElementById("editor");
+  if (editor?.open) editor.close();
   setView("invoices");
+  window.alert(`Invoice ${invoice.number} was created from quote ${quote.number}.`);
+}
+
+function createInvoiceFromEditorQuote() {
+  if (editing.mode !== "quote" || !editing.id) return;
+  const form = document.getElementById("editor-form");
+  const data = Object.fromEntries(new FormData(form).entries());
+  if (!data.clientId) {
+    window.alert("Select or add a client before creating the invoice.");
+    return;
+  }
+  const quote = {
+    id: editing.id,
+    number: data.number,
+    clientId: data.clientId,
+    date: data.date,
+    title: data.title,
+    taxRate: Number(data.taxRate || 0),
+    subject: data.subject || defaultDocumentSubject("quote", data),
+    status: data.status,
+    items: editorLineItems(),
+    showShipTo: data.showShipTo === "on",
+    shipTo: data.shipTo,
+    notes: data.notes
+  };
+  upsert(state.quotes, quote);
+  saveState();
+  convertQuote(quote.id);
 }
 
 function previewDocument(type, idValue) {
@@ -2093,6 +2132,7 @@ function previewDocument(type, idValue) {
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
   document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
   document.getElementById("document-preview").showModal();
 }
@@ -2103,6 +2143,7 @@ function exportDocumentPdf(type, doc) {
   const client = clientById(doc.clientId);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
   document.getElementById("send-preview-document").hidden = type !== "invoice" || computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void";
   const preview = document.getElementById("document-preview");
   if (!preview.open) preview.showModal();
@@ -2123,6 +2164,11 @@ function editPreviewDocument() {
 function sendPreviewDocument() {
   if (!previewing || previewing.type !== "invoice") return;
   sendInvoice(previewing.id);
+}
+
+function createInvoiceFromPreviewQuote() {
+  if (!previewing || previewing.type !== "quote") return;
+  convertQuote(previewing.id);
 }
 
 function renderDocument(type, doc, client) {
@@ -2182,9 +2228,9 @@ function renderDocument(type, doc, client) {
           <div class="doc-summary">
             <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
             <div><span>Tax (${taxRate.toFixed(2)}%)</span><strong>${money.format(tax)}</strong></div>
-            <div class="doc-total"><span>Total Due</span><strong>${money.format(total)}</strong></div>
+            <div class="doc-total"><span>${type === "quote" ? "Total" : "Total Due"}</span><strong>${money.format(total)}</strong></div>
           </div>
-        ` : `<div class="doc-total"><span>Total Due</span><strong>${money.format(total)}</strong></div>`}
+        ` : `<div class="doc-total"><span>${type === "quote" ? "Total" : "Total Due"}</span><strong>${money.format(total)}</strong></div>`}
       </div>
       ${doc.notes ? `
         <div class="doc-block">
@@ -2534,11 +2580,13 @@ document.addEventListener("click", event => {
     updateEditorTotal();
   }
   if (target.id === "editor-delete" && editing.mode === "invoice" && editing.id) deleteInvoice(editing.id);
+  if (target.id === "editor-create-invoice" && editing.mode === "quote" && editing.id) createInvoiceFromEditorQuote();
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
   if (target.id === "editor-save") saveEditor();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "edit-preview-document") editPreviewDocument();
+  if (target.id === "create-invoice-preview-document") createInvoiceFromPreviewQuote();
   if (target.id === "send-preview-document") sendPreviewDocument();
   if (target.id === "print-document") window.print();
   if (target.id === "save-snapshot") snapshot();

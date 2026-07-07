@@ -740,7 +740,22 @@ dialog {
   border-radius: 8px;
   padding: 0;
   width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 24px);
   color: var(--ink);
+}
+
+#editor {
+  width: min(1500px, calc(100vw - 28px));
+}
+
+#editor form {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 28px);
+}
+
+#editor-fields {
+  overflow: auto;
 }
 
 dialog::backdrop {
@@ -828,6 +843,7 @@ textarea {
   gap: 10px;
   padding: 16px;
   border-top: 1px solid var(--line);
+  flex: 0 0 auto;
 }
 
 #editor-delete {
@@ -861,15 +877,15 @@ button.danger {
 
 .invoice-editor {
   display: block;
-  padding: 24px;
+  padding: 22px 28px;
 }
 
 .invoice-edit-head {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(320px, 420px);
-  gap: 44px;
+  grid-template-columns: minmax(320px, 1fr) minmax(360px, 560px);
+  gap: 64px;
   align-items: start;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .invoice-edit-logo {
@@ -906,7 +922,7 @@ button.danger {
 
 .invoice-edit-bill {
   max-width: none;
-  margin: 0 0 30px;
+  margin: 0 0 24px;
 }
 
 .invoice-edit-address-grid {
@@ -926,7 +942,7 @@ button.danger {
 }
 
 .invoice-edit-section h3 {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   font-size: 28px;
 }
 
