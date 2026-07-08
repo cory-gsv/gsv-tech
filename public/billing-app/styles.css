@@ -1134,6 +1134,12 @@ button.danger {
   margin-top: 40px;
 }
 
+.doc-block > h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
 .doc-address-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1163,6 +1169,20 @@ button.danger {
 
 .doc-table th {
   text-align: center;
+}
+
+.doc-items td {
+  line-height: 1.25;
+  vertical-align: top;
+}
+
+.doc-items td.center {
+  vertical-align: middle;
+}
+
+.doc-items td:first-child {
+  white-space: normal;
+  word-break: normal;
 }
 
 .doc-items th:nth-child(1),

@@ -2260,7 +2260,7 @@ function createInvoiceFromPreviewQuote() {
 
 function renderDocument(type, doc, client) {
   const title = type === "quote" ? "QUOTE" : "INVOICE";
-  const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "info@gsvisions.com";
+  const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "cory@gsvisions.com";
   const subtotal = documentSubtotal(doc);
   const tax = documentTaxTotal(doc);
   const total = invoiceTotal(doc);
