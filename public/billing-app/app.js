@@ -372,32 +372,51 @@ function lineItemAmount(item) {
 }
 
 function quoteLineType(item = {}) {
-  return item.type || "line";
+  const rawType = String(item.type || "line").toLowerCase().replace(/[\s_-]+/g, "");
+  if (["title", "section", "header", "titleline", "master"].includes(rawType)) return "title";
+  if (["detail", "sub", "subline", "child"].includes(rawType)) return "detail";
+  return "line";
 }
 
 function quoteHasTitleLines(items = []) {
-  return items.some(item => quoteLineType(item) === "title");
+  return items.some((item, index) => quoteDisplayLineType(items, item, index) === "title");
+}
+
+function quoteDisplayLineType(items = [], item = {}, index = 0) {
+  const explicitType = quoteLineType(item);
+  if (explicitType !== "line") return explicitType;
+  const hasExplicitTitle = items.some(row => quoteLineType(row) === "title");
+  const hasFollowingLine = items.slice(index + 1).some(row => (row.description || "").trim());
+  if (!hasExplicitTitle && lineItemAmount(item) === 0 && hasFollowingLine) return "title";
+  return "line";
 }
 
 function quoteTitleLineAmount(items = [], titleIndex = 0) {
-  let total = lineItemAmount(items[titleIndex] || {});
+  let total = 0;
   for (let index = titleIndex + 1; index < items.length; index += 1) {
-    if (quoteLineType(items[index]) === "title") break;
+    if (quoteDisplayLineType(items, items[index], index) === "title") break;
     total += lineItemAmount(items[index]);
   }
   return total;
 }
 
 function documentSubtotal(doc) {
-  return (doc.items || []).reduce((sum, item) => sum + lineItemAmount(item), 0);
+  const items = doc.items || [];
+  return items.reduce((sum, item, index) => {
+    if (quoteHasTitleLines(items) && quoteDisplayLineType(items, item, index) === "title") return sum;
+    return sum + lineItemAmount(item);
+  }, 0);
 }
 
 function documentTaxTotal(doc) {
   const taxRate = Number(doc.taxRate || 0);
   if (!taxRate) return 0;
-  const taxableSubtotal = (doc.items || [])
-    .filter(item => item.taxable)
-    .reduce((sum, item) => sum + lineItemAmount(item), 0);
+  const items = doc.items || [];
+  const taxableSubtotal = items.reduce((sum, item, index) => {
+    if (!item.taxable) return sum;
+    if (quoteHasTitleLines(items) && quoteDisplayLineType(items, item, index) === "title") return sum;
+    return sum + lineItemAmount(item);
+  }, 0);
   return Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
 }
 
@@ -2367,7 +2386,7 @@ function renderDocumentItemTable(type, items = []) {
         <thead><tr><th>Description</th><th>Total</th></tr></thead>
         <tbody>
           ${items.map((item, index) => {
-            const rowType = quoteLineType(item);
+            const rowType = quoteDisplayLineType(items, item, index);
             if (rowType === "title") {
               inSection = true;
               return `
