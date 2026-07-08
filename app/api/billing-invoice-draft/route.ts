@@ -323,8 +323,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     let content = "";
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
     content += drawLogo(margin, pageY(674), 170);
-    content += drawText(contactEmail, margin, pageY(622), 10);
-    content += drawText("(916) 432-3373", margin, pageY(606), 10);
+    content += drawText(contactEmail, margin, pageY(650), 10);
+    content += drawText("(916) 432-3373", margin, pageY(634), 10);
 
     content += drawText(isQuote ? "QUOTE" : "INVOICE", 452, pageY(704), 23, ink, "F2");
     const metaX = 350;
