@@ -307,7 +307,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const printableRows = sectionMode ? sectionRows : sourceItems;
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
-  const baseItemsTop = 392;
+  const baseItemsTop = 424;
   const itemsBottom = 118;
   const requiredItemsH = headerH + Math.max(printableRows.length, 1) * rowH;
   const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
@@ -322,11 +322,11 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   function drawFirstPageHeader() {
     let content = "";
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
-    content += drawLogo(margin, pageY(666), 190);
-    content += drawText(contactEmail, margin, pageY(580), 10);
-    content += drawText("(916) 432-3373", margin, pageY(562), 10);
+    content += drawLogo(margin, pageY(674), 170);
+    content += drawText(contactEmail, margin, pageY(622), 10);
+    content += drawText("(916) 432-3373", margin, pageY(606), 10);
 
-    content += drawText(isQuote ? "QUOTE" : "INVOICE", 452, pageY(700), 24, ink, "F2");
+    content += drawText(isQuote ? "QUOTE" : "INVOICE", 452, pageY(704), 23, ink, "F2");
     const metaX = 350;
     const metaValueX = 455;
     const metaRows = isQuote
@@ -341,13 +341,13 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
           ["Invoice Month", invoice.month || ""],
         ];
     metaRows.forEach(([label, value], index) => {
-      const y = pageY(637 - index * 22);
+      const y = pageY(666 - index * 19);
       content += drawTextRight(label, metaX, y, 90, 10, ink, "F2");
       content += drawText(value, metaValueX, y, 10);
     });
 
-    const billY = pageY(426);
-    const billH = 94;
+    const billY = pageY(462);
+    const billH = 82;
     const addressGap = 18;
     const addressW = (tableW - addressGap) / 2;
     content += rect(tableX, billY, addressW, billH);
@@ -355,7 +355,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     content += drawTextCenter("Bill To", tableX, billY + billH - 15, addressW, 10, ink, "F2");
     const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
     billTo.slice(0, 6).forEach((line, index) => {
-      content += drawText(line, tableX + 8, billY + billH - 38 - index * 12, 9);
+      content += drawText(line, tableX + 8, billY + billH - 34 - index * 11, 8.5);
     });
     if (invoice.showShipTo) {
       const shipX = tableX + addressW + addressGap;
@@ -364,11 +364,11 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       content += drawTextCenter("Ship To", shipX, billY + billH - 15, addressW, 10, ink, "F2");
       const shipTo = (invoice.shipTo || client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
       shipTo.slice(0, 6).forEach((line, index) => {
-        content += drawText(line, shipX + 8, billY + billH - 38 - index * 12, 9);
+        content += drawText(line, shipX + 8, billY + billH - 34 - index * 11, 8.5);
       });
     }
 
-    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, pageY(406), 14, ink, "F2");
+    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, pageY(438), 13, ink, "F2");
     return content;
   }
 
