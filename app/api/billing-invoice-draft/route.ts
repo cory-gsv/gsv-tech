@@ -275,57 +275,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     return `q ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
   }
 
-  let content = "";
-  content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
-  content += drawLogo(margin, 650, 240);
-  content += drawText(contactEmail, margin, 592, 12);
-  content += drawText("(916) 432-3373", margin, 568, 12);
-
-  content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 705, 30, ink, "F2");
-  const metaX = 350;
-  const metaValueX = 455;
-  const metaRows = isQuote
-    ? [
-        ["Quote #", invoice.number || ""],
-        ["Date", invoice.date || ""],
-      ]
-    : [
-        ["Invoice #", invoice.number || ""],
-        ["Date", invoice.date || ""],
-        ["Due Date", invoice.dueDate || ""],
-        ["Invoice Month", invoice.month || ""],
-      ];
-  metaRows.forEach(([label, value], index) => {
-    const y = 655 - index * 26;
-    content += drawTextRight(label, metaX, y, 90, 12, ink, "F2");
-    content += drawText(value, metaValueX, y, 12);
-  });
-
   const tableX = margin;
   const tableW = page.width - margin * 2;
-  const billY = 430;
-  const billH = 126;
-  const addressGap = 18;
-  const addressW = (tableW - addressGap) / 2;
-  content += rect(tableX, billY, addressW, billH);
-  content += rect(tableX, billY + billH - 28, addressW, 28, headerFill);
-  content += drawTextCenter("Bill To", tableX, billY + billH - 19, addressW, 12, ink, "F2");
-  const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
-  billTo.slice(0, 6).forEach((line, index) => {
-    content += drawText(line, tableX + 8, billY + billH - 50 - index * 15, 12);
-  });
-  if (invoice.showShipTo) {
-    const shipX = tableX + addressW + addressGap;
-    content += rect(shipX, billY, addressW, billH);
-    content += rect(shipX, billY + billH - 28, addressW, 28, headerFill);
-    content += drawTextCenter("Ship To", shipX, billY + billH - 19, addressW, 12, ink, "F2");
-    const shipTo = (invoice.shipTo || client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
-    shipTo.slice(0, 6).forEach((line, index) => {
-      content += drawText(line, shipX + 8, billY + billH - 50 - index * 15, 12);
-    });
-  }
-
-  content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, 382, 18, ink, "F2");
   const sourceItems = invoice.items || [];
   const sectionMode = isQuote && quoteHasTitleLines(sourceItems);
   const sectionRows: PdfSectionRow[] = sectionMode
@@ -353,52 +304,133 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
         };
       })
     : [];
+  const printableRows = sectionMode ? sectionRows : sourceItems;
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
-  const itemsTop = 360;
-  const itemsY = 118;
-  const maxItemRows = Math.max(1, Math.floor((itemsTop - itemsY - headerH) / rowH));
-  const sectionItems = sectionRows.slice(0, maxItemRows);
-  const invoiceItems = sourceItems.slice(0, maxItemRows);
-  const itemsH = itemsTop - itemsY;
-  const col = {
-    desc: tableX,
-    qty: tableX + 350,
-    rate: tableX + 415,
-    amount: tableX + 470,
-  };
-  const width = {
-    desc: 350,
-    qty: 65,
-    rate: 55,
-    amount: tableW - 470,
-  };
-
-  content += rect(tableX, itemsY, tableW, itemsH);
-  content += rect(tableX, itemsY + itemsH - headerH, tableW, headerH, headerFill);
-
-  let y = itemsY + itemsH - headerH;
-  if (sectionMode) {
-    const sectionAmountX = tableX + tableW - 125;
-    const sectionDescW = tableW - 125;
-    content += vline(sectionAmountX, itemsY, itemsY + itemsH);
-    content += drawTextCenter("Description", tableX, itemsY + itemsH - 20, sectionDescW, 12, ink, "F2");
-    content += drawTextCenter("Total", sectionAmountX, itemsY + itemsH - 20, 125, 12, ink, "F2");
-
-    for (const item of sectionItems) {
-      if (y - rowH < itemsY) break;
-      content += hline(tableX, y, tableX + tableW);
-      const textY = y - 17;
-      if (item.kind === "detail") {
-        const detailText = String(item.description || "").trim();
-        if (detailText) content += drawText(`- ${detailText.slice(0, 78)}`, tableX + 18, textY, 10, "0.35 0.42 0.50");
-      } else {
-        content += drawText(String(item.description || "").slice(0, 70), tableX + 8, textY, 11, ink, "F2");
-        content += drawTextCenter(money(Number(item.amount || 0)), sectionAmountX, textY, 125, 11, ink, "F2");
-      }
-      y -= rowH;
-    }
+  const firstItemsTop = 360;
+  const continuationItemsTop = 690;
+  const itemsBottom = 118;
+  const firstPageRows = Math.max(1, Math.floor((firstItemsTop - itemsBottom - headerH) / rowH));
+  const continuationRows = Math.max(1, Math.floor((continuationItemsTop - itemsBottom - headerH) / rowH));
+  const chunks: Array<typeof printableRows> = [];
+  let cursor = 0;
+  if (!printableRows.length) {
+    chunks.push([] as typeof printableRows);
   } else {
+    chunks.push(printableRows.slice(0, firstPageRows) as typeof printableRows);
+    cursor = firstPageRows;
+    while (cursor < printableRows.length) {
+      chunks.push(printableRows.slice(cursor, cursor + continuationRows) as typeof printableRows);
+      cursor += continuationRows;
+    }
+  }
+
+  function drawFirstPageHeader() {
+    let content = "";
+    content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
+    content += drawLogo(margin, 650, 240);
+    content += drawText(contactEmail, margin, 592, 12);
+    content += drawText("(916) 432-3373", margin, 568, 12);
+
+    content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 705, 30, ink, "F2");
+    const metaX = 350;
+    const metaValueX = 455;
+    const metaRows = isQuote
+      ? [
+          ["Quote #", invoice.number || ""],
+          ["Date", invoice.date || ""],
+        ]
+      : [
+          ["Invoice #", invoice.number || ""],
+          ["Date", invoice.date || ""],
+          ["Due Date", invoice.dueDate || ""],
+          ["Invoice Month", invoice.month || ""],
+        ];
+    metaRows.forEach(([label, value], index) => {
+      const y = 655 - index * 26;
+      content += drawTextRight(label, metaX, y, 90, 12, ink, "F2");
+      content += drawText(value, metaValueX, y, 12);
+    });
+
+    const billY = 430;
+    const billH = 126;
+    const addressGap = 18;
+    const addressW = (tableW - addressGap) / 2;
+    content += rect(tableX, billY, addressW, billH);
+    content += rect(tableX, billY + billH - 28, addressW, 28, headerFill);
+    content += drawTextCenter("Bill To", tableX, billY + billH - 19, addressW, 12, ink, "F2");
+    const billTo = (client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
+    billTo.slice(0, 6).forEach((line, index) => {
+      content += drawText(line, tableX + 8, billY + billH - 50 - index * 15, 12);
+    });
+    if (invoice.showShipTo) {
+      const shipX = tableX + addressW + addressGap;
+      content += rect(shipX, billY, addressW, billH);
+      content += rect(shipX, billY + billH - 28, addressW, 28, headerFill);
+      content += drawTextCenter("Ship To", shipX, billY + billH - 19, addressW, 12, ink, "F2");
+      const shipTo = (invoice.shipTo || client.billTo || client.name || "").split(/\r?\n/).filter(Boolean);
+      shipTo.slice(0, 6).forEach((line, index) => {
+        content += drawText(line, shipX + 8, billY + billH - 50 - index * 15, 12);
+      });
+    }
+
+    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, 382, 18, ink, "F2");
+    return content;
+  }
+
+  function drawContinuationHeader(pageNumber: number) {
+    let content = "";
+    content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
+    content += drawLogo(margin, 704, 120);
+    content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 725, 24, ink, "F2");
+    content += drawTextRight(isQuote ? "Quote #" : "Invoice #", 350, 688, 90, 11, ink, "F2");
+    content += drawText(invoice.number || "", 455, 688, 11);
+    content += drawText(`${isQuote ? "Quote" : "Invoice"} continued - page ${pageNumber}`, tableX, 660, 16, ink, "F2");
+    return content;
+  }
+
+  function drawItemsTable(rows: typeof printableRows, itemsTop: number, itemsY: number) {
+    let content = "";
+    const itemsH = itemsTop - itemsY;
+    content += rect(tableX, itemsY, tableW, itemsH);
+    content += rect(tableX, itemsY + itemsH - headerH, tableW, headerH, headerFill);
+
+    let y = itemsY + itemsH - headerH;
+    if (sectionMode) {
+      const sectionAmountX = tableX + tableW - 125;
+      const sectionDescW = tableW - 125;
+      content += vline(sectionAmountX, itemsY, itemsY + itemsH);
+      content += drawTextCenter("Description", tableX, itemsY + itemsH - 20, sectionDescW, 12, ink, "F2");
+      content += drawTextCenter("Total", sectionAmountX, itemsY + itemsH - 20, 125, 12, ink, "F2");
+
+      for (const item of rows as PdfSectionRow[]) {
+        if (y - rowH < itemsY) break;
+        content += hline(tableX, y, tableX + tableW);
+        const textY = y - 17;
+        if (item.kind === "detail") {
+          const detailText = String(item.description || "").trim();
+          if (detailText) content += drawText(`- ${detailText.slice(0, 78)}`, tableX + 18, textY, 10, "0.35 0.42 0.50");
+        } else {
+          content += drawText(String(item.description || "").slice(0, 70), tableX + 8, textY, 11, ink, "F2");
+          content += drawTextCenter(money(Number(item.amount || 0)), sectionAmountX, textY, 125, 11, ink, "F2");
+        }
+        y -= rowH;
+      }
+      return content;
+    }
+
+    const col = {
+      desc: tableX,
+      qty: tableX + 350,
+      rate: tableX + 415,
+      amount: tableX + 470,
+    };
+    const width = {
+      desc: 350,
+      qty: 65,
+      rate: 55,
+      amount: tableW - 470,
+    };
     content += vline(col.qty, itemsY, itemsY + itemsH);
     content += vline(col.rate, itemsY, itemsY + itemsH);
     content += vline(col.amount, itemsY, itemsY + itemsH);
@@ -407,7 +439,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     content += drawTextCenter("Rate", col.rate, itemsY + itemsH - 20, width.rate, 12, ink, "F2");
     content += drawTextCenter("Amount", col.amount, itemsY + itemsH - 20, width.amount, 12, ink, "F2");
 
-    for (const item of sourceItems.slice(0, 16)) {
+    for (const item of rows as InvoiceItem[]) {
       if (y - rowH < itemsY) break;
       const amount = lineItemAmount(item);
       content += hline(tableX, y, tableX + tableW);
@@ -418,23 +450,43 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       content += drawTextCenter(money(amount), col.amount, textY, width.amount, 11);
       y -= rowH;
     }
+    return content;
   }
 
-  const totalY = 58;
-  content += rect(tableX, totalY, tableW, 36, gold);
-  content += vline(tableX + tableW - 115, totalY, totalY + 36);
-  content += drawTextRight(isQuote ? "Total" : "Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
-  content += drawTextCenter(money(total), tableX + tableW - 115, totalY + 12, 115, 16, ink, "F2");
+  function drawTotalBlock() {
+    const totalY = 58;
+    let content = "";
+    content += rect(tableX, totalY, tableW, 36, gold);
+    content += vline(tableX + tableW - 115, totalY, totalY + 36);
+    content += drawTextRight(isQuote ? "Total" : "Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
+    content += drawTextCenter(money(total), tableX + tableW - 115, totalY + 12, 115, 16, ink, "F2");
+    return content;
+  }
 
-  const stream = `q\n1 1 1 rg 0 0 612 792 re f\n0 0 0 RG 0 0 0 rg\n${content}Q`;
+  const pageContents = chunks.map((rows, index) => {
+    const firstPage = index === 0;
+    const lastPage = index === chunks.length - 1;
+    let content = firstPage ? drawFirstPageHeader() : drawContinuationHeader(index + 1);
+    content += drawItemsTable(rows, firstPage ? firstItemsTop : continuationItemsTop, itemsBottom);
+    if (lastPage) content += drawTotalBlock();
+    return `q\n1 1 1 rg 0 0 612 792 re f\n0 0 0 RG 0 0 0 rg\n${content}Q`;
+  });
+
+  const pageObjectStart = 6;
+  const contentObjectStart = pageObjectStart + pageContents.length;
+  const pageRefs = pageContents.map((_, index) => `${pageObjectStart + index} 0 R`).join(" ");
+  const pageObjects = pageContents.map((_, index) => (
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents ${contentObjectStart + index} 0 R >>`
+  ));
+  const contentObjects = pageContents.map(stream => `<< /Length ${pdfByteLength(stream)} >>\nstream\n${stream}\nendstream`);
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> /XObject << /Im1 6 0 R >> >> /Contents 7 0 R >>",
+    `<< /Type /Pages /Kids [${pageRefs}] /Count ${pageContents.length} >>`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
     logo.object,
-    `<< /Length ${pdfByteLength(stream)} >>\nstream\n${stream}\nendstream`,
+    ...pageObjects,
+    ...contentObjects,
   ];
 
   let pdf = "%PDF-1.4\n";
