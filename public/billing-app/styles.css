@@ -1241,6 +1241,7 @@ button.danger {
 }
 
 .doc-section-row td {
+  border-bottom: 0;
   font-size: 17px;
   font-weight: 800;
   background: #fff;
@@ -1248,8 +1249,13 @@ button.danger {
 
 .doc-detail-row td {
   border-top: 0;
+  border-bottom: 0;
   padding-left: 24px;
   color: var(--muted);
+}
+
+.doc-detail-row + .doc-section-row td {
+  border-top: 1px solid #111820;
 }
 
 .doc-detail-row td::before {
