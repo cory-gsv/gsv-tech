@@ -388,7 +388,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       content += hline(tableX, y, tableX + tableW);
       const textY = y - 17;
       if (item.kind === "detail") {
-        content += drawText(`- ${String(item.description || "").slice(0, 78)}`, tableX + 18, textY, 10, "0.35 0.42 0.50");
+        const detailText = String(item.description || "").trim();
+        if (detailText) content += drawText(`- ${detailText.slice(0, 78)}`, tableX + 18, textY, 10, "0.35 0.42 0.50");
       } else {
         content += drawText(String(item.description || "").slice(0, 70), tableX + 8, textY, 11, ink, "F2");
         content += drawTextCenter(money(Number(item.amount || 0)), sectionAmountX, textY, 125, 11, ink, "F2");

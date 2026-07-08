@@ -2415,7 +2415,7 @@ function renderDocumentItemTable(type, items = []) {
               `;
             }
             if (inSection || rowType === "detail") {
-              return `<tr class="doc-detail-row"><td>${escapeHtml(item.description || "")}</td><td class="center"></td></tr>`;
+              return `<tr class="doc-detail-row ${(item.description || "").trim() ? "" : "is-empty-detail"}"><td>${escapeHtml(item.description || "")}</td><td class="center"></td></tr>`;
             }
             return `
               <tr>
