@@ -1205,20 +1205,22 @@ button.danger {
   margin-top: 28px;
   margin-left: auto;
   width: min(440px, 100%);
+  border: 1px solid #111820;
+  overflow: hidden;
   break-inside: avoid;
 }
 
 .doc-summary > div {
   display: grid;
   grid-template-columns: 1fr 160px;
-  border: 1px solid #111820;
-  border-bottom: 0;
+  border: 0;
+  border-bottom: 1px solid #111820;
   font-size: 18px;
   font-weight: 700;
 }
 
 .doc-summary > div:last-child {
-  border-bottom: 1px solid #111820;
+  border-bottom: 0;
 }
 
 .doc-summary > div:not(.doc-total) span,
