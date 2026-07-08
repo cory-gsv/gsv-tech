@@ -307,7 +307,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const printableRows = sectionMode ? sectionRows : sourceItems;
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
-  const baseItemsTop = 424;
+  const baseItemsTop = 462;
   const itemsBottom = 118;
   const requiredItemsH = headerH + Math.max(printableRows.length, 1) * rowH;
   const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
@@ -346,7 +346,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       content += drawText(value, metaValueX, y, 10);
     });
 
-    const billY = pageY(462);
+    const billY = pageY(500);
     const billH = 82;
     const addressGap = 18;
     const addressW = (tableW - addressGap) / 2;
@@ -368,7 +368,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       });
     }
 
-    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, pageY(438), 13, ink, "F2");
+    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, pageY(476), 13, ink, "F2");
     return content;
   }
 
