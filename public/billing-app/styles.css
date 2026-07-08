@@ -1242,26 +1242,33 @@ button.danger {
 
 .doc-section-row td {
   border-top: 1px solid #111820;
-  border-bottom: 1px solid #111820;
+  border-bottom: 0;
   font-size: 17px;
   font-weight: 800;
-  background: var(--soft);
+  background: #fff;
 }
 
 .doc-detail-row td {
   border-top: 0;
   border-bottom: 0;
-  padding-left: 24px;
   color: var(--muted);
+}
+
+.doc-detail-row td:first-child {
+  padding-left: 24px;
+}
+
+.doc-detail-row td:first-child::before {
+  content: "- ";
+  font-weight: 800;
 }
 
 .doc-detail-row + .doc-section-row td {
   border-top: 1px solid #111820;
 }
 
-.doc-detail-row td::before {
-  content: "- ";
-  font-weight: 800;
+.doc-quote-sections tbody tr:last-child td {
+  border-bottom: 1px solid #111820;
 }
 
 .doc-table .center {
