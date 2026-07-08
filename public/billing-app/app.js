@@ -424,6 +424,20 @@ function invoiceTotal(invoice) {
   return documentSubtotal(invoice) + documentTaxTotal(invoice);
 }
 
+function quoteMargin(quote = {}) {
+  const items = quote.items || [];
+  const hasSections = quoteHasTitleLines(items);
+  return items.reduce((sum, item, index) => {
+    if (hasSections && quoteDisplayLineType(items, item, index) === "title") return sum;
+    const amount = lineItemAmount(item);
+    const detail = String(item.detail || item.itemDetail || "");
+    if (/labor/i.test(detail)) return sum + amount;
+    const unitCost = Number(item.unitCost || 0);
+    if (!unitCost) return sum;
+    return sum + Number(item.qty || 0) * (Number(item.rate || 0) - unitCost);
+  }, 0);
+}
+
 function currentMspItems(clientId, month = today.slice(0, 7)) {
   const audit = latestAudit(clientId, month);
   if (audit && clientById(clientId)?.licenseAuditBilling !== false) return auditInvoiceItems(audit);
@@ -1234,6 +1248,7 @@ function renderQuotes() {
         <td>${formatDate(quote.date)}</td>
         <td><span class="badge ${quote.status}">${escapeHtml(quote.status)}</span></td>
         <td class="num">${money.format(invoiceTotal(quote))}</td>
+        <td class="num">${money.format(quoteMargin(quote))}</td>
         <td>
           <div class="row-actions">
             <button data-preview-quote="${quote.id}">Preview</button>
@@ -1246,8 +1261,8 @@ function renderQuotes() {
     `).join("");
   document.getElementById("quote-list").innerHTML = `
     <table>
-      <thead><tr><th>Quote</th><th>Client</th><th>Date</th><th>Status</th><th class="num">Total</th><th>Actions</th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="6">No quotes yet.</td></tr>`}</tbody>
+      <thead><tr><th>Quote</th><th>Client</th><th>Date</th><th>Status</th><th class="num">Total</th><th class="num">Margin</th><th>Actions</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="7">No quotes yet.</td></tr>`}</tbody>
     </table>
   `;
 }
