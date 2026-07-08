@@ -1241,10 +1241,11 @@ button.danger {
 }
 
 .doc-section-row td {
-  border-bottom: 0;
+  border-top: 1px solid #111820;
+  border-bottom: 1px solid #111820;
   font-size: 17px;
   font-weight: 800;
-  background: #fff;
+  background: var(--soft);
 }
 
 .doc-detail-row td {
