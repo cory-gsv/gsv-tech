@@ -1304,7 +1304,8 @@ function openEditor(mode, existing = {}) {
   document.getElementById("editor-title").textContent = editorTitle(mode);
   fields.className = mode === "invoice" || mode === "quote" ? "form-grid invoice-editor" : "form-grid";
   fields.innerHTML = editorFields(mode, existing);
-  deleteButton.hidden = !(mode === "invoice" && existing.id);
+  deleteButton.hidden = !((mode === "invoice" || mode === "quote") && existing.id);
+  deleteButton.textContent = mode === "quote" ? "Delete Quote" : "Delete Invoice";
   createInvoiceButton.hidden = !(mode === "quote" && existing.id && existing.status !== "converted");
   pdfButton.hidden = mode !== "invoice";
   sendButton.hidden = !((mode === "invoice" || mode === "quote") && existing.id);
@@ -1818,6 +1819,20 @@ function deleteInvoice(invoiceId) {
   saveState();
   const editor = document.getElementById("editor");
   if (editor.open) editor.close();
+  render();
+}
+
+function deleteQuote(quoteId) {
+  const quote = state.quotes.find(q => q.id === quoteId);
+  if (!quote) return;
+  const ok = window.confirm(`Delete quote ${quote.number}? This cannot be undone.`);
+  if (!ok) return;
+  state.quotes = state.quotes.filter(q => q.id !== quoteId);
+  saveState();
+  const editor = document.getElementById("editor");
+  if (editor.open) editor.close();
+  const preview = document.getElementById("document-preview");
+  if (preview?.open) preview.close();
   render();
 }
 
@@ -2776,6 +2791,7 @@ document.addEventListener("click", event => {
     updateEditorTotal();
   }
   if (target.id === "editor-delete" && editing.mode === "invoice" && editing.id) deleteInvoice(editing.id);
+  if (target.id === "editor-delete" && editing.mode === "quote" && editing.id) deleteQuote(editing.id);
   if (target.id === "editor-create-invoice" && editing.mode === "quote" && editing.id) createInvoiceFromEditorQuote();
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
