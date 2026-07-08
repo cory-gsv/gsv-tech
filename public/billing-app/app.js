@@ -1289,6 +1289,7 @@ function openEditor(mode, existing = {}) {
   createInvoiceButton.hidden = !(mode === "quote" && existing.id && existing.status !== "converted");
   pdfButton.hidden = mode !== "invoice";
   sendButton.hidden = !((mode === "invoice" || mode === "quote") && existing.id);
+  setEditorError("");
   dialog.showModal();
   updateEditorTotal();
 }
@@ -1672,12 +1673,24 @@ function addDays(dateText, days) {
   return d.toISOString().slice(0, 10);
 }
 
+function setEditorError(message = "", fieldName = "") {
+  const error = document.getElementById("editor-error");
+  if (!error) return;
+  error.textContent = message;
+  error.hidden = !message;
+  if (message && fieldName) {
+    const field = document.querySelector(`#editor-form [name="${fieldName}"]`);
+    field?.focus();
+  }
+}
+
 function saveEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
+  setEditorError("");
   if ((editing.mode === "invoice" || editing.mode === "quote") && !data.clientId) {
-    window.alert("Select or add a client before saving.");
-    return;
+    setEditorError("Select or add a client before saving.", "clientId");
+    return false;
   }
   if (editing.mode === "client") {
       const client = {
@@ -1761,6 +1774,7 @@ function saveEditor() {
   saveState();
   document.getElementById("editor").close();
   render();
+  return true;
 }
 
 function upsert(collection, item) {
@@ -2209,7 +2223,7 @@ function createInvoiceFromEditorQuote() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
   if (!data.clientId) {
-    window.alert("Select or add a client before creating the invoice.");
+    setEditorError("Select or add a client before creating the invoice.", "clientId");
     return;
   }
   const quote = {
@@ -2744,7 +2758,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-pdf" && editing.mode === "invoice") exportDocumentPdf("invoice", invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "quote" && editing.id) sendQuote(editing.id, quoteFromEditor());
-  if (target.id === "editor-save") saveEditor();
+  if (target.id === "editor-close" || target.id === "editor-cancel") document.getElementById("editor").close();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "edit-preview-document") editPreviewDocument();
   if (target.id === "create-invoice-preview-document") createInvoiceFromPreviewQuote();
@@ -2782,6 +2796,42 @@ document.addEventListener("click", event => {
     document.getElementById("invoice-search").value = "";
     renderInvoices();
   }
+});
+
+document.addEventListener("submit", event => {
+  if (event.target?.id !== "editor-form") return;
+  event.preventDefault();
+  saveEditor();
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key !== "Enter") return;
+  const form = event.target.closest?.("#editor-form");
+  if (!form) return;
+  const tagName = event.target.tagName;
+  if (tagName === "TEXTAREA") return;
+  if (tagName === "BUTTON" && !["editor-save", "editor-cancel", "editor-close"].includes(event.target.id)) return;
+
+  event.preventDefault();
+  if (event.target.id === "editor-save" || event.metaKey || event.ctrlKey) {
+    saveEditor();
+    return;
+  }
+  if (event.target.id === "editor-cancel" || event.target.id === "editor-close") {
+    document.getElementById("editor").close();
+    return;
+  }
+
+  const controls = [...form.querySelectorAll("input, select, textarea, button")]
+    .filter(control => !control.disabled && control.type !== "hidden" && control.offsetParent !== null);
+  const currentIndex = controls.indexOf(event.target);
+  const nextControl = controls[currentIndex + 1];
+  if (nextControl && nextControl.id !== "editor-cancel") {
+    nextControl.focus();
+    if (nextControl.select) nextControl.select();
+    return;
+  }
+  saveEditor();
 });
 
 document.addEventListener("input", event => {

@@ -285,19 +285,20 @@
   </main>
 
   <dialog id="editor">
-    <form method="dialog" id="editor-form">
+    <form id="editor-form">
       <div class="modal-head">
         <h2 id="editor-title">Edit</h2>
-        <button value="cancel" class="icon">×</button>
+        <button id="editor-close" type="button" class="icon">×</button>
       </div>
+      <div id="editor-error" class="editor-error" hidden></div>
       <div id="editor-fields" class="form-grid"></div>
       <div class="modal-actions" id="editor-actions">
         <button id="editor-delete" class="danger ghost" type="button" hidden>Delete Invoice</button>
         <button id="editor-create-invoice" type="button" hidden>Create Invoice</button>
         <button id="editor-pdf" type="button" hidden>Export PDF</button>
         <button id="editor-send" type="button" hidden>Send</button>
-        <button value="cancel">Cancel</button>
-        <button id="editor-save" value="default" class="primary">Save</button>
+        <button id="editor-cancel" type="button">Cancel</button>
+        <button id="editor-save" type="submit" class="primary">Save</button>
       </div>
     </form>
   </dialog>
