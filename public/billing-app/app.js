@@ -371,6 +371,23 @@ function lineItemAmount(item) {
   return Number(item.qty || 0) * Number(item.rate || 0);
 }
 
+function quoteLineType(item = {}) {
+  return item.type || "line";
+}
+
+function quoteHasTitleLines(items = []) {
+  return items.some(item => quoteLineType(item) === "title");
+}
+
+function quoteTitleLineAmount(items = [], titleIndex = 0) {
+  let total = lineItemAmount(items[titleIndex] || {});
+  for (let index = titleIndex + 1; index < items.length; index += 1) {
+    if (quoteLineType(items[index]) === "title") break;
+    total += lineItemAmount(items[index]);
+  }
+  return total;
+}
+
 function documentSubtotal(doc) {
   return (doc.items || []).reduce((sum, item) => sum + lineItemAmount(item), 0);
 }
@@ -1392,7 +1409,7 @@ function editorFields(mode, item) {
         <div class="line-editor ${mode === "quote" ? "quote-line-editor" : ""}" id="line-editor" data-mode="${mode}">
           <div class="line-editor-head">
             ${mode === "quote"
-              ? "<span></span><span>Description</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
+              ? "<span></span><span>Type</span><span>Description</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
               : "<span></span><span>Description</span><span>Qty</span><span>Unit Price</span><span>Amount</span><span></span>"}
           </div>
           <div id="line-editor-rows">
@@ -1400,6 +1417,7 @@ function editorFields(mode, item) {
           </div>
         </div>
         <div class="line-editor-tools">
+          ${mode === "quote" ? `<button id="add-title-line" type="button">Add Title Line</button>` : ""}
           <button id="add-line-item" type="button">Add Row</button>
         </div>
         <div class="invoice-edit-total"><span>${mode === "quote" ? "Total" : "Total Due"}</span><strong id="editor-total">$0</strong></div>
@@ -1514,9 +1532,15 @@ function quoteLineRate(item) {
 function lineEditorRow(item = {}, mode = editing.mode) {
   const rate = mode === "quote" ? quoteLineRate(item) : Number(item.rate || 0);
   if (mode === "quote") {
+    const type = quoteLineType(item);
     return `
       <div class="line-editor-row quote-line-row" draggable="true">
         <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
+        <select name="itemType" aria-label="Line Type">
+          <option value="line" ${type === "line" ? "selected" : ""}>Line</option>
+          <option value="title" ${type === "title" ? "selected" : ""}>Title</option>
+          <option value="detail" ${type === "detail" ? "selected" : ""}>Sub line</option>
+        </select>
         <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
         <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
         <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(item.unitCost ?? "")}">
@@ -1548,9 +1572,11 @@ function editorLineItems() {
         qty: Number(row.querySelector('[name="itemQty"]').value || 0),
         rate: Number(row.querySelector('[name="itemRate"]').value || 0)
       };
+      const type = row.querySelector('[name="itemType"]');
       const unitCost = row.querySelector('[name="itemUnitCost"]');
       const markup = row.querySelector('[name="itemMarkup"]');
       const taxable = row.querySelector('[name="itemTaxable"]');
+      if (type) item.type = type.value || "line";
       if (unitCost) item.unitCost = Number(unitCost.value || 0);
       if (markup) item.markupPercent = Number(markup.value || 0);
       if (taxable) item.taxable = taxable.checked;
@@ -2298,19 +2324,7 @@ function renderDocument(type, doc, client) {
       </div>
       <div class="doc-block">
         <h2>${type === "quote" ? escapeHtml(doc.title || "Project Quote") : "Monthly IT Services"}</h2>
-        <table class="doc-table doc-items">
-          <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
-          <tbody>
-            ${(doc.items || []).map(item => `
-              <tr>
-                <td>${escapeHtml(item.description)}</td>
-                <td class="center">${item.qty || ""}</td>
-                <td class="center">${money.format(Number(item.rate || 0))}</td>
-                <td class="center">${money.format(lineItemAmount(item))}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
+        ${renderDocumentItemTable(type, doc.items || [])}
         ${tax ? `
           <div class="doc-summary">
             <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
@@ -2328,6 +2342,56 @@ function renderDocument(type, doc, client) {
         </div>
       ` : ""}
     </div>
+  `;
+}
+
+function renderDocumentItemTable(type, items = []) {
+  if (type === "quote" && quoteHasTitleLines(items)) {
+    let inSection = false;
+    return `
+      <table class="doc-table doc-quote-sections">
+        <thead><tr><th>Description</th><th>Total</th></tr></thead>
+        <tbody>
+          ${items.map((item, index) => {
+            const rowType = quoteLineType(item);
+            if (rowType === "title") {
+              inSection = true;
+              return `
+                <tr class="doc-section-row">
+                  <td>${escapeHtml(item.description || "Project Section")}</td>
+                  <td class="center">${money.format(quoteTitleLineAmount(items, index))}</td>
+                </tr>
+              `;
+            }
+            if (inSection || rowType === "detail") {
+              return `<tr class="doc-detail-row"><td colspan="2">${escapeHtml(item.description || "")}</td></tr>`;
+            }
+            return `
+              <tr>
+                <td>${escapeHtml(item.description || "")}</td>
+                <td class="center">${money.format(lineItemAmount(item))}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  return `
+    <table class="doc-table doc-items">
+      <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+      <tbody>
+        ${items.map(item => `
+          <tr>
+            <td>${escapeHtml(item.description)}</td>
+            <td class="center">${item.qty || ""}</td>
+            <td class="center">${money.format(Number(item.rate || 0))}</td>
+            <td class="center">${money.format(lineItemAmount(item))}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
   `;
 }
 
@@ -2656,8 +2720,17 @@ document.addEventListener("click", event => {
   if (target.id === "audit-pull-pax8") pullPax8Costs();
   if (target.id === "audit-services-all") auditServices();
   if (target.dataset.auditServices) auditServices(target.dataset.auditServices);
+  if (target.id === "add-title-line") {
+    document.getElementById("line-editor-rows")?.insertAdjacentHTML(
+      "beforeend",
+      lineEditorRow({ type: "title", description: "New Section", qty: 1, rate: 0 }, "quote")
+    );
+    updateEditorTotal();
+  }
   if (target.id === "add-line-item") {
-    document.getElementById("line-editor-rows")?.insertAdjacentHTML("beforeend", lineEditorRow());
+    const mode = document.getElementById("line-editor")?.dataset.mode || editing.mode;
+    const item = mode === "quote" ? { type: "detail", description: "", qty: 1, rate: 0 } : {};
+    document.getElementById("line-editor-rows")?.insertAdjacentHTML("beforeend", lineEditorRow(item, mode));
     updateEditorTotal();
   }
   if (target.dataset.removeLine !== undefined) {

@@ -8,9 +8,16 @@ import { verifyBillingSession } from "../../billing/billingAuth";
 const GRAPH_ROOT = "https://graph.microsoft.com/v1.0";
 
 type InvoiceItem = {
+  type?: string;
   description?: string;
   qty?: number;
   rate?: number;
+};
+
+type PdfSectionRow = {
+  kind: "title" | "detail" | "line";
+  description: string;
+  amount: number;
 };
 
 type InvoicePayload = {
@@ -97,6 +104,27 @@ function invoiceTotal(invoice: InvoicePayload) {
     (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
     0,
   );
+}
+
+function lineItemAmount(item: InvoiceItem) {
+  return Number(item.qty || 0) * Number(item.rate || 0);
+}
+
+function quoteLineType(item: InvoiceItem = {}) {
+  return item.type || "line";
+}
+
+function quoteHasTitleLines(items: InvoiceItem[] = []) {
+  return items.some(item => quoteLineType(item) === "title");
+}
+
+function quoteTitleLineAmount(items: InvoiceItem[] = [], titleIndex = 0) {
+  let total = lineItemAmount(items[titleIndex] || {});
+  for (let index = titleIndex + 1; index < items.length; index += 1) {
+    if (quoteLineType(items[index]) === "title") break;
+    total += lineItemAmount(items[index]);
+  }
+  return total;
 }
 
 function paethPredictor(left: number, above: number, upperLeft: number) {
@@ -298,11 +326,39 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   }
 
   content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, 382, 18, ink, "F2");
-  const items = (invoice.items || []).slice(0, 14);
-  const rowH = 27;
+  const sourceItems = invoice.items || [];
+  const sectionMode = isQuote && quoteHasTitleLines(sourceItems);
+  const sectionRows: PdfSectionRow[] = sectionMode
+    ? sourceItems.map((item, index) => {
+        const rowType = quoteLineType(item);
+        if (rowType === "title") {
+          return {
+            kind: "title",
+            description: item.description || "Project Section",
+            amount: quoteTitleLineAmount(sourceItems, index),
+          };
+        }
+        const hasPriorTitle = sourceItems.slice(0, index).some(prior => quoteLineType(prior) === "title");
+        if (hasPriorTitle || rowType === "detail") {
+          return {
+            kind: "detail",
+            description: item.description || "",
+            amount: 0,
+          };
+        }
+        return {
+          kind: "line",
+          description: item.description || "",
+          amount: lineItemAmount(item),
+        };
+      })
+    : [];
+  const sectionItems = sectionRows.slice(0, 18);
+  const invoiceItems = sourceItems.slice(0, 14);
+  const rowH = sectionMode ? 25 : 27;
   const headerH = 30;
   const itemsY = 135;
-  const itemsH = headerH + rowH * Math.max(items.length, 1);
+  const itemsH = headerH + rowH * Math.max(sectionMode ? sectionItems.length : invoiceItems.length, 1);
   const col = {
     desc: tableX,
     qty: tableX + 350,
@@ -318,25 +374,47 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
 
   content += rect(tableX, itemsY, tableW, itemsH);
   content += rect(tableX, itemsY + itemsH - headerH, tableW, headerH, headerFill);
-  content += vline(col.qty, itemsY, itemsY + itemsH);
-  content += vline(col.rate, itemsY, itemsY + itemsH);
-  content += vline(col.amount, itemsY, itemsY + itemsH);
-  content += drawTextCenter("Description", col.desc, itemsY + itemsH - 20, width.desc, 12, ink, "F2");
-  content += drawTextCenter("Qty", col.qty, itemsY + itemsH - 20, width.qty, 12, ink, "F2");
-  content += drawTextCenter("Rate", col.rate, itemsY + itemsH - 20, width.rate, 12, ink, "F2");
-  content += drawTextCenter("Amount", col.amount, itemsY + itemsH - 20, width.amount, 12, ink, "F2");
 
   let y = itemsY + itemsH - headerH;
-  for (const item of (invoice.items || []).slice(0, 16)) {
-    if (y - rowH < itemsY) break;
-    const amount = Number(item.qty || 0) * Number(item.rate || 0);
-    content += hline(tableX, y, tableX + tableW);
-    const textY = y - 18;
-    content += drawText(String(item.description || "").slice(0, 58), col.desc + 8, textY, 11);
-    content += drawTextCenter(String(item.qty ?? ""), col.qty, textY, width.qty, 11);
-    content += drawTextCenter(money(Number(item.rate || 0)), col.rate, textY, width.rate, 11);
-    content += drawTextCenter(money(amount), col.amount, textY, width.amount, 11);
-    y -= rowH;
+  if (sectionMode) {
+    const sectionAmountX = tableX + tableW - 125;
+    const sectionDescW = tableW - 125;
+    content += vline(sectionAmountX, itemsY, itemsY + itemsH);
+    content += drawTextCenter("Description", tableX, itemsY + itemsH - 20, sectionDescW, 12, ink, "F2");
+    content += drawTextCenter("Total", sectionAmountX, itemsY + itemsH - 20, 125, 12, ink, "F2");
+
+    for (const item of sectionItems) {
+      if (y - rowH < itemsY) break;
+      content += hline(tableX, y, tableX + tableW);
+      const textY = y - 17;
+      if (item.kind === "detail") {
+        content += drawText(`- ${String(item.description || "").slice(0, 78)}`, tableX + 18, textY, 10, "0.35 0.42 0.50");
+      } else {
+        content += drawText(String(item.description || "").slice(0, 70), tableX + 8, textY, 11, ink, "F2");
+        content += drawTextCenter(money(Number(item.amount || 0)), sectionAmountX, textY, 125, 11, ink, "F2");
+      }
+      y -= rowH;
+    }
+  } else {
+    content += vline(col.qty, itemsY, itemsY + itemsH);
+    content += vline(col.rate, itemsY, itemsY + itemsH);
+    content += vline(col.amount, itemsY, itemsY + itemsH);
+    content += drawTextCenter("Description", col.desc, itemsY + itemsH - 20, width.desc, 12, ink, "F2");
+    content += drawTextCenter("Qty", col.qty, itemsY + itemsH - 20, width.qty, 12, ink, "F2");
+    content += drawTextCenter("Rate", col.rate, itemsY + itemsH - 20, width.rate, 12, ink, "F2");
+    content += drawTextCenter("Amount", col.amount, itemsY + itemsH - 20, width.amount, 12, ink, "F2");
+
+    for (const item of sourceItems.slice(0, 16)) {
+      if (y - rowH < itemsY) break;
+      const amount = lineItemAmount(item);
+      content += hline(tableX, y, tableX + tableW);
+      const textY = y - 18;
+      content += drawText(String(item.description || "").slice(0, 58), col.desc + 8, textY, 11);
+      content += drawTextCenter(String(item.qty ?? ""), col.qty, textY, width.qty, 11);
+      content += drawTextCenter(money(Number(item.rate || 0)), col.rate, textY, width.rate, 11);
+      content += drawTextCenter(money(amount), col.amount, textY, width.amount, 11);
+      y -= rowH;
+    }
   }
 
   const totalY = 58;

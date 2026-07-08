@@ -965,8 +965,8 @@ button.danger {
 
 .quote-line-editor .line-editor-head,
 .quote-line-editor .line-editor-row {
-  grid-template-columns: 42px minmax(300px, 1fr) 88px 120px 110px 120px 90px 130px 42px;
-  min-width: 1042px;
+  grid-template-columns: 42px 106px minmax(300px, 1fr) 88px 120px 110px 120px 90px 130px 42px;
+  min-width: 1160px;
 }
 
 .line-editor-head {
@@ -976,6 +976,7 @@ button.danger {
 }
 
 .line-editor-head span,
+.line-editor-row select,
 .line-editor-row input,
 .line-editor-row output,
 .line-editor-row .line-taxable,
@@ -998,16 +999,22 @@ button.danger {
 }
 
 .line-editor-row:last-child input,
+.line-editor-row:last-child select,
 .line-editor-row:last-child output,
 .line-editor-row:last-child .line-taxable,
 .line-editor-row:last-child button {
   border-bottom: 0;
 }
 
-.line-editor-row input {
+.line-editor-row input,
+.line-editor-row select {
   min-height: 42px;
   padding: 8px;
   background: #fff;
+}
+
+.line-editor-row select {
+  font: inherit;
 }
 
 .line-editor-row input[name="itemQty"],
@@ -1046,6 +1053,7 @@ button.danger {
 }
 
 .line-editor-row.dragging input,
+.line-editor-row.dragging select,
 .line-editor-row.dragging output,
 .line-editor-row.dragging .line-taxable,
 .line-editor-row.dragging button {
@@ -1054,6 +1062,9 @@ button.danger {
 
 .line-editor-tools {
   margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .invoice-edit-total {
@@ -1203,6 +1214,33 @@ button.danger {
 .doc-items th:nth-child(4),
 .doc-items td:nth-child(4) {
   width: 15%;
+}
+
+.doc-quote-sections th:nth-child(1),
+.doc-quote-sections td:nth-child(1) {
+  width: 78%;
+}
+
+.doc-quote-sections th:nth-child(2),
+.doc-quote-sections td:nth-child(2) {
+  width: 22%;
+}
+
+.doc-section-row td {
+  font-size: 17px;
+  font-weight: 800;
+  background: #fff;
+}
+
+.doc-detail-row td {
+  border-top: 0;
+  padding-left: 24px;
+  color: var(--muted);
+}
+
+.doc-detail-row td::before {
+  content: "- ";
+  font-weight: 800;
 }
 
 .doc-table .center {
