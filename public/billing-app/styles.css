@@ -971,16 +971,16 @@ button.danger {
 .line-editor-head,
 .line-editor-row {
   display: grid;
-  grid-template-columns: 42px minmax(320px, 1fr) 90px 110px 130px 42px;
+  grid-template-columns: 42px minmax(260px, 1fr) minmax(220px, .72fr) 90px 110px 130px 42px;
   align-items: stretch;
-  min-width: 734px;
+  min-width: 954px;
   width: 100%;
 }
 
 .quote-line-editor .line-editor-head,
 .quote-line-editor .line-editor-row {
-  grid-template-columns: 42px 106px minmax(300px, 1fr) 88px 120px 110px 120px 90px 130px 42px;
-  min-width: 1160px;
+  grid-template-columns: 42px 106px minmax(280px, 1fr) minmax(220px, .72fr) 88px 120px 110px 120px 90px 130px 42px;
+  min-width: 1380px;
 }
 
 .line-editor-head {

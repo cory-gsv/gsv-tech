@@ -1429,8 +1429,8 @@ function editorFields(mode, item) {
         <div class="line-editor ${mode === "quote" ? "quote-line-editor" : ""}" id="line-editor" data-mode="${mode}">
           <div class="line-editor-head">
             ${mode === "quote"
-              ? "<span></span><span>Type</span><span>Description</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
-              : "<span></span><span>Description</span><span>Qty</span><span>Unit Price</span><span>Amount</span><span></span>"}
+              ? "<span></span><span>Type</span><span>Description</span><span>Item Detail</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
+              : "<span></span><span>Description</span><span>Item Detail</span><span>Qty</span><span>Unit Price</span><span>Amount</span><span></span>"}
           </div>
           <div id="line-editor-rows">
             ${lineEditorRows(item.items || [], mode)}
@@ -1562,6 +1562,7 @@ function lineEditorRow(item = {}, mode = editing.mode) {
           <option value="detail" ${type === "detail" ? "selected" : ""}>Sub line</option>
         </select>
         <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
+        <input name="itemDetail" aria-label="Item Detail" value="${escapeHtml(item.detail || item.itemDetail || "")}" placeholder="Model, SKU, license, or ordering note">
         <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
         <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(item.unitCost ?? "")}">
         <input name="itemMarkup" aria-label="Mark Up Percent" type="number" step="0.01" value="${escapeHtml(item.markupPercent ?? item.markup ?? "")}">
@@ -1576,6 +1577,7 @@ function lineEditorRow(item = {}, mode = editing.mode) {
     <div class="line-editor-row" draggable="true">
       <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
       <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
+      <input name="itemDetail" aria-label="Item Detail" value="${escapeHtml(item.detail || item.itemDetail || "")}" placeholder="Model, SKU, license, or ordering note">
       <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
       <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
       <output class="line-amount">${money.format(Number(item.qty || 0) * Number(item.rate || 0))}</output>
@@ -1589,6 +1591,7 @@ function editorLineItems() {
     .map(row => {
       const item = {
         description: row.querySelector('[name="itemDescription"]').value.trim(),
+        detail: row.querySelector('[name="itemDetail"]')?.value.trim() || "",
         qty: Number(row.querySelector('[name="itemQty"]').value || 0),
         rate: Number(row.querySelector('[name="itemRate"]').value || 0)
       };
@@ -1602,7 +1605,7 @@ function editorLineItems() {
       if (taxable) item.taxable = taxable.checked;
       return item;
     })
-    .filter(item => item.description || item.qty || item.rate || item.unitCost || item.markupPercent);
+    .filter(item => item.description || item.detail || item.qty || item.rate || item.unitCost || item.markupPercent);
 }
 
 function syncQuoteLineMarkup(row, changedInput) {
