@@ -353,12 +353,14 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
         };
       })
     : [];
-  const sectionItems = sectionRows.slice(0, 18);
-  const invoiceItems = sourceItems.slice(0, 14);
-  const rowH = sectionMode ? 25 : 27;
-  const headerH = 30;
-  const itemsY = 135;
-  const itemsH = headerH + rowH * Math.max(sectionMode ? sectionItems.length : invoiceItems.length, 1);
+  const rowH = sectionMode ? 20 : 22;
+  const headerH = 26;
+  const itemsTop = 360;
+  const itemsY = 118;
+  const maxItemRows = Math.max(1, Math.floor((itemsTop - itemsY - headerH) / rowH));
+  const sectionItems = sectionRows.slice(0, maxItemRows);
+  const invoiceItems = sourceItems.slice(0, maxItemRows);
+  const itemsH = itemsTop - itemsY;
   const col = {
     desc: tableX,
     qty: tableX + 350,
