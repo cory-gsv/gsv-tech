@@ -307,32 +307,26 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const printableRows = sectionMode ? sectionRows : sourceItems;
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
-  const firstItemsTop = 360;
-  const continuationItemsTop = 690;
+  const baseItemsTop = 360;
   const itemsBottom = 118;
-  const firstPageRows = Math.max(1, Math.floor((firstItemsTop - itemsBottom - headerH) / rowH));
-  const continuationRows = Math.max(1, Math.floor((continuationItemsTop - itemsBottom - headerH) / rowH));
-  const chunks: Array<typeof printableRows> = [];
-  let cursor = 0;
-  if (!printableRows.length) {
-    chunks.push([] as typeof printableRows);
-  } else {
-    chunks.push(printableRows.slice(0, firstPageRows) as typeof printableRows);
-    cursor = firstPageRows;
-    while (cursor < printableRows.length) {
-      chunks.push(printableRows.slice(cursor, cursor + continuationRows) as typeof printableRows);
-      cursor += continuationRows;
-    }
+  const requiredItemsH = headerH + Math.max(printableRows.length, 1) * rowH;
+  const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
+  page.height += pageYOffset;
+  const firstItemsTop = baseItemsTop + pageYOffset;
+  const chunks: Array<typeof printableRows> = [printableRows];
+
+  function pageY(value: number) {
+    return value + pageYOffset;
   }
 
   function drawFirstPageHeader() {
     let content = "";
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
-    content += drawLogo(margin, 650, 240);
-    content += drawText(contactEmail, margin, 592, 12);
-    content += drawText("(916) 432-3373", margin, 568, 12);
+    content += drawLogo(margin, pageY(650), 240);
+    content += drawText(contactEmail, margin, pageY(592), 12);
+    content += drawText("(916) 432-3373", margin, pageY(568), 12);
 
-    content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 705, 30, ink, "F2");
+    content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, pageY(705), 30, ink, "F2");
     const metaX = 350;
     const metaValueX = 455;
     const metaRows = isQuote
@@ -347,12 +341,12 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
           ["Invoice Month", invoice.month || ""],
         ];
     metaRows.forEach(([label, value], index) => {
-      const y = 655 - index * 26;
+      const y = pageY(655 - index * 26);
       content += drawTextRight(label, metaX, y, 90, 12, ink, "F2");
       content += drawText(value, metaValueX, y, 12);
     });
 
-    const billY = 430;
+    const billY = pageY(430);
     const billH = 126;
     const addressGap = 18;
     const addressW = (tableW - addressGap) / 2;
@@ -374,18 +368,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       });
     }
 
-    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, 382, 18, ink, "F2");
-    return content;
-  }
-
-  function drawContinuationHeader(pageNumber: number) {
-    let content = "";
-    content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
-    content += drawLogo(margin, 704, 120);
-    content += drawText(isQuote ? "QUOTE" : "INVOICE", 434, 725, 24, ink, "F2");
-    content += drawTextRight(isQuote ? "Quote #" : "Invoice #", 350, 688, 90, 11, ink, "F2");
-    content += drawText(invoice.number || "", 455, 688, 11);
-    content += drawText(`${isQuote ? "Quote" : "Invoice"} continued - page ${pageNumber}`, tableX, 660, 16, ink, "F2");
+    content += drawText(isQuote ? (invoice.title || "Project Quote") : "Monthly IT Services", tableX, pageY(382), 18, ink, "F2");
     return content;
   }
 
@@ -463,20 +446,21 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     return content;
   }
 
-  const pageContents = chunks.map((rows, index) => {
-    const firstPage = index === 0;
-    const lastPage = index === chunks.length - 1;
-    let content = firstPage ? drawFirstPageHeader() : drawContinuationHeader(index + 1);
-    content += drawItemsTable(rows, firstPage ? firstItemsTop : continuationItemsTop, itemsBottom);
-    if (lastPage) content += drawTotalBlock();
-    return `q\n1 1 1 rg 0 0 612 792 re f\n0 0 0 RG 0 0 0 rg\n${content}Q`;
+  const pageContents = chunks.map((rows) => {
+    let content = drawFirstPageHeader();
+    content += drawItemsTable(rows, firstItemsTop, itemsBottom);
+    content += drawTotalBlock();
+    return `q
+1 1 1 rg 0 0 ${page.width} ${page.height} re f
+0 0 0 RG 0 0 0 rg
+${content}Q`;
   });
 
   const pageObjectStart = 6;
   const contentObjectStart = pageObjectStart + pageContents.length;
   const pageRefs = pageContents.map((_, index) => `${pageObjectStart + index} 0 R`).join(" ");
   const pageObjects = pageContents.map((_, index) => (
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents ${contentObjectStart + index} 0 R >>`
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${page.width} ${page.height}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents ${contentObjectStart + index} 0 R >>`
   ));
   const contentObjects = pageContents.map(stream => `<< /Length ${pdfByteLength(stream)} >>\nstream\n${stream}\nendstream`);
   const objects = [
