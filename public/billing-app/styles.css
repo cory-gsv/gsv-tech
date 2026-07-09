@@ -1109,6 +1109,10 @@ button.danger {
   width: min(980px, calc(100vw - 32px));
 }
 
+#document-preview.is-admin-preview {
+  width: min(1380px, calc(100vw - 32px));
+}
+
 .doc {
   padding: 36px;
   background: #fff;
@@ -1279,6 +1283,7 @@ button.danger {
 .admin-preview {
   padding: 24px;
   background: #fff;
+  overflow-x: auto;
 }
 
 .admin-preview-summary {
@@ -1311,6 +1316,7 @@ button.danger {
 
 .admin-preview-table {
   width: 100%;
+  min-width: 1240px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 13px;
@@ -1331,17 +1337,17 @@ button.danger {
 
 .admin-preview-table th:nth-child(1),
 .admin-preview-table td:nth-child(1) {
-  width: 7%;
+  width: 90px;
 }
 
 .admin-preview-table th:nth-child(2),
 .admin-preview-table td:nth-child(2) {
-  width: 24%;
+  width: 300px;
 }
 
 .admin-preview-table th:nth-child(3),
 .admin-preview-table td:nth-child(3) {
-  width: 22%;
+  width: 300px;
 }
 
 .admin-preview-table .num {

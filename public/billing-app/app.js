@@ -2317,7 +2317,9 @@ function previewDocument(type, idValue, previewMode = "admin") {
       : doc.status === "converted" || doc.status === "declined"
   );
   document.getElementById("print-document").hidden = !customerMode;
-  document.getElementById("document-preview").showModal();
+  const preview = document.getElementById("document-preview");
+  preview.classList.toggle("is-admin-preview", !customerMode);
+  preview.showModal();
 }
 
 function exportDocumentPdf(type, doc) {
@@ -2332,6 +2334,7 @@ function exportDocumentPdf(type, doc) {
       ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
       : doc.status === "converted" || doc.status === "declined";
   const preview = document.getElementById("document-preview");
+  preview.classList.remove("is-admin-preview");
   if (!preview.open) preview.showModal();
   window.setTimeout(() => window.print(), 150);
 }
