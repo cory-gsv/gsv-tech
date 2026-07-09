@@ -336,6 +336,49 @@ function clientById(clientId) {
   return state.clients.find(c => c.id === clientId);
 }
 
+function quoteOneTimeClient(quote = {}) {
+  const contact = quote.oneTimeClient || {};
+  const name = String(contact.name || quote.oneTimeName || "").trim();
+  if (!name) return null;
+  const email = String(contact.email || "").trim();
+  const phone = String(contact.phone || "").trim();
+  const billTo = String(contact.billTo || "").trim() || [name, phone, email].filter(Boolean).join("\n");
+  return {
+    name,
+    email,
+    ccEmail: String(contact.ccEmail || "").trim(),
+    phone,
+    billTo,
+    shipTo: String(contact.shipTo || quote.shipTo || "").trim()
+  };
+}
+
+function documentClient(doc = {}) {
+  return clientById(doc.clientId) || quoteOneTimeClient(doc);
+}
+
+function quoteClientName(quote = {}) {
+  return clientById(quote.clientId)?.name || quoteOneTimeClient(quote)?.name || "One-time quote";
+}
+
+function quoteOneTimeClientFromForm(data = {}) {
+  const name = String(data.oneTimeName || "").trim();
+  const email = String(data.oneTimeEmail || "").trim();
+  const phone = String(data.oneTimePhone || "").trim();
+  const billTo = String(data.oneTimeBillTo || "").trim();
+  const ccEmail = String(data.oneTimeCcEmail || "").trim();
+  if (!name && !email && !phone && !billTo && !ccEmail) return null;
+  const resolvedName = name || billTo.split("\n").find(Boolean)?.trim() || email;
+  if (!resolvedName) return null;
+  return {
+    name: resolvedName,
+    email,
+    phone,
+    ccEmail,
+    billTo: billTo || [resolvedName, phone, email].filter(Boolean).join("\n")
+  };
+}
+
 function billingClientFor(clientId) {
   const client = clientById(clientId);
   return clientById(client?.billingClientId) || client;
@@ -1244,7 +1287,7 @@ function renderQuotes() {
     .map(quote => `
       <tr>
         <td><strong>${escapeHtml(quote.number)}</strong><br><span class="subtle">${escapeHtml(quote.title || "")}</span></td>
-        <td>${escapeHtml(clientName(quote.clientId))}</td>
+        <td>${escapeHtml(quoteClientName(quote))}</td>
         <td>${formatDate(quote.date)}</td>
         <td><span class="badge ${quote.status}">${escapeHtml(quote.status)}</span></td>
         <td class="num">${money.format(invoiceTotal(quote))}</td>
@@ -1254,6 +1297,7 @@ function renderQuotes() {
             <button data-preview-quote="${quote.id}">Preview</button>
             <button data-customer-preview-quote="${quote.id}">Customer Preview</button>
             <button data-edit-quote="${quote.id}">Edit</button>
+            ${!quote.clientId && quoteOneTimeClient(quote) ? `<button data-create-client-from-quote="${quote.id}">Create Customer</button>` : ""}
             ${quote.status !== "converted" && quote.status !== "declined" ? `<button data-send-quote="${quote.id}">Send</button>` : ""}
             ${quote.status !== "converted" ? `<button data-convert-quote="${quote.id}">Create Invoice</button>` : ""}
           </div>
@@ -1433,13 +1477,14 @@ function editorFields(mode, item) {
               ${select("clientId", "Bill To", clientOptions(item.clientId), false)}
               ${mode === "quote" ? `<button id="quick-add-client" type="button">Add Client</button>` : ""}
             </div>
-            <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || "Select a client")}</div>
+            <div class="invoice-edit-address">${lines(clientById(item.clientId)?.billTo || clientById(item.clientId)?.name || quoteOneTimeClient(item)?.billTo || "Select a client, or use one-time quote details below")}</div>
           </div>
           <div>
             ${checkbox("showShipTo", "Show Ship To", item.showShipTo)}
-            ${textarea("shipTo", "Ship To", item.shipTo || clientById(item.clientId)?.billTo || "", false)}
+            ${textarea("shipTo", "Ship To", item.shipTo || clientById(item.clientId)?.billTo || quoteOneTimeClient(item)?.shipTo || "", false)}
           </div>
         </div>
+        ${mode === "quote" ? oneTimeQuoteFields(item) : ""}
       </div>
       <div class="invoice-edit-section full">
         <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
@@ -1473,6 +1518,20 @@ function editorFields(mode, item) {
     `;
   }
   return "";
+}
+
+function oneTimeQuoteFields(item = {}) {
+  const contact = quoteOneTimeClient(item) || {};
+  return `
+    <div class="one-time-quote-fields">
+      <p class="field-note full">Use these fields for a one-time quote when you do not want to create a customer yet.</p>
+      ${field("oneTimeName", "One-Time Name", contact.name || "")}
+      ${field("oneTimeEmail", "One-Time Email", contact.email || "")}
+      ${field("oneTimePhone", "One-Time Phone", contact.phone || "")}
+      ${field("oneTimeCcEmail", "One-Time CC Email(s)", contact.ccEmail || "")}
+      ${textarea("oneTimeBillTo", "One-Time Bill To", contact.billTo || "", true)}
+    </div>
+  `;
 }
 
 function statusOptions(mode, selected) {
@@ -1727,8 +1786,13 @@ function saveEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
   setEditorError("");
-  if ((editing.mode === "invoice" || editing.mode === "quote") && !data.clientId) {
+  const oneTimeClient = editing.mode === "quote" ? quoteOneTimeClientFromForm(data) : null;
+  if (editing.mode === "invoice" && !data.clientId) {
     setEditorError("Select or add a client before saving.", "clientId");
+    return false;
+  }
+  if (editing.mode === "quote" && !data.clientId && !oneTimeClient) {
+    setEditorError("Select a client, or enter a one-time quote name.", "oneTimeName");
     return false;
   }
   if (editing.mode === "client") {
@@ -1784,6 +1848,7 @@ function saveEditor() {
       id: editing.id || id("quote"),
       number: data.number,
       clientId: data.clientId,
+      oneTimeClient,
       date: data.date,
       title: data.title,
       taxRate: Number(data.taxRate || 0),
@@ -1933,10 +1998,10 @@ async function sendInvoice(invoiceId, invoiceOverride = null) {
 async function sendQuote(quoteId, quoteOverride = null) {
   const quote = quoteOverride || state.quotes.find(q => q.id === quoteId);
   if (!quote) return;
-  const client = clientById(quote.clientId);
+  const client = documentClient(quote);
 
   if (!clientEmail(client)) {
-    window.alert("This client does not have an email address saved.");
+    window.alert("This quote does not have an email address saved.");
     return;
   }
 
@@ -2010,10 +2075,12 @@ function quoteFromEditor() {
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
   const existingQuote = state.quotes.find(quote => quote.id === editing.id);
+  const oneTimeClient = quoteOneTimeClientFromForm(data);
   return {
     id: editing.id || id("preview"),
     number: data.number,
     clientId: data.clientId,
+    oneTimeClient,
     date: data.date,
     title: data.title,
     taxRate: Number(data.taxRate || 0),
@@ -2236,6 +2303,45 @@ async function generateServicesQuote(clientId = "", options = {}) {
   createServicesQuoteForClient(client, month);
 }
 
+function createCustomerFromQuote(quoteId, options = {}) {
+  const quote = state.quotes.find(q => q.id === quoteId);
+  if (!quote) return null;
+  const existingClient = clientById(quote.clientId);
+  if (existingClient) {
+    if (!options.silent) window.alert(`Quote ${quote.number} is already linked to ${existingClient.name}.`);
+    return existingClient;
+  }
+  const contact = quoteOneTimeClient(quote);
+  if (!contact?.name) {
+    if (!options.silent) window.alert("This quote does not have one-time customer details to create from.");
+    return null;
+  }
+  if (!options.silent) {
+    const ok = window.confirm(`Create customer ${contact.name} from quote ${quote.number}?`);
+    if (!ok) return null;
+  }
+  const newClient = {
+    id: id("client"),
+    name: contact.name,
+    status: "active",
+    terms: "Net 15",
+    billTo: contact.billTo || contact.name,
+    shipTo: contact.shipTo || "",
+    email: contact.email || "",
+    ccEmail: contact.ccEmail || "",
+    phone: contact.phone || "",
+    internalCosts: [],
+    mspRates: { fullUser: 70, lightUser: 20, serviceAccount: 10, copilot: 30 },
+    licenseAuditBilling: true
+  };
+  state.clients.push(newClient);
+  quote.clientId = newClient.id;
+  saveState();
+  render();
+  if (!options.silent) window.alert(`Customer ${newClient.name} was created from quote ${quote.number}.`);
+  return newClient;
+}
+
 function convertQuote(quoteId) {
   const quote = state.quotes.find(q => q.id === quoteId);
   if (!quote) return;
@@ -2243,11 +2349,23 @@ function convertQuote(quoteId) {
     window.alert("This quote has already been converted to an invoice.");
     return;
   }
+  let client = clientById(quote.clientId);
+  if (!client) {
+    const contact = quoteOneTimeClient(quote);
+    if (!contact) {
+      window.alert("Add customer details before creating an invoice from this quote.");
+      return;
+    }
+    const ok = window.confirm(`Create customer ${contact.name} from this quote and then create the invoice?`);
+    if (!ok) return;
+    client = createCustomerFromQuote(quote.id, { silent: true });
+    if (!client) return;
+  }
   const invoiceNumber = quote.number.replace("GSV-Q", "GSV-INV");
   const invoice = {
     id: id("inv"),
     number: invoiceNumber,
-    clientId: quote.clientId,
+    clientId: client.id,
     date: today,
     dueDate: addDays(today, 15),
     month: today.slice(0, 7),
@@ -2275,14 +2393,16 @@ function createInvoiceFromEditorQuote() {
   if (editing.mode !== "quote" || !editing.id) return;
   const form = document.getElementById("editor-form");
   const data = Object.fromEntries(new FormData(form).entries());
-  if (!data.clientId) {
-    setEditorError("Select or add a client before creating the invoice.", "clientId");
+  const oneTimeClient = quoteOneTimeClientFromForm(data);
+  if (!data.clientId && !oneTimeClient) {
+    setEditorError("Select a client, or enter a one-time quote name before creating the invoice.", "oneTimeName");
     return;
   }
   const quote = {
     id: editing.id,
     number: data.number,
     clientId: data.clientId,
+    oneTimeClient,
     date: data.date,
     title: data.title,
     taxRate: Number(data.taxRate || 0),
@@ -2303,13 +2423,14 @@ function previewDocument(type, idValue, previewMode = "admin") {
   if (!doc) return;
   const customerMode = previewMode === "customer" || type !== "quote";
   previewing = { type, id: idValue, mode: customerMode ? "customer" : "admin" };
-  const client = clientById(doc.clientId);
+  const client = documentClient(doc);
   document.getElementById("document-title").textContent = customerMode
     ? (type === "quote" ? "Customer Quote Preview" : "Invoice")
     : "Admin Quote Preview";
   document.getElementById("document-body").innerHTML = customerMode
     ? renderDocument(type, doc, client)
     : renderAdminQuotePreview(doc, client);
+  document.getElementById("create-customer-preview-document").hidden = type !== "quote" || Boolean(doc.clientId) || !quoteOneTimeClient(doc);
   document.getElementById("create-invoice-preview-document").hidden = !customerMode || type !== "quote" || doc.status === "converted";
   document.getElementById("send-preview-document").hidden = !customerMode || (
     type === "invoice"
@@ -2325,9 +2446,10 @@ function previewDocument(type, idValue, previewMode = "admin") {
 function exportDocumentPdf(type, doc) {
   if (!doc) return;
   previewing = { type, id: doc.id };
-  const client = clientById(doc.clientId);
+  const client = documentClient(doc);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
+  document.getElementById("create-customer-preview-document").hidden = true;
   document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
   document.getElementById("send-preview-document").hidden =
     type === "invoice"
@@ -2361,6 +2483,12 @@ function createInvoiceFromPreviewQuote() {
   convertQuote(previewing.id);
 }
 
+function createCustomerFromPreviewQuote() {
+  if (!previewing || previewing.type !== "quote") return;
+  createCustomerFromQuote(previewing.id);
+  const preview = document.getElementById("document-preview");
+  if (preview?.open) preview.close();
+}
 
 function rowMarginAmount(item) {
   const qty = Number(item.qty || 0);
@@ -2898,6 +3026,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-close" || target.id === "editor-cancel") document.getElementById("editor").close();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "edit-preview-document") editPreviewDocument();
+  if (target.id === "create-customer-preview-document") createCustomerFromPreviewQuote();
   if (target.id === "create-invoice-preview-document") createInvoiceFromPreviewQuote();
   if (target.id === "send-preview-document") sendPreviewDocument();
   if (target.id === "print-document") window.print();
@@ -2925,6 +3054,7 @@ document.addEventListener("click", event => {
   if (target.dataset.pdfInvoice) exportDocumentPdf("invoice", state.invoices.find(inv => inv.id === target.dataset.pdfInvoice));
   if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote, "admin");
   if (target.dataset.customerPreviewQuote) previewDocument("quote", target.dataset.customerPreviewQuote, "customer");
+  if (target.dataset.createClientFromQuote) createCustomerFromQuote(target.dataset.createClientFromQuote);
   if (target.dataset.convertQuote) convertQuote(target.dataset.convertQuote);
   if (target.id === "invoice-clear-filters") {
     document.getElementById("invoice-client-filter").value = "";

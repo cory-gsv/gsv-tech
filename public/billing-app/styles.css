@@ -955,6 +955,28 @@ button.danger {
   background: #fff;
 }
 
+.one-time-quote-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.one-time-quote-fields .full,
+.one-time-quote-fields .field-note {
+  grid-column: 1 / -1;
+}
+
+.one-time-quote-fields .field-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .invoice-edit-section h3 {
   margin: 0 0 14px;
   font-size: 28px;
