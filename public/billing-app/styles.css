@@ -1275,6 +1275,101 @@ button.danger {
   text-align: center;
 }
 
+
+.admin-preview {
+  padding: 24px;
+  background: #fff;
+}
+
+.admin-preview-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-preview-summary div {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #f8fafc;
+}
+
+.admin-preview-summary span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.admin-preview-summary strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.admin-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.admin-preview-table th,
+.admin-preview-table td {
+  border: 1px solid var(--border);
+  padding: 7px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.admin-preview-table th {
+  background: #e7edf5;
+  text-align: left;
+}
+
+.admin-preview-table th:nth-child(1),
+.admin-preview-table td:nth-child(1) {
+  width: 7%;
+}
+
+.admin-preview-table th:nth-child(2),
+.admin-preview-table td:nth-child(2) {
+  width: 24%;
+}
+
+.admin-preview-table th:nth-child(3),
+.admin-preview-table td:nth-child(3) {
+  width: 22%;
+}
+
+.admin-preview-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-preview-table .center {
+  text-align: center;
+}
+
+.admin-section-row td {
+  background: #f8fafc;
+  font-weight: 800;
+}
+
+.admin-preview-notes {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.admin-preview-notes strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .doc-total {
   margin-top: 28px;
   display: grid;

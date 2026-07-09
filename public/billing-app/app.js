@@ -1252,6 +1252,7 @@ function renderQuotes() {
         <td>
           <div class="row-actions">
             <button data-preview-quote="${quote.id}">Preview</button>
+            <button data-customer-preview-quote="${quote.id}">Customer Preview</button>
             <button data-edit-quote="${quote.id}">Edit</button>
             ${quote.status !== "converted" && quote.status !== "declined" ? `<button data-send-quote="${quote.id}">Send</button>` : ""}
             ${quote.status !== "converted" ? `<button data-convert-quote="${quote.id}">Create Invoice</button>` : ""}
@@ -2297,18 +2298,25 @@ function createInvoiceFromEditorQuote() {
   convertQuote(quote.id);
 }
 
-function previewDocument(type, idValue) {
+function previewDocument(type, idValue, previewMode = "admin") {
   const doc = type === "quote" ? state.quotes.find(q => q.id === idValue) : state.invoices.find(inv => inv.id === idValue);
   if (!doc) return;
-  previewing = { type, id: idValue };
+  const customerMode = previewMode === "customer" || type !== "quote";
+  previewing = { type, id: idValue, mode: customerMode ? "customer" : "admin" };
   const client = clientById(doc.clientId);
-  document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
-  document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
-  document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
-  document.getElementById("send-preview-document").hidden =
+  document.getElementById("document-title").textContent = customerMode
+    ? (type === "quote" ? "Customer Quote Preview" : "Invoice")
+    : "Admin Quote Preview";
+  document.getElementById("document-body").innerHTML = customerMode
+    ? renderDocument(type, doc, client)
+    : renderAdminQuotePreview(doc, client);
+  document.getElementById("create-invoice-preview-document").hidden = !customerMode || type !== "quote" || doc.status === "converted";
+  document.getElementById("send-preview-document").hidden = !customerMode || (
     type === "invoice"
       ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
-      : doc.status === "converted" || doc.status === "declined";
+      : doc.status === "converted" || doc.status === "declined"
+  );
+  document.getElementById("print-document").hidden = !customerMode;
   document.getElementById("document-preview").showModal();
 }
 
@@ -2348,6 +2356,79 @@ function sendPreviewDocument() {
 function createInvoiceFromPreviewQuote() {
   if (!previewing || previewing.type !== "quote") return;
   convertQuote(previewing.id);
+}
+
+
+function rowMarginAmount(item) {
+  const qty = Number(item.qty || 0);
+  const unitCost = Number(item.unitCost || 0);
+  const rate = Number(item.rate || 0);
+  const detail = String(item.detail || item.itemDetail || "");
+  if (/labor/i.test(detail)) return qty * rate;
+  return qty * (rate - unitCost);
+}
+
+function renderAdminQuotePreview(doc, client) {
+  const subtotal = documentSubtotal(doc);
+  const tax = documentTaxTotal(doc);
+  const total = invoiceTotal(doc);
+  const taxRate = Number(doc.taxRate || 0);
+  const margin = quoteMargin(doc);
+  const items = doc.items || [];
+  return `
+    <div class="admin-preview">
+      <div class="admin-preview-summary">
+        <div><span>Quote #</span><strong>${escapeHtml(doc.number || "")}</strong></div>
+        <div><span>Client</span><strong>${escapeHtml(client?.name || "")}</strong></div>
+        <div><span>Date</span><strong>${escapeHtml(doc.date || "")}</strong></div>
+        <div><span>Status</span><strong>${escapeHtml(doc.status || "")}</strong></div>
+        <div><span>Project / Title</span><strong>${escapeHtml(doc.title || "")}</strong></div>
+        <div><span>Email Subject</span><strong>${escapeHtml(doc.subject || "")}</strong></div>
+        <div><span>Tax Rate</span><strong>${taxRate.toFixed(2)}%</strong></div>
+        <div><span>Margin</span><strong>${money.format(margin)}</strong></div>
+        <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
+        <div><span>Tax</span><strong>${money.format(tax)}</strong></div>
+        <div><span>Total</span><strong>${money.format(total)}</strong></div>
+      </div>
+      <table class="admin-preview-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Item Detail</th>
+            <th>Qty</th>
+            <th>Unit Cost</th>
+            <th>Mark Up %</th>
+            <th>Unit Price</th>
+            <th>Taxable</th>
+            <th>Total</th>
+            <th>Margin</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, index) => {
+            const rowType = quoteDisplayLineType(items, item, index);
+            const typeLabel = rowType === "title" ? "Section" : rowType === "detail" ? "Detail" : "Line";
+            return `
+              <tr class="${rowType === "title" ? "admin-section-row" : ""}">
+                <td>${typeLabel}</td>
+                <td>${escapeHtml(item.description || "")}</td>
+                <td>${escapeHtml(item.detail || item.itemDetail || "")}</td>
+                <td class="num">${item.qty ?? ""}</td>
+                <td class="num">${money.format(Number(item.unitCost || 0))}</td>
+                <td class="num">${Number(item.markupPercent || 0)}</td>
+                <td class="num">${money.format(Number(item.rate || 0))}</td>
+                <td class="center">${item.taxable ? "Yes" : "No"}</td>
+                <td class="num">${money.format(lineItemAmount(item))}</td>
+                <td class="num">${money.format(rowMarginAmount(item))}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+      ${doc.notes ? `<div class="admin-preview-notes"><strong>Notes</strong>${lines(doc.notes)}</div>` : ""}
+    </div>
+  `;
 }
 
 function renderDocument(type, doc, client) {
@@ -2839,7 +2920,8 @@ document.addEventListener("click", event => {
   }
   if (target.dataset.previewInvoice) previewDocument("invoice", target.dataset.previewInvoice);
   if (target.dataset.pdfInvoice) exportDocumentPdf("invoice", state.invoices.find(inv => inv.id === target.dataset.pdfInvoice));
-  if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote);
+  if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote, "admin");
+  if (target.dataset.customerPreviewQuote) previewDocument("quote", target.dataset.customerPreviewQuote, "customer");
   if (target.dataset.convertQuote) convertQuote(target.dataset.convertQuote);
   if (target.id === "invoice-clear-filters") {
     document.getElementById("invoice-client-filter").value = "";
