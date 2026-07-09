@@ -304,7 +304,9 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
         };
       })
     : [];
-  const printableRows = sectionMode ? sectionRows : sourceItems;
+  const printableRows = sectionMode
+    ? sectionRows.filter(row => row.kind !== "detail" || String(row.description || "").trim())
+    : sourceItems;
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
   const baseItemsTop = 486;
@@ -313,6 +315,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
   page.height += pageYOffset;
   const firstItemsTop = baseItemsTop + pageYOffset;
+  const tableBottom = firstItemsTop - requiredItemsH;
   const chunks: Array<typeof printableRows> = [printableRows];
 
   function pageY(value: number) {
@@ -436,8 +439,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     return content;
   }
 
-  function drawTotalBlock() {
-    const totalY = 58;
+  function drawTotalBlock(totalY: number) {
     let content = "";
     content += rect(tableX, totalY, tableW, 36, gold);
     content += vline(tableX + tableW - 115, totalY, totalY + 36);
@@ -448,8 +450,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
 
   const pageContents = chunks.map((rows) => {
     let content = drawFirstPageHeader();
-    content += drawItemsTable(rows, firstItemsTop, itemsBottom);
-    content += drawTotalBlock();
+    content += drawItemsTable(rows, firstItemsTop, tableBottom);
+    content += drawTotalBlock(Math.max(58, tableBottom - 52));
     return `q
 1 1 1 rg 0 0 ${page.width} ${page.height} re f
 0 0 0 RG 0 0 0 rg
