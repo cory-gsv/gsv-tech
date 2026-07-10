@@ -300,6 +300,8 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const tableX = margin;
   const tableW = page.width - margin * 2;
   const sourceItems = invoice.items || [];
+  const summaryRowCount = tax || shipping ? 1 + (tax ? 1 : 0) + (shipping ? 1 : 0) : 0;
+  const summaryReserve = summaryRowCount * 24;
   const sectionMode = isQuote && quoteHasTitleLines(sourceItems);
   const sectionRows: PdfSectionRow[] = sectionMode
     ? sourceItems.map((item, index) => {
@@ -332,7 +334,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const rowH = sectionMode ? 20 : 22;
   const headerH = 26;
   const baseItemsTop = 486;
-  const itemsBottom = 118;
+  const itemsBottom = 118 + summaryReserve;
   const requiredItemsH = headerH + Math.max(printableRows.length, 1) * rowH;
   const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
   page.height += pageYOffset;
@@ -493,7 +495,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
   const pageContents = chunks.map((rows) => {
     let content = drawFirstPageHeader();
     content += drawItemsTable(rows, firstItemsTop, tableBottom);
-    content += drawTotalBlock(Math.max(58, tableBottom - 52));
+    content += drawTotalBlock(Math.max(58, tableBottom - 52 - summaryReserve));
     return `q
 1 1 1 rg 0 0 ${page.width} ${page.height} re f
 0 0 0 RG 0 0 0 rg
