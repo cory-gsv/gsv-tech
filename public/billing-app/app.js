@@ -463,8 +463,12 @@ function documentTaxTotal(doc) {
   return Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
 }
 
+function documentShippingTotal(doc) {
+  return Math.max(0, Number(doc.shippingCost || 0));
+}
+
 function invoiceTotal(invoice) {
-  return documentSubtotal(invoice) + documentTaxTotal(invoice);
+  return documentSubtotal(invoice) + documentTaxTotal(invoice) + documentShippingTotal(invoice);
 }
 
 function quoteMargin(quote = {}) {
@@ -1466,6 +1470,7 @@ function editorFields(mode, item) {
           ${field("date", "Date", item.date || today, "date")}
           ${mode === "invoice" ? field("dueDate", "Due Date", item.dueDate || addDays(today, 15), "date") : field("title", "Project / Quote Title", item.title || "")}
           ${mode === "quote" ? field("taxRate", "Tax Rate %", item.taxRate ?? 0, "number") : ""}
+          ${mode === "quote" ? field("shippingCost", "Shipping Cost", item.shippingCost ?? 0, "number") : ""}
           ${field("subject", "Email Subject", item.subject || defaultDocumentSubject(mode, { ...item, number: documentNumber }))}
           ${select("status", "Status", statusOptions(mode, item.status), false)}
         </div>
@@ -1716,8 +1721,9 @@ function updateEditorTotal(changedInput) {
     if (row.querySelector('[name="itemTaxable"]')?.checked) taxableSubtotal += amount;
   });
   const taxRate = Number(document.getElementById("taxRate")?.value || 0);
+  const shipping = Math.max(0, Number(document.getElementById("shippingCost")?.value || 0));
   const tax = Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
-  totalNode.textContent = money.format(subtotal + tax);
+  totalNode.textContent = money.format(subtotal + tax + shipping);
 }
 
 function itemsToText(items) {
@@ -1852,6 +1858,7 @@ function saveEditor() {
       date: data.date,
       title: data.title,
       taxRate: Number(data.taxRate || 0),
+      shippingCost: Math.max(0, Number(data.shippingCost || 0)),
       subject: data.subject || defaultDocumentSubject("quote", data),
       status: data.status,
       items: editorLineItems(),
@@ -2021,6 +2028,7 @@ async function sendQuote(quoteId, quoteOverride = null) {
           title: quote.title,
           items: quote.items,
           taxRate: Number(quote.taxRate || 0),
+          shippingCost: documentShippingTotal(quote),
           showShipTo: quote.showShipTo,
           shipTo: quote.shipTo,
           total: invoiceTotal(quote)
@@ -2084,6 +2092,7 @@ function quoteFromEditor() {
     date: data.date,
     title: data.title,
     taxRate: Number(data.taxRate || 0),
+    shippingCost: Math.max(0, Number(data.shippingCost || 0)),
     subject: data.subject || defaultDocumentSubject("quote", data),
     status: data.status,
     items: editorLineItems(),
@@ -2374,6 +2383,7 @@ function convertQuote(quoteId) {
     subject: defaultDocumentSubject("invoice", { ...quote, number: invoiceNumber }),
     items: structuredClone(quote.items),
     taxRate: Number(quote.taxRate || 0),
+    shippingCost: documentShippingTotal(quote),
     showShipTo: quote.showShipTo,
     shipTo: quote.shipTo,
     notes: quote.notes
@@ -2406,6 +2416,7 @@ function createInvoiceFromEditorQuote() {
     date: data.date,
     title: data.title,
     taxRate: Number(data.taxRate || 0),
+    shippingCost: Math.max(0, Number(data.shippingCost || 0)),
     subject: data.subject || defaultDocumentSubject("quote", data),
     status: data.status,
     items: editorLineItems(),
@@ -2502,6 +2513,7 @@ function rowMarginAmount(item) {
 function renderAdminQuotePreview(doc, client) {
   const subtotal = documentSubtotal(doc);
   const tax = documentTaxTotal(doc);
+  const shipping = documentShippingTotal(doc);
   const total = invoiceTotal(doc);
   const taxRate = Number(doc.taxRate || 0);
   const margin = quoteMargin(doc);
@@ -2519,6 +2531,7 @@ function renderAdminQuotePreview(doc, client) {
         <div><span>Margin</span><strong>${money.format(margin)}</strong></div>
         <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
         <div><span>Tax</span><strong>${money.format(tax)}</strong></div>
+        <div><span>Shipping</span><strong>${money.format(shipping)}</strong></div>
         <div><span>Total</span><strong>${money.format(total)}</strong></div>
       </div>
       <table class="admin-preview-table">
@@ -2567,6 +2580,7 @@ function renderDocument(type, doc, client) {
   const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "cory@gsvisions.com";
   const subtotal = documentSubtotal(doc);
   const tax = documentTaxTotal(doc);
+  const shipping = documentShippingTotal(doc);
   const total = invoiceTotal(doc);
   const taxRate = Number(doc.taxRate || 0);
   return `
@@ -2603,10 +2617,11 @@ function renderDocument(type, doc, client) {
       <div class="doc-block">
         <h2>${type === "quote" ? escapeHtml(doc.title || "Project Quote") : "Monthly IT Services"}</h2>
         ${renderDocumentItemTable(type, doc.items || [])}
-        ${tax ? `
+        ${(tax || shipping) ? `
           <div class="doc-summary">
             <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
-            <div><span>Tax (${taxRate.toFixed(2)}%)</span><strong>${money.format(tax)}</strong></div>
+            ${tax ? `<div><span>Tax (${taxRate.toFixed(2)}%)</span><strong>${money.format(tax)}</strong></div>` : ""}
+            ${shipping ? `<div><span>Shipping</span><strong>${money.format(shipping)}</strong></div>` : ""}
             <div class="doc-total"><span>${type === "quote" ? "Total" : "Total Due"}</span><strong>${money.format(total)}</strong></div>
           </div>
         ` : `<div class="doc-total"><span>${type === "quote" ? "Total" : "Total Due"}</span><strong>${money.format(total)}</strong></div>`}
@@ -3103,7 +3118,7 @@ document.addEventListener("keydown", event => {
 });
 
 document.addEventListener("input", event => {
-  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate") updateEditorTotal(event.target);
+  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate" || event.target.id === "shippingCost") updateEditorTotal(event.target);
 });
 
 document.addEventListener("change", event => {
@@ -3119,7 +3134,7 @@ document.addEventListener("change", event => {
     renderAudit365();
     renderClients();
   }
-  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate") updateEditorTotal(event.target);
+  if (event.target.closest("#line-editor-rows") || event.target.id === "taxRate" || event.target.id === "shippingCost") updateEditorTotal(event.target);
 });
 
 document.addEventListener("dragstart", event => {

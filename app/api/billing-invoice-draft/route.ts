@@ -29,6 +29,7 @@ type InvoicePayload = {
   title?: string;
   items?: InvoiceItem[];
   taxRate?: number;
+  shippingCost?: number;
   showShipTo?: boolean;
   shipTo?: string;
   total?: number;
@@ -99,11 +100,29 @@ function money(value: number) {
   }).format(value || 0);
 }
 
-function invoiceTotal(invoice: InvoicePayload) {
+function documentSubtotal(invoice: InvoicePayload) {
   return (invoice.items || []).reduce(
     (sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0),
     0,
   );
+}
+
+function documentTaxTotal(invoice: InvoicePayload) {
+  const taxRate = Number(invoice.taxRate || 0);
+  if (!taxRate) return 0;
+  const taxableSubtotal = (invoice.items || []).reduce((sum, item: InvoiceItem & { taxable?: boolean }) => {
+    if (!item.taxable) return sum;
+    return sum + Number(item.qty || 0) * Number(item.rate || 0);
+  }, 0);
+  return Math.round(taxableSubtotal * (taxRate / 100) * 100) / 100;
+}
+
+function documentShippingTotal(invoice: InvoicePayload) {
+  return Math.max(0, Number(invoice.shippingCost || 0));
+}
+
+function invoiceTotal(invoice: InvoicePayload) {
+  return documentSubtotal(invoice) + documentTaxTotal(invoice) + documentShippingTotal(invoice);
 }
 
 function lineItemAmount(item: InvoiceItem) {
@@ -222,6 +241,9 @@ function pdfLogoImageObject() {
 }
 
 function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, documentType: "invoice" | "quote" = "invoice", contactEmail = "billing@gsvisions.com") {
+  const subtotal = documentSubtotal(invoice);
+  const tax = documentTaxTotal(invoice);
+  const shipping = documentShippingTotal(invoice);
   const total = Number(invoice.total ?? invoiceTotal(invoice));
   const isQuote = documentType === "quote";
   const logo = pdfLogoImageObject();
@@ -441,6 +463,26 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
 
   function drawTotalBlock(totalY: number) {
     let content = "";
+    const summaryRows = [
+      ["Subtotal", subtotal],
+      ...(tax ? [[`Tax (${Number(invoice.taxRate || 0).toFixed(2)}%)`, tax] as [string, number]] : []),
+      ...(shipping ? [["Shipping", shipping] as [string, number]] : []),
+    ];
+    if (tax || shipping) {
+      const rowH = 24;
+      const summaryH = summaryRows.length * rowH;
+      const summaryW = 270;
+      const summaryX = tableX + tableW - summaryW;
+      let y = totalY + 36;
+      content += rect(summaryX, y, summaryW, summaryH);
+      content += vline(summaryX + summaryW - 105, y, y + summaryH);
+      summaryRows.forEach(([label, amount], index) => {
+        const rowY = y + summaryH - (index + 1) * rowH;
+        if (index > 0) content += hline(summaryX, rowY + rowH, summaryX + summaryW);
+        content += drawTextRight(String(label), summaryX, rowY + 8, summaryW - 110, 10, ink, "F2");
+        content += drawTextCenter(money(Number(amount)), summaryX + summaryW - 105, rowY + 8, 105, 10, ink, "F2");
+      });
+    }
     content += rect(tableX, totalY, tableW, 36, gold);
     content += vline(tableX + tableW - 115, totalY, totalY + 36);
     content += drawTextRight(isQuote ? "Total" : "Total Due", tableX, totalY + 12, tableW - 120, 16, ink, "F2");
