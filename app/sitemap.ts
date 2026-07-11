@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/app/config/site";
-import { localCities, localServices } from "@/app/data/localSeo";
+import { localCities } from "@/app/data/localSeo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -15,8 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/book-consult",
     "/privacy-policy",
     "/sms-terms",
-    "/commercial-it-support-lincoln-ca",
-    "/home-network-security-lincoln-ca",
   ].map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified: now,
@@ -24,21 +22,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === "" ? 1 : 0.8,
   }));
 
+  // Lightweight per-city hub page (links out to the business/residential pages below).
   const locationRoutes = localCities.map((city) => ({
     url: `${siteUrl}/locations/${city.slug}`,
     lastModified: now,
     changeFrequency: "monthly" as const,
-    priority: 0.75,
+    priority: 0.6,
   }));
 
-  const serviceCityRoutes = localServices.flatMap((service) =>
-    localCities.map((city) => ({
-      url: `${siteUrl}/services/${service.slug}/${city.slug}`,
+  // Consolidated business vs. residential landing pages, one pair per city.
+  const cityAudienceRoutes = localCities.flatMap((city) => [
+    {
+      url: `${siteUrl}/commercial-it-support-${city.slug}`,
       lastModified: now,
       changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
-  );
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/home-network-security-${city.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    },
+  ]);
 
-  return [...staticRoutes, ...locationRoutes, ...serviceCityRoutes];
+  return [...staticRoutes, ...locationRoutes, ...cityAudienceRoutes];
 }

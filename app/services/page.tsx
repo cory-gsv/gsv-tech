@@ -1,5 +1,5 @@
-import Link from "next/link";
 import SiteFooter from "@/app/components/SiteFooter";
+import SiteHeader from "@/app/components/SiteHeader";
 
 function ServiceBlock({
   eyebrow,
@@ -30,22 +30,7 @@ export default function ServicesPage() {
   return (
     <main id="top" className="gsv-page">
       <div className="gsv-shell">
-        <header className="gsv-header">
-          <div className="gsv-brand">
-            <div className="gsv-brand-mark">GSV</div>
-            <div>
-              <div className="gsv-brand-name">Golden State Visions</div>
-              <div className="gsv-brand-sub">A division of Golden State Visions</div>
-            </div>
-          </div>
-
-          <nav className="gsv-nav">
-            <Link href="/">Home</Link>
-            <Link href="/services">Services</Link>
-            <Link href="/#why-us">Why Us</Link>
-            <Link href="/#contact">Contact</Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
         <section className="gsv-section">
           <div className="gsv-section-head gsv-section-head-dark">
@@ -134,9 +119,9 @@ export default function ServicesPage() {
             </div>
           </div>
         </section>
-      </div>
 
-      <SiteFooter />
+        <SiteFooter />
+      </div>
     </main>
   );
 }
