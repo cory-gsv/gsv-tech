@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getLocalCity } from "@/app/data/localSeo";
 import ResidentialCityPage, { residentialCityMeta } from "@/app/components/ResidentialCityPage";
 
-const CITY_SLUG = "lincoln-ca";
+const CITY_SLUG = "auburn-ca";
 
 export function generateMetadata(): Metadata {
   const city = getLocalCity(CITY_SLUG);

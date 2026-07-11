@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocalCity } from "@/app/data/localSeo";
-import ResidentialCityPage, { residentialCityMeta } from "@/app/components/ResidentialCityPage";
+import BusinessCityPage, { businessCityMeta } from "@/app/components/BusinessCityPage";
 
-const CITY_SLUG = "lincoln-ca";
+const CITY_SLUG = "mountain-view-ca";
 
 export function generateMetadata(): Metadata {
   const city = getLocalCity(CITY_SLUG);
   if (!city) return {};
-  return residentialCityMeta(city);
+  return businessCityMeta(city);
 }
 
 export default function Page() {
   const city = getLocalCity(CITY_SLUG);
   if (!city) notFound();
-  return <ResidentialCityPage city={city} />;
+  return <BusinessCityPage city={city} />;
 }
