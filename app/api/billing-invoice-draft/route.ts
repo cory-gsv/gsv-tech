@@ -475,7 +475,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
       const summaryH = summaryRows.length * rowH;
       const summaryW = 270;
       const summaryX = tableX + tableW - summaryW;
-      let y = totalY + 36;
+      const y = totalY + 36;
       content += rect(summaryX, y, summaryW, summaryH);
       content += vline(summaryX + summaryW - 105, y, y + summaryH);
       summaryRows.forEach(([label, amount], index) => {
