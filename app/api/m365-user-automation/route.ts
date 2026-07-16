@@ -784,6 +784,25 @@ async function createSetupEmailDraft(
 ) {
   const setupEmail = cleanText(request.setupEmail || request.sourceEmail)
   if (!setupEmail || !setupEmail.includes("@")) return null
+  const ccAddresses = [
+    request.sourceEmail && request.sourceEmail !== setupEmail
+      ? {
+          address: request.sourceEmail,
+          name: request.requester || request.sourceEmail,
+        }
+      : null,
+    request.userPrincipalName && request.userPrincipalName !== setupEmail
+      ? {
+          address: request.userPrincipalName,
+          name: cleanText(request.displayName) || request.userPrincipalName,
+        }
+      : null,
+  ].filter((recipient): recipient is { address: string; name: string } =>
+    Boolean(recipient?.address && recipient.address.includes("@")),
+  )
+  const uniqueCcRecipients = Array.from(
+    new Map(ccAddresses.map((recipient) => [recipient.address.toLowerCase(), recipient])).values(),
+  )
   const fromMailbox =
     envValue(
       "M365_USER_INSTRUCTIONS_SEND_FROM",
@@ -814,9 +833,12 @@ async function createSetupEmailDraft(
           },
         },
       ],
-      ccRecipients: request.sourceEmail && request.sourceEmail !== setupEmail
-        ? [{ emailAddress: { address: request.sourceEmail, name: request.requester || request.sourceEmail } }]
-        : [],
+      ccRecipients: uniqueCcRecipients.map((recipient) => ({
+        emailAddress: {
+          address: recipient.address,
+          name: recipient.name,
+        },
+      })),
       bccRecipients: [{ emailAddress: { address: "cory@gsvisions.com", name: "Cory" } }],
       replyTo: [{ emailAddress: { address: fromMailbox, name: "Golden State Visions" } }],
     }),
