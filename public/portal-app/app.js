@@ -2,8 +2,9 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-05";
+const portalBuild = "portal-20260716-08";
 const m365AutomationRetryTimers = new Map();
+const m365AutomationActiveRuns = new Set();
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -922,11 +923,53 @@ function openTicketDetail(ticketId) {
 }
 
 function ticketTypeLabel(ticket = {}) {
-  return ticket.type || "Service request";
+  const value = typeof ticket === "string" ? ticket : ticket.type;
+  return {
+    service_request: "service request",
+    SERVICE_REQUEST: "service request",
+    problem: "problem",
+    PROBLEM: "problem",
+    incident: "incident",
+    INCIDENT: "incident",
+    question: "question",
+    QUESTION: "question",
+    task: "task",
+    TASK: "task"
+  }[String(value || "service_request")] || String(value || "service request").replace(/_/g, " ");
 }
 
 function ticketFormLabel(ticket = {}) {
   return ticket.form || "Default";
+}
+
+function ticketTypeValue(ticket = {}) {
+  const raw = typeof ticket === "string" ? ticket : ticket.type;
+  const normalized = String(raw || "service_request").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return {
+    service: "service_request",
+    service_request: "service_request",
+    problem: "problem",
+    incident: "incident",
+    question: "question",
+    task: "task"
+  }[normalized] || "service_request";
+}
+
+function ticketTypeOptions(selected = "service_request") {
+  const current = ticketTypeValue(selected);
+  return [
+    ["service_request", "service request"],
+    ["problem", "problem"],
+    ["incident", "incident"],
+    ["question", "question"],
+    ["task", "task"]
+  ].map(([value, label]) => `<option value="${value}" ${current === value ? "selected" : ""}>${label}</option>`).join("");
+}
+
+function ticketFormOptions(selected = "Default") {
+  const current = String(selected || "Default");
+  const forms = ["Default", ...new Set((state.tickets || []).map(ticket => ticket.form).filter(Boolean))];
+  return forms.map(form => `<option value="${escapeHtml(form)}" ${String(form) === current ? "selected" : ""}>${escapeHtml(form)}</option>`).join("");
 }
 
 function ticketSeverityLabel(severity = "none") {
@@ -1216,9 +1259,32 @@ function scheduleM365AutomationRetry(requestId, delayMs = 30000) {
   m365AutomationRetryTimers.set(requestId, timer);
 }
 
+function normalizeM365AutomationState(request = {}) {
+  if (!request || typeof request !== "object") return request;
+  if (request.status === "running" && request.pax8AlreadyIncreased) {
+    request.status = "waiting_for_license";
+  }
+  if (request.status === "waiting_for_license") {
+    const hasWaitingStep = Array.isArray(request.automationRunLog)
+      && request.automationRunLog.some(step => step?.status === "waiting");
+    if (!hasWaitingStep) {
+      request.automationRunLog = m365WaitingSteps(request, {
+        license: request.license,
+        pax8Changed: false,
+        pax8Quantity: request.pax8Quantity,
+        lastCheckedAt: request.lastLicenseCheckAt
+      });
+    }
+    request.automationPreview = "";
+    request.automationError = "";
+  }
+  return request;
+}
+
 function ticketM365AutomationCard(ticket = {}) {
   const request = ensureM365RequestForTicket(ticket);
   if (!request) return "";
+  normalizeM365AutomationState(request);
   if (request.clientId) requestPurchasedLicensesForClient(request.clientId);
   if (request.status === "waiting_for_license") scheduleM365AutomationRetry(request.id);
   const displayStatus = request.pax8AlreadyIncreased && request.status === "pax8_needed" ? "waiting_for_license" : (request.status || "requested");
@@ -1229,6 +1295,8 @@ function ticketM365AutomationCard(ticket = {}) {
     ? `<span class="button-link disabled">Auto-checking Microsoft 365</span>`
     : request.status === "running"
       ? `<span class="button-link disabled">Running...</span>`
+      : request.status === "complete"
+        ? `<span class="button-link disabled">Mailbox Created</span>`
       : `<a href="${ticketM365ActionHref("run", request.id)}" data-run-365-automation="${request.id}" class="button-link primary">Create 365 Mailbox</a>`;
   return `
     <article class="ticket-card ticket-m365-card">
@@ -1352,12 +1420,18 @@ function renderTicketDetail() {
     </div>
 
     <div class="ticket-control-row">
-      <label class="ticket-inline-field">
+      <label class="ticket-inline-field ticket-status-field">
         <span>Status</span>
         <select id="ticket-detail-status">${ticketStatusOptions(ticket.status || "new")}</select>
       </label>
-      <div class="ticket-select-pill">Type: ${escapeHtml(ticketTypeLabel(ticket))}<span>⌄</span></div>
-      <div class="ticket-select-pill ticket-form-pill">Form: ${escapeHtml(ticketFormLabel(ticket))}<span>⌄</span></div>
+      <label class="ticket-inline-field ticket-type-field">
+        <span>Type</span>
+        <select id="ticket-detail-type">${ticketTypeOptions(ticketTypeValue(ticket))}</select>
+      </label>
+      <label class="ticket-inline-field ticket-form-field">
+        <span>Form</span>
+        <select id="ticket-detail-form">${ticketFormOptions(ticketFormLabel(ticket))}</select>
+      </label>
       <p class="ticket-created-line">${escapeHtml(ticketCreatedLine(ticket))}</p>
     </div>
 
@@ -2330,7 +2404,7 @@ function m365StartingSteps(request = {}, autoResume = false) {
   if (autoResume || request.pax8AlreadyIncreased) {
     return [
       { status: "done", label: "Pax8 license count is already updated." },
-      { status: "running", label: "Checking Microsoft 365 for the new license.", detail: "This can take a few minutes after Pax8 changes." },
+      { status: "running", label: "Checking Microsoft 365 for the new license.", detail: "Pax8 will not be changed again for this request." },
       { status: "pending", label: "Create the new Microsoft 365 mailbox." },
       { status: "pending", label: "Assign the license." },
       { status: "pending", label: "Prepare the setup email and update the ticket." }
@@ -2348,6 +2422,7 @@ function m365StartingSteps(request = {}, autoResume = false) {
 
 function m365WaitingSteps(request = {}, result = {}) {
   const licenseName = result.license || request.license || "the selected license";
+  const checkedAt = result.lastCheckedAt || request.lastLicenseCheckAt || "";
   return [
     {
       status: "done",
@@ -2359,7 +2434,7 @@ function m365WaitingSteps(request = {}, result = {}) {
     {
       status: "waiting",
       label: `Waiting for Microsoft 365 to show ${licenseName}.`,
-      detail: "The portal will keep checking automatically. You do not need to click the button again."
+      detail: `The portal will keep checking automatically. You do not need to click the button again.${checkedAt ? ` Last checked: ${checkedAt}.` : ""}`
     },
     { status: "pending", label: "Create the new Microsoft 365 mailbox." },
     { status: "pending", label: "Assign the license." },
@@ -2404,15 +2479,41 @@ function m365CompleteSteps(request = {}, result = {}) {
 async function runM365Automation(requestId, options = {}) {
   const request = findM365Request(requestId);
   if (!request) return;
+  normalizeM365AutomationState(request);
   const autoResume = options.autoResume === true;
+  if (m365AutomationActiveRuns.has(request.id)) {
+    request.automationRunLog = Array.isArray(request.automationRunLog) && request.automationRunLog.length
+      ? request.automationRunLog
+      : m365StartingSteps(request, autoResume);
+    request.automationError = "";
+    saveState();
+    render();
+    return;
+  }
+  if (!autoResume && request.status === "waiting_for_license") {
+    request.automationRunLog = m365WaitingSteps(request, {
+      license: request.license,
+      pax8Changed: false,
+      pax8Quantity: request.pax8Quantity,
+      lastCheckedAt: request.lastLicenseCheckAt
+    });
+    request.automationPreview = "";
+    request.automationError = "";
+    saveState();
+    render();
+    scheduleM365AutomationRetry(request.id, 10000);
+    return;
+  }
   if (!autoResume) {
     const ok = window.confirm(`Create ${request.userPrincipalName || "this Microsoft 365 user"} and adjust Pax8 if needed?`);
     if (!ok) return;
   }
+  m365AutomationActiveRuns.add(request.id);
   request.automationError = "";
   request.automationPreview = "";
   request.automationRunLog = m365StartingSteps(request, autoResume);
   request.status = autoResume ? "waiting_for_license" : "running";
+  request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   saveState();
   renderM365Requests();
   renderTicketDetail();
@@ -2429,17 +2530,22 @@ async function runM365Automation(requestId, options = {}) {
       request.status = "waiting_for_license";
       request.pax8AlreadyIncreased = true;
       request.pax8SubscriptionId = data.result.pax8SubscriptionId || request.pax8SubscriptionId || "";
+      request.pax8Quantity = data.result.pax8Quantity || request.pax8Quantity || "";
+      request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
       request.automationRunLog = m365WaitingSteps(request, data.result || {});
-      request.automationPreview = data.result?.message || "";
+      request.automationPreview = "";
+      request.automationError = "";
       request.updatedAt = today;
       saveState();
       render();
       scheduleM365AutomationRetry(request.id, data.result?.retryAfterMs || 30000);
+      m365AutomationActiveRuns.delete(request.id);
       return;
     }
     request.status = "complete";
     request.pax8AlreadyIncreased = false;
     request.pax8SubscriptionId = "";
+    request.pax8Quantity = "";
     request.temporaryPassword = data.result?.temporaryPassword || request.temporaryPassword || "";
     request.automationRunLog = m365CompleteSteps(request, data.result || {});
     request.automationPreview = "Automation complete.";
@@ -2449,11 +2555,13 @@ async function runM365Automation(requestId, options = {}) {
     ].filter(Boolean).join("\n\n");
   } catch (error) {
     request.automationError = error instanceof Error ? error.message : "Automation run failed.";
+    request.status = request.pax8AlreadyIncreased || request.pax8SubscriptionId ? "waiting_for_license" : "needs_review";
     request.automationRunLog = [
       ...(Array.isArray(request.automationRunLog) ? request.automationRunLog : []),
       { status: "error", label: request.automationError }
     ];
   }
+  m365AutomationActiveRuns.delete(request.id);
   request.updatedAt = today;
   saveState();
   render();
@@ -2609,9 +2717,11 @@ function setTicketActionStatus(message = "", isError = false) {
   node.classList.toggle("error", isError);
 }
 
-function ticketDetailFieldsChanged(ticket, status, priority, severity, tags, ccEmails, followupTime) {
+function ticketDetailFieldsChanged(ticket, status, type, form, priority, severity, tags, ccEmails, followupTime) {
   return (
     String(status || "") !== String(ticket.status || "") ||
+    String(type || "") !== String(ticketTypeValue(ticket)) ||
+    String(form || "") !== String(ticketFormLabel(ticket)) ||
     String(priority || "") !== String(ticket.priority || "") ||
     String(severity || "") !== String(ticket.severity || "none") ||
     JSON.stringify(tags || []) !== JSON.stringify(ticket.tags || []) ||
@@ -4090,6 +4200,8 @@ async function saveTicketUpdate(ticketId, options = {}) {
   setTicketActionStatus("Saving ticket update...");
   const useDom = !options.skipDom;
   const status = options.status || (useDom ? document.getElementById("ticket-detail-status")?.value : "") || ticket.status;
+  const type = options.type || (useDom ? document.getElementById("ticket-detail-type")?.value : "") || ticketTypeValue(ticket);
+  const form = options.form || (useDom ? document.getElementById("ticket-detail-form")?.value : "") || ticketFormLabel(ticket);
   const priority = options.priority || (useDom ? document.getElementById("ticket-detail-priority")?.value : "") || ticket.priority;
   const severity = options.severity || (useDom ? document.getElementById("ticket-detail-severity")?.value : "") || ticket.severity || "none";
   const note = (options.comment ?? (useDom ? document.getElementById("ticket-response-text")?.value.trim() : "")) || "";
@@ -4099,7 +4211,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
     ? options.followupTime
     : (useDom ? followupEpochValue(document.getElementById("ticket-detail-followup")?.value || "") : ticket.followupTime || null);
   const publicComment = options.publicComment ?? (selectedTicketResponseMode !== "private");
-  const detailsChanged = ticketDetailFieldsChanged(ticket, status, priority, severity, tags, ccEmails, followupTime);
+  const detailsChanged = ticketDetailFieldsChanged(ticket, status, type, form, priority, severity, tags, ccEmails, followupTime);
   let ninjaResponse = null;
 
   try {
@@ -4113,6 +4225,8 @@ async function saveTicketUpdate(ticketId, options = {}) {
         subject: ticket.title,
         status,
         statusId: status === ticket.status ? ticket.ninjaStatusId : "",
+        type,
+        form,
         priority,
         severity,
         tags,
@@ -4139,6 +4253,8 @@ async function saveTicketUpdate(ticketId, options = {}) {
   }
 
   ticket.status = status;
+  ticket.type = type;
+  ticket.form = form;
   ticket.priority = priority;
   ticket.severity = severity;
   ticket.tags = tags;
@@ -5661,6 +5777,10 @@ document.addEventListener("input", event => {
 document.addEventListener("change", event => {
   if (event.target.dataset?.ticket365License) {
     updateTicketM365License(event.target.dataset.ticket365License, event.target.value);
+    return;
+  }
+  if (["ticket-detail-status", "ticket-detail-type", "ticket-detail-form"].includes(event.target.id)) {
+    if (selectedTicketId) saveTicketUpdate(selectedTicketId, { comment: "" });
     return;
   }
   if (event.target.id === "clientId") {

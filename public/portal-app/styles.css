@@ -60,6 +60,10 @@ button.primary,
   border-color: var(--ink);
 }
 
+.button-link.primary:visited {
+  color: #fff;
+}
+
 .button-link {
   align-items: center;
   background: #fff;
@@ -1041,7 +1045,7 @@ td.num, th.num {
   flex-wrap: wrap;
   gap: 10px;
   align-items: end;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin: 0 -24px 18px;
   padding: 14px 24px;
   border-top: 1px solid var(--line);
@@ -1049,18 +1053,23 @@ td.num, th.num {
   background: #fff;
 }
 
-.ticket-control-row > label,
-.ticket-control-row > .ticket-select-pill {
-  flex: 0 1 180px;
+.ticket-control-row > label {
+  flex: 0 0 190px;
 }
 
-.ticket-control-row > .ticket-form-pill {
+.ticket-control-row > .ticket-type-field {
   flex-basis: 260px;
+  min-width: 260px;
+}
+
+.ticket-control-row > .ticket-form-field {
+  flex-basis: 360px;
+  min-width: 320px;
 }
 
 .ticket-created-line {
-  flex: 1 1 360px;
-  margin: 0 0 8px;
+  flex: 1 1 auto;
+  margin: 0 0 8px auto;
   text-align: right;
   color: var(--muted);
   font-weight: 600;
@@ -1097,10 +1106,14 @@ select.readonly-select,
 input.readonly-select {
   width: 100%;
   min-height: 38px;
+  padding: 0 32px 0 12px;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: #fff;
   color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 input.readonly-select {

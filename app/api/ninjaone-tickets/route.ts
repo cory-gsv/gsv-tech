@@ -26,6 +26,8 @@ type PortalTicketRequest = {
   internalNotes?: string
   category?: string
   priority?: string
+  type?: string
+  form?: string
   ticketFormId?: number
   version?: number
   status?: string
@@ -358,6 +360,21 @@ function requestedSeverityToNinjaOne(severity = "none", priority = "normal") {
   )
 }
 
+function typeToNinjaOne(type = "service_request") {
+  const normalized = String(type || "")
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_")
+  return (
+    {
+      service_request: "SERVICE_REQUEST",
+      problem: "PROBLEM",
+      incident: "INCIDENT",
+      question: "QUESTION",
+      task: "TASK",
+    }[normalized] || "SERVICE_REQUEST"
+  )
+}
+
 function cleanStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.map((item) => String(item || "").trim()).filter(Boolean)
@@ -498,7 +515,7 @@ export async function POST(request: NextRequest) {
           ticketFormId,
           subject,
           status,
-          type: "SERVICE_REQUEST",
+          type: typeToNinjaOne(ticket.type),
           requesterUid: ticket.requesterUid || undefined,
           priority: priorityToNinjaOne(ticket.priority),
           severity: severityToNinjaOne(ticket.priority),
@@ -616,7 +633,7 @@ export async function PUT(request: NextRequest) {
           requesterUid,
           subject,
           status,
-          type: "SERVICE_REQUEST",
+          type: typeToNinjaOne(ticket.type || current.type || "service_request"),
           priority: priorityToNinjaOne(ticket.priority || current.priority),
           severity: requestedSeverityToNinjaOne(ticket.severity || current.severity, ticket.priority || current.priority),
           ...(ticket.tags ? { tags } : {}),
