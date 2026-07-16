@@ -2,7 +2,8 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-25";
+const portalBuild = "portal-20260716-26";
+const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
 
@@ -1092,6 +1093,7 @@ function embeddedPortalNotesFromInternalNotes(value = "") {
     type: match[1] === "private note" ? "private" : "public",
     body: String(match[3] || "").trim(),
     createdAt: match[2],
+    authorName: portalNoteAuthorName,
   })).filter(note => note.body);
 }
 
@@ -1123,21 +1125,26 @@ function addPortalTicketActivity(ticket, note, publicComment = true) {
     type: publicComment ? "public" : "private",
     body: note,
     createdAt: new Date().toISOString(),
+    authorName: portalNoteAuthorName,
   };
   ticket.portalNotes = [entry, ...(Array.isArray(ticket.portalNotes) ? ticket.portalNotes : [])];
 }
 
 function ticketActivityEntries(ticket = {}) {
   const requester = ticketRequesterName(ticket);
-  const entries = ticketPortalNotes(ticket).map(note => `
-    <div class="ticket-activity-entry">
-      <span class="avatar-initials">GS</span>
-      <div>
-        <p><strong>${note.type === "private" ? "Portal private note" : "Portal public response"}</strong> <span class="subtle">${escapeHtml(formatDate(note.createdAt))}</span></p>
-        <div class="ticket-note-body">${lines(note.body)}</div>
+  const entries = ticketPortalNotes(ticket).map(note => {
+    const authorName = note.authorName || portalNoteAuthorName || "GSV Portal";
+    const initials = authorName.split(/\s+/).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "GS";
+    return `
+      <div class="ticket-activity-entry">
+        <span class="avatar-initials">${escapeHtml(initials)}</span>
+        <div>
+          <p><strong>${escapeHtml(authorName)}</strong> <span class="ticket-activity-label">${note.type === "private" ? "Portal private note" : "Portal public response"}</span> <span class="subtle">${escapeHtml(formatDate(note.createdAt))}</span></p>
+          <div class="ticket-note-body">${lines(note.body)}</div>
+        </div>
       </div>
-    </div>
-  `);
+    `;
+  });
   if (ticket.description) {
     entries.push(`
       <div class="ticket-activity-entry">
