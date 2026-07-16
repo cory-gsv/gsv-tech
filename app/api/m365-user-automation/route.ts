@@ -682,6 +682,7 @@ export async function POST(request: NextRequest) {
     const displayName = cleanText(automationRequest.displayName)
     const license = cleanText(automationRequest.license)
     const pax8AlreadyIncreased = automationRequest.pax8AlreadyIncreased === true
+    const savedPax8SubscriptionId = cleanText(automationRequest.pax8SubscriptionId || "")
 
     if (!displayName) throw new Error("Missing new user's display name.")
     if (!userPrincipalName || !userPrincipalName.includes("@")) {
@@ -714,7 +715,9 @@ export async function POST(request: NextRequest) {
       pax8Match = matchPax8Subscription(subscriptions, pax8CompanyId, license)
     }
 
-    const needsPax8Increase = availableLicenses < 1
+    const pax8AlreadyHandled = pax8AlreadyIncreased || Boolean(savedPax8SubscriptionId)
+    const needsPax8Increase = availableLicenses < 1 && !pax8AlreadyHandled
+    const waitingForPreviousPax8 = availableLicenses < 1 && pax8AlreadyHandled
     const preview = {
       tenantKey,
       userExists: Boolean(existingUser),
@@ -744,6 +747,8 @@ export async function POST(request: NextRequest) {
           ? pax8Match
             ? "Increase Pax8 subscription quantity by 1, then wait for Microsoft 365 to show the new seat."
             : "Pax8 license is needed, but no matching Pax8 subscription was found."
+          : waitingForPreviousPax8
+            ? "Wait for Microsoft 365 to show the license Pax8 already added."
           : "Use existing available Microsoft 365 license.",
         "Assign Microsoft 365 license.",
         automationRequest.setupEmail || automationRequest.sourceEmail
@@ -760,11 +765,11 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       throw new Error(`Microsoft 365 user ${userPrincipalName} already exists.`)
     }
-    if (needsPax8Increase && !pax8Match?.id && !pax8AlreadyIncreased) {
+    if (availableLicenses < 1 && !pax8Match?.id && !pax8AlreadyHandled) {
       throw new Error(`No matching Pax8 subscription found for "${license}".`)
     }
 
-    const pax8Changed = Boolean(needsPax8Increase && pax8Match?.id && !pax8AlreadyIncreased)
+    const pax8Changed = Boolean(needsPax8Increase && pax8Match?.id)
     let assignableSku = sku
     let licenseWait:
       | {
@@ -775,7 +780,7 @@ export async function POST(request: NextRequest) {
         }
       | null = null
 
-    if (needsPax8Increase) {
+    if (availableLicenses < 1) {
       if (pax8Changed && pax8Match?.id) {
         const pax8AccessToken = await pax8Token()
         await pax8Request(
@@ -808,7 +813,7 @@ export async function POST(request: NextRequest) {
             pax8Changed,
             pax8AlreadyIncreased: true,
             pax8SubscriptionId:
-              pax8Match?.id || automationRequest.pax8SubscriptionId || "",
+              pax8Match?.id || savedPax8SubscriptionId || "",
             pax8Quantity: pax8Match
               ? Number(pax8Match.quantity || 0) + (pax8Changed ? 1 : 0)
               : null,
@@ -818,7 +823,7 @@ export async function POST(request: NextRequest) {
               Number(envValue("M365_AUTO_RETRY_AFTER_MS") || 30000),
             ),
             message:
-              "Pax8 is updated. Microsoft 365 is still making the new license available, so the portal will keep checking automatically.",
+              "Microsoft 365 is still making the license available. The portal will keep checking automatically and will not update Pax8 again.",
           },
         })
       }
