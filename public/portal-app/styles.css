@@ -1054,17 +1054,9 @@ td.num, th.num {
 }
 
 .ticket-control-row > label {
-  flex: 0 0 190px;
-}
-
-.ticket-control-row > .ticket-type-field {
-  flex-basis: 260px;
-  min-width: 260px;
-}
-
-.ticket-control-row > .ticket-form-field {
-  flex-basis: 360px;
-  min-width: 320px;
+  flex: 0 1 260px;
+  width: 260px;
+  min-width: 220px;
 }
 
 .ticket-created-line {

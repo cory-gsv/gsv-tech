@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyBillingSession } from "../../billing/billingAuth"
-import { ninjaOneUserAccessToken } from "../ninjaoneAuth"
+import { ninjaOneServiceAccessToken, ninjaOneUserAccessToken } from "../ninjaoneAuth"
 
 const GRAPH_ROOT = "https://graph.microsoft.com/v1.0"
 const PAX8_API_ROOT = "https://api.pax8.com"
@@ -69,6 +69,16 @@ type Pax8Subscription = {
 type LicenseAvailability = {
   sku: GraphSku
   available: number
+  effectiveAvailable?: number
+  pax8Available?: number
+  pax8Quantity?: number
+}
+
+type GraphUser = {
+  id?: string
+  displayName?: string
+  userPrincipalName?: string
+  assignedLicenses?: Array<{ skuId?: string }>
 }
 
 function envValue(...keys: string[]) {
@@ -374,7 +384,7 @@ function graphErrorMessage(
 
 async function graphOptionalUser(accessToken: string, userPrincipalName: string) {
   const response = await fetch(
-    `${GRAPH_ROOT}/users/${encodeURIComponent(userPrincipalName)}?$select=id,displayName,userPrincipalName`,
+    `${GRAPH_ROOT}/users/${encodeURIComponent(userPrincipalName)}?$select=id,displayName,userPrincipalName,assignedLicenses`,
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -392,7 +402,14 @@ async function graphOptionalUser(accessToken: string, userPrincipalName: string)
       ),
     )
   }
-  return data as { id?: string; displayName?: string; userPrincipalName?: string }
+  return data as GraphUser
+}
+
+function userHasSku(user: GraphUser | null, skuId?: string) {
+  if (!user || !skuId) return false
+  return (user.assignedLicenses || []).some(
+    (license) => String(license.skuId || "").toLowerCase() === skuId.toLowerCase(),
+  )
 }
 
 async function graphGetAll<T>(accessToken: string, path: string) {
@@ -467,9 +484,24 @@ function licenseAvailabilityPayload(
   fallbackSku?: GraphSku | null,
 ) {
   const sku = availability?.sku || fallbackSku || null
+  const availabilityDetails = availability as
+    | (LicenseAvailability & {
+        pax8Quantity?: number
+        pax8Available?: number
+        effectiveAvailable?: number
+      })
+    | null
   const enabled = Number(sku?.prepaidUnits?.enabled || 0)
   const consumed = Number(sku?.consumedUnits || 0)
   const available = Number(availability?.available ?? (enabled - consumed))
+  const pax8Quantity =
+    "pax8Quantity" in (availabilityDetails || {}) ? Number(availabilityDetails?.pax8Quantity ?? 0) : null
+  const pax8Available =
+    "pax8Available" in (availabilityDetails || {}) ? Number(availabilityDetails?.pax8Available ?? 0) : null
+  const effectiveAvailable =
+    "effectiveAvailable" in (availabilityDetails || {})
+      ? Number(availabilityDetails?.effectiveAvailable ?? available)
+      : available
   return {
     skuId: sku?.skuId || "",
     skuPartNumber: sku?.skuPartNumber || "",
@@ -477,12 +509,16 @@ function licenseAvailabilityPayload(
     enabled,
     consumed,
     available,
+    effectiveAvailable,
+    pax8Quantity,
+    pax8Available,
   }
 }
 
 async function waitForLicenseAvailability(
   accessToken: string,
   requestedLicense: string,
+  minEnabled = 0,
 ) {
   const attempts = Math.max(1, Number(envValue("M365_LICENSE_WAIT_ATTEMPTS") || 2))
   const intervalMs = Math.max(1000, Number(envValue("M365_LICENSE_WAIT_INTERVAL_MS") || 5000))
@@ -490,7 +526,8 @@ async function waitForLicenseAvailability(
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     latest = await graphLicenseAvailability(accessToken, requestedLicense)
-    if (latest?.available && latest.available > 0) {
+    const enabled = Number(latest?.sku?.prepaidUnits?.enabled || 0)
+    if (latest?.available && latest.available > 0 && (!minEnabled || enabled >= minEnabled)) {
       return {
         ...latest,
         attempts: attempt,
@@ -589,28 +626,80 @@ function matchPax8Subscription(
 
 async function postNinjaOnePrivateNote(ticketId: string, note: string) {
   if (!ticketId || !note) return null
-  const accessToken = await ninjaOneUserAccessToken()
-  const form = new FormData()
-  form.append(
-    "comment",
-    new Blob([JSON.stringify({ public: false, body: note })], {
-      type: "application/json",
-    }),
-  )
-  const response = await fetch(
-    `${NINJAONE_API_ROOT}/v2/ticketing/ticket/${encodeURIComponent(ticketId)}/comment`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: form,
-      cache: "no-store",
-    },
-  )
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(data.errorMessage || data.message || data.error || "NinjaOne ticket note failed.")
+
+  const noteForm = () => {
+    const form = new FormData()
+    form.append(
+      "comment",
+      new Blob([JSON.stringify({ public: false, body: note })], {
+        type: "application/json",
+      }),
+    )
+    return form
   }
-  return data
+
+  let userAuthError = ""
+  let serviceAuthError = ""
+  const tokenAttempts: Array<() => Promise<string>> = [
+    async () => {
+      try {
+        return await ninjaOneUserAccessToken()
+      } catch (error) {
+        userAuthError = error instanceof Error ? error.message : "NinjaOne user authentication failed."
+        throw error
+      }
+    },
+    async () => {
+      try {
+        return await ninjaOneServiceAccessToken("monitoring management control")
+      } catch (error) {
+        serviceAuthError =
+          error instanceof Error ? error.message : "NinjaOne service authentication failed."
+        throw error
+      }
+    },
+  ]
+
+  for (const getAccessToken of tokenAttempts) {
+    let accessToken = ""
+    try {
+      accessToken = await getAccessToken()
+    } catch {
+      continue
+    }
+
+    const response = await fetch(
+      `${NINJAONE_API_ROOT}/v2/ticketing/ticket/${encodeURIComponent(ticketId)}/comment`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: noteForm(),
+        cache: "no-store",
+      },
+    )
+    const data = await response.json().catch(() => ({}))
+    if (response.ok) return data
+
+    const errorText = String(data.errorMessage || data.message || data.error || "")
+    if (response.status === 401 || /invalid[_\s-]?token|not_authenticated/i.test(errorText)) {
+      continue
+    }
+    if (/user_context_required/i.test(errorText)) {
+      throw new Error(
+        "NinjaOne ticket note requires a connected NinjaOne user. Reconnect NinjaOne OAuth, then retry the ticket note.",
+      )
+    }
+    throw new Error(
+      data.errorMessage || data.message || data.error || "NinjaOne ticket note failed.",
+    )
+  }
+
+  const detail = userAuthError || serviceAuthError
+  throw new Error(
+    detail && /invalid[_\s-]?token|not_authenticated/i.test(detail)
+      ? "NinjaOne authentication expired. Reconnect NinjaOne OAuth, then retry the ticket note."
+      : detail || "NinjaOne ticket note failed because NinjaOne authentication is unavailable.",
+  )
 }
 
 function completionNote(request: NonNullable<AutomationRequest["request"]>, password: string) {
@@ -620,6 +709,16 @@ function completionNote(request: NonNullable<AutomationRequest["request"]>, pass
     `License: ${request.license}`,
     `Temporary password: ${password}`,
     "User must change password at first sign-in.",
+  ].join("\n")
+}
+
+function recoveryCompletionNote(request: NonNullable<AutomationRequest["request"]>) {
+  return [
+    "Microsoft 365 automation recovery completed.",
+    `User: ${request.displayName || request.userPrincipalName}`,
+    `Username: ${request.userPrincipalName}`,
+    `License verified: ${request.license}`,
+    "The mailbox/user already existed, so no duplicate user was created.",
   ].join("\n")
 }
 
@@ -675,7 +774,6 @@ function setupEmailHtml(
     `<p>If you are prompted to create a new password, choose something secure that you do not use for other accounts.</p>`,
     `<p>If you have trouble signing in or setting up your email, please reply to this email or contact us for support.</p>`,
     `<p>Thank you,</p>`,
-    `<p><strong>Cory</strong><br><strong>Golden State Visions</strong><br>Managed IT Services | Security | Networking | VOIP<br>(916) 432-3373<br><a href="mailto:cory@gsvisions.com">cory@gsvisions.com</a><br><a href="https://gsvisions.com">gsvisions.com</a></p>`,
   ].join("")
 }
 
@@ -774,8 +872,10 @@ export async function POST(request: NextRequest) {
       throw new Error(`Could not match "${license}" to a Microsoft 365 SKU in ${client.name || tenantKey}.`)
     }
 
-    const availableLicenses =
+    const graphAvailableLicenses =
       Number(sku.prepaidUnits?.enabled || 0) - Number(sku.consumedUnits || 0)
+    const consumedLicenses = Number(sku.consumedUnits || 0)
+    const enabledLicenses = Number(sku.prepaidUnits?.enabled || 0)
     let pax8Match: Pax8Subscription | null = null
     if (pax8CompanyId) {
       const pax8AccessToken = await pax8Token()
@@ -786,10 +886,26 @@ export async function POST(request: NextRequest) {
       pax8Match = matchPax8Subscription(subscriptions, pax8CompanyId, license)
     }
 
-    const pax8AlreadyHandled = pax8AlreadyIncreased || Boolean(savedPax8SubscriptionId)
-    const needsPax8Increase = availableLicenses < 1 && !pax8AlreadyHandled
-    const waitingForPreviousPax8 = availableLicenses < 1 && pax8AlreadyHandled
-    const licenseAvailability = licenseAvailabilityPayload({ sku, available: availableLicenses })
+    const pax8Quantity = Number(pax8Match?.quantity || 0)
+    const pax8BackedLicense = Boolean(pax8Match?.id)
+    const pax8AvailableLicenses = pax8BackedLicense
+      ? Math.max(0, pax8Quantity - consumedLicenses)
+      : 0
+    const effectiveAvailableLicenses = pax8BackedLicense
+      ? pax8AvailableLicenses
+      : graphAvailableLicenses
+    const pax8AlreadyHandled = pax8AlreadyIncreased
+    const needsPax8Increase =
+      effectiveAvailableLicenses < 1 && pax8BackedLicense && !pax8AlreadyHandled
+    const waitingForPreviousPax8 =
+      effectiveAvailableLicenses < 1 && pax8BackedLicense && pax8AlreadyHandled
+    const licenseAvailability = licenseAvailabilityPayload({
+      sku,
+      available: graphAvailableLicenses,
+      effectiveAvailable: effectiveAvailableLicenses,
+      pax8Available: pax8AvailableLicenses,
+      pax8Quantity: pax8BackedLicense ? pax8Quantity : undefined,
+    })
     const preview = {
       tenantKey,
       userExists: Boolean(existingUser),
@@ -799,6 +915,7 @@ export async function POST(request: NextRequest) {
       ninjaTicketId: automationRequest.ninjaTicketId,
       sku: licenseAvailability,
       licenseAvailability,
+      pax8BackedLicense,
       pax8AlreadyHandled,
       needsPax8Increase,
       waitingForPreviousPax8,
@@ -807,8 +924,9 @@ export async function POST(request: NextRequest) {
         ? {
             subscriptionId: pax8Match.id,
             productName: pax8Match.productName,
-            currentQuantity: Number(pax8Match.quantity || 0),
-            nextQuantity: Number(pax8Match.quantity || 0) + (needsPax8Increase ? 1 : 0),
+            currentQuantity: pax8Quantity,
+            nextQuantity: pax8Quantity + (needsPax8Increase ? 1 : 0),
+            availableQuantity: pax8AvailableLicenses,
           }
         : null,
       steps: [
@@ -819,7 +937,9 @@ export async function POST(request: NextRequest) {
             : "Pax8 license is needed, but no matching Pax8 subscription was found."
           : waitingForPreviousPax8
             ? "Wait for Microsoft 365 to show the license Pax8 already added."
-          : "Use existing available Microsoft 365 license.",
+          : pax8BackedLicense && effectiveAvailableLicenses > 0
+            ? "Use the matching active Pax8 subscription capacity for Microsoft 365 license assignment."
+            : "Use existing available Microsoft 365 license.",
         "Assign Microsoft 365 license.",
         automationRequest.setupEmail || automationRequest.sourceEmail
           ? "Create setup-instructions email draft for the contact address."
@@ -832,10 +952,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ source: "GSV Portal", preview })
     }
 
+    if (existingUser && userHasSku(existingUser, sku.skuId)) {
+      const note = recoveryCompletionNote({
+        ...automationRequest,
+        displayName: existingUser.displayName || displayName,
+        userPrincipalName,
+        license: friendlySkuName(sku.skuPartNumber || "") || license,
+      })
+      let ninjaTicketUpdated = false
+      let ninjaTicketError = ""
+      if (automationRequest.ninjaTicketId) {
+        try {
+          await postNinjaOnePrivateNote(automationRequest.ninjaTicketId, note)
+          ninjaTicketUpdated = true
+        } catch (error) {
+          ninjaTicketError =
+            error instanceof Error ? error.message : "NinjaOne ticket note failed."
+        }
+      }
+      return NextResponse.json({
+        source: "GSV Portal",
+        result: {
+          status: "already_complete",
+          userAlreadyExisted: true,
+          userPrincipalName,
+          displayName: existingUser.displayName || displayName,
+          license: friendlySkuName(sku.skuPartNumber || "") || license,
+          licenseAvailability,
+          temporaryPassword: "",
+          pax8Changed: false,
+          licenseWait: null,
+          pax8Quantity: pax8Match ? pax8Quantity : null,
+          setupEmailDraft: null,
+          setupEmailError: "",
+          ninjaTicketUpdated,
+          ninjaTicketError,
+          note,
+        },
+      })
+    }
     if (existingUser) {
       throw new Error(`Microsoft 365 user ${userPrincipalName} already exists.`)
     }
-    if (availableLicenses < 1 && !pax8Match?.id && !pax8AlreadyHandled) {
+    if (effectiveAvailableLicenses < 1 && !pax8BackedLicense && !pax8Match?.id && !pax8AlreadyHandled) {
       throw new Error(`No matching Pax8 subscription found for "${license}".`)
     }
 
@@ -843,7 +1002,10 @@ export async function POST(request: NextRequest) {
     let assignableSku = sku
     let latestLicenseAvailabilityForResult = licenseAvailabilityPayload({
       sku,
-      available: availableLicenses,
+      available: graphAvailableLicenses,
+      effectiveAvailable: effectiveAvailableLicenses,
+      pax8Available: pax8AvailableLicenses,
+      pax8Quantity: pax8BackedLicense ? pax8Quantity : undefined,
     })
     let licenseWait:
       | {
@@ -854,7 +1016,7 @@ export async function POST(request: NextRequest) {
         }
       | null = null
 
-    if (availableLicenses < 1) {
+    if (effectiveAvailableLicenses < 1 && pax8BackedLicense) {
       if (pax8Changed && pax8Match?.id) {
         const pax8AccessToken = await pax8Token()
         await pax8Request(
@@ -869,18 +1031,29 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const availability = await waitForLicenseAvailability(graphAccessToken, license)
+      const minEnabled = pax8Changed ? enabledLicenses + 1 : 0
+      const availability = await waitForLicenseAvailability(graphAccessToken, license, minEnabled)
+      const expectedPax8Quantity = pax8Match
+        ? Number(pax8Match.quantity || 0) + (pax8Changed ? 1 : 0)
+        : 0
+      const latestConsumed = Number(availability.sku?.consumedUnits || consumedLicenses)
+      const latestPax8Available = Math.max(0, expectedPax8Quantity - latestConsumed)
       latestLicenseAvailabilityForResult = licenseAvailabilityPayload(
-        availability,
+        {
+          ...availability,
+          effectiveAvailable: latestPax8Available,
+          pax8Available: latestPax8Available,
+          pax8Quantity: expectedPax8Quantity,
+        },
         availability.sku || sku,
       )
       licenseWait = {
         attempts: availability.attempts,
         waitedMs: availability.waitedMs,
         timedOut: availability.timedOut,
-        available: availability.available,
+        available: latestPax8Available,
       }
-      if (!availability.sku?.skuId || availability.available < 1) {
+      if (!availability.sku?.skuId || latestPax8Available < 1) {
         return NextResponse.json({
           source: "GSV Portal",
           result: {
@@ -964,8 +1137,16 @@ export async function POST(request: NextRequest) {
           ? `Setup instructions email draft failed: ${setupEmailError}`
           : "No setup instructions contact email was provided.",
     ].join("\n")
+    let ninjaTicketUpdated = false
+    let ninjaTicketError = ""
     if (automationRequest.ninjaTicketId) {
-      await postNinjaOnePrivateNote(automationRequest.ninjaTicketId, note)
+      try {
+        await postNinjaOnePrivateNote(automationRequest.ninjaTicketId, note)
+        ninjaTicketUpdated = true
+      } catch (error) {
+        ninjaTicketError =
+          error instanceof Error ? error.message : "NinjaOne ticket note failed."
+      }
     }
 
     return NextResponse.json({
@@ -983,7 +1164,8 @@ export async function POST(request: NextRequest) {
           : null,
         setupEmailDraft,
         setupEmailError,
-        ninjaTicketUpdated: Boolean(automationRequest.ninjaTicketId),
+        ninjaTicketUpdated,
+        ninjaTicketError,
         note,
       },
     })
