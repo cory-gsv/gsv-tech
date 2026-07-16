@@ -2818,6 +2818,7 @@ async function runM365Automation(requestId, options = {}) {
   if (!autoResume && !isWaitingCheck) {
     const ok = window.confirm(`Create ${request.userPrincipalName || "this Microsoft 365 user"} and adjust Pax8 if needed?`);
     if (!ok) return;
+    await markM365TicketInProgress(request);
   }
   m365AutomationActiveRuns.add(request.id);
   request.automationError = "";
@@ -4582,6 +4583,15 @@ async function updateTicketStatus(ticketId, status) {
   ticket.updatedAt = today;
   saveState();
   render();
+}
+
+async function markM365TicketInProgress(request = {}) {
+  const ticket = (state.tickets || []).find(item =>
+    (request.ninjaTicketId && String(item.ninjaTicketId || "") === String(request.ninjaTicketId))
+    || (selectedTicketId && item.id === selectedTicketId)
+  );
+  if (!ticket || ticket.status !== "new") return;
+  await updateTicketStatus(ticket.id, "in_progress");
 }
 
 function addTicketNote(ticketId) {

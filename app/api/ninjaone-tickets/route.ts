@@ -48,6 +48,10 @@ type NinjaOneTicket = {
   requesterUid?: string
   subject?: string
   version?: number
+  ticketVersion?: number
+  ticketVersionNumber?: number
+  revision?: number
+  sequence?: number
   ticketFormId?: number
   deleted?: boolean
   missing?: boolean
@@ -70,6 +74,7 @@ type NinjaOneTicket = {
   additionalAssignedTechnicianIds?: number[]
   updateTime?: number
   createTime?: number
+  [key: string]: unknown
 }
 
 type NinjaOneTicketLogEntry = {
@@ -280,7 +285,7 @@ async function ninjaOneOptionalTicket(accessToken: string, ticketId: string) {
     requesterUid: ticket.requesterUid || "",
     subject: ticket.subject || "",
     description,
-    version: ticket.version || 0,
+    version: ninjaTicketVersion(ticket) ?? 0,
     ticketFormId: ticket.ticketFormId || 0,
     source: ticket.source || "",
     type: ticket.type || "",
@@ -311,6 +316,29 @@ function primitive(value: unknown): string {
     return primitive(record.value) || primitive(record.name) || primitive(record.displayName) || primitive(record.label)
   }
   return ""
+}
+
+function numericField(record: Record<string, unknown> | undefined, names: string[]) {
+  if (!record) return null
+  for (const name of names) {
+    const value = record[name]
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value
+    if (typeof value === "string") {
+      const numberValue = Number(value)
+      if (Number.isFinite(numberValue) && numberValue >= 0) return numberValue
+    }
+  }
+  return null
+}
+
+function ninjaTicketVersion(ticket: Record<string, unknown> | undefined) {
+  return numericField(ticket, [
+    "version",
+    "ticketVersion",
+    "ticketVersionNumber",
+    "revision",
+    "sequence",
+  ])
 }
 
 function boardTicketId(row: Record<string, unknown>) {
@@ -674,7 +702,8 @@ export async function PUT(request: NextRequest) {
     const ticketFormId =
       Number(ticket.ticketFormId || current.ticketFormId || 0) ||
       (await defaultTicketFormId(accessToken))
-    const version = Number(ticket.version || current.version || 0)
+    const versionValue = ticket.version ?? ninjaTicketVersion(current)
+    const version = versionValue === null || versionValue === undefined ? null : Number(versionValue)
     const tags = cleanStringArray(ticket.tags)
     const ccEmails = cleanStringArray(ticket.ccEmails)
     const followupTime =
@@ -690,7 +719,12 @@ export async function PUT(request: NextRequest) {
     if (!clientId) throw new Error("Missing NinjaOne organization ID.")
     if (!requesterUid) throw new Error("Missing NinjaOne requester.")
     if (!subject) throw new Error("Ticket subject is required.")
-    if (!version) throw new Error("NinjaOne ticket version was not returned.")
+    if (version === null || !Number.isFinite(version)) {
+      const returnedFields = Object.keys(current || {}).sort().join(", ") || "none"
+      throw new Error(
+        `NinjaOne ticket version was not returned. Returned ticket fields: ${returnedFields}.`,
+      )
+    }
 
     const updated = await ninjaOneRequest<Record<string, unknown>>(
       accessToken,
