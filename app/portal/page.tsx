@@ -8,7 +8,7 @@ type PortalPageProps = {
 
 function errorMessage(error?: string) {
   if (error === "missing") {
-    return "The server cannot see the portal environment variables yet. Redeploy after saving the Vercel variables."
+    return "The portal login settings are missing on this server. For local testing, restart the local server after saving .env.local. For the live site, redeploy after saving the Vercel variables."
   }
   if (error === "wrong") {
     return "That username or password did not work."
@@ -92,7 +92,7 @@ export default async function PortalPage({ searchParams }: PortalPageProps) {
     <main className="gsv-billing-shell">
       <iframe
         className="gsv-billing-shell__frame"
-        src="/portal-app/index.html?v=portal-20260715-19"
+        src="/portal-app/index.html?v=portal-20260716-24"
         title="GSV Client Portal"
       />
     </main>

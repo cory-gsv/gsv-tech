@@ -8,7 +8,7 @@ type BillingPageProps = {
 
 function errorMessage(error?: string) {
   if (error === "missing") {
-    return "The server cannot see the Billing Hub environment variables yet. Redeploy after saving the Vercel variables."
+    return "The Billing Hub login settings are missing on this server. For local testing, restart the local server after saving .env.local. For the live site, redeploy after saving the Vercel variables."
   }
   if (error === "wrong") {
     return "That username or password did not work."
