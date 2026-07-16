@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260715-18";
+const portalBuild = "portal-20260715-19";
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -732,7 +732,7 @@ function setView(view) {
     exports: "Year-End Export"
   }[view];
   render();
-  if (view === "tickets") requestNinjaOneTicketSync();
+  if (["dashboard", "tickets", "ticket-detail"].includes(view)) requestNinjaOneTicketSync();
 }
 
 function updateNavGroups(view = activeView) {
@@ -1694,17 +1694,17 @@ function startNinjaOneLiveSync() {
   if (ticketSyncTimer) clearInterval(ticketSyncTimer);
   requestNinjaOneTicketSync();
   ticketSyncTimer = setInterval(() => {
-    if (document.hidden || activeView === "ticket-detail") return;
+    if (document.hidden) return;
     requestNinjaOneTicketSync();
   }, TICKET_SYNC_INTERVAL_MS);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && activeView !== "ticket-detail") requestNinjaOneTicketSync();
+    if (!document.hidden) requestNinjaOneTicketSync();
   });
   window.addEventListener("focus", () => {
-    if (activeView !== "ticket-detail") requestNinjaOneTicketSync();
+    requestNinjaOneTicketSync();
   });
   window.addEventListener("online", () => {
-    if (activeView !== "ticket-detail") requestNinjaOneTicketSync();
+    requestNinjaOneTicketSync();
   });
 }
 
@@ -2076,6 +2076,7 @@ function parseM365RequestFromTicket(ticket = {}) {
       displayName: finalName.displayName,
       userPrincipalName: email,
       license,
+      licenseSource: licenseDecision.source,
       pax8Action: "Use available license, otherwise increase Pax8 quantity",
       temporaryPassword: "",
       automationPreview: "",
@@ -2099,8 +2100,31 @@ function reconcileM365RequestsFromTickets() {
   for (const ticket of state.tickets || []) {
     if (!ticket.ninjaTicketId || ticket.status === "deleted" || !isNewUserTicket(ticket)) continue;
     const existing = (state.m365Requests || []).find(request => String(request.ninjaTicketId || "") === String(ticket.ninjaTicketId));
-    if (existing) continue;
     const parsed = parseM365RequestFromTicket(ticket);
+    if (existing) {
+      const parsedRequest = parsed.request || {};
+      const nextLicense = String(parsedRequest.license || "").trim();
+      const currentLicense = String(existing.license || "").trim();
+      const manualLicense = existing.licenseSource === "manual";
+      const defaultOrParsedLicenseChanged = nextLicense && !manualLicense && nextLicense !== currentLicense;
+      const sourceEmailChanged = parsedRequest.sourceEmail && parsedRequest.sourceEmail !== existing.sourceEmail;
+      const requesterChanged = parsedRequest.requester && parsedRequest.requester !== existing.requester;
+      const clientChanged = parsedRequest.clientId && parsedRequest.clientId !== existing.clientId;
+      if (defaultOrParsedLicenseChanged || sourceEmailChanged || requesterChanged || clientChanged) {
+        if (defaultOrParsedLicenseChanged) {
+          existing.license = nextLicense;
+          existing.licenseSource = parsedRequest.licenseSource || "parsed";
+          existing.automationPreview = "";
+          existing.automationError = "";
+        }
+        if (sourceEmailChanged) existing.sourceEmail = parsedRequest.sourceEmail;
+        if (requesterChanged) existing.requester = parsedRequest.requester;
+        if (clientChanged) existing.clientId = parsedRequest.clientId;
+        existing.updatedAt = today;
+        changed = true;
+      }
+      continue;
+    }
     if (!parsed.client?.userAutomationEnabled && !parsed.missing.includes("client mapping")) {
       parsed.request.status = "needs_review";
       parsed.request.automationError = "Needs review: new-user automation is not enabled for this client.";
@@ -2241,6 +2265,7 @@ function updateTicketM365License(requestId, license) {
   const request = findM365Request(requestId);
   if (!request) return;
   request.license = String(license || "").trim();
+  request.licenseSource = "manual";
   request.automationPreview = "";
   request.automationError = "";
   request.updatedAt = today;
@@ -2271,7 +2296,9 @@ function saveTicketM365InlineRequest(requestId) {
   request.userPrincipalName = String(fields.userPrincipalName || "").trim();
   request.setupEmail = String(fields.setupEmail || "").trim();
   request.sourceEmail = String(fields.sourceEmail || "").trim();
-  request.license = String(fields.license || "").trim();
+  const nextLicense = String(fields.license || "").trim();
+  if (nextLicense && nextLicense !== String(request.license || "").trim()) request.licenseSource = "manual";
+  request.license = nextLicense;
   request.notes = String(fields.notes || "").trim();
   request.automationPreview = "";
   request.automationError = "";
