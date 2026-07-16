@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-24";
+const portalBuild = "portal-20260716-25";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
 
@@ -1084,21 +1084,91 @@ function recentTicketsFor(ticket = {}) {
     .slice(0, 5);
 }
 
-function ticketActivityHtml(ticket = {}) {
+function embeddedPortalNotesFromInternalNotes(value = "") {
+  const text = String(value || "");
+  const matches = [...text.matchAll(/(?:^|\n)Portal (public response|private note|note) ([0-9-]+): ([\s\S]*?)(?=\nPortal (?:public response|private note|note) [0-9-]+:|$)/g)];
+  return matches.map((match, index) => ({
+    id: `embedded_${match[2]}_${index}`,
+    type: match[1] === "private note" ? "private" : "public",
+    body: String(match[3] || "").trim(),
+    createdAt: match[2],
+  })).filter(note => note.body);
+}
+
+function internalNotesWithoutPortalNotes(value = "") {
+  return String(value || "")
+    .replace(/(?:^|\n)Portal (?:public response|private note|note) [0-9-]+: [\s\S]*?(?=\nPortal (?:public response|private note|note) [0-9-]+:|$)/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function ticketPortalNotes(ticket = {}) {
+  const storedNotes = Array.isArray(ticket.portalNotes) ? ticket.portalNotes : [];
+  const notes = [...storedNotes, ...embeddedPortalNotesFromInternalNotes(ticket.internalNotes)];
+  const seen = new Set();
+  return notes
+    .filter(note => {
+      const key = `${note.type || "public"}|${note.createdAt || ""}|${note.body || ""}`;
+      if (!note.body || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+}
+
+function addPortalTicketActivity(ticket, note, publicComment = true) {
+  if (!ticket || !note) return;
+  const entry = {
+    id: id("portal_note"),
+    type: publicComment ? "public" : "private",
+    body: note,
+    createdAt: new Date().toISOString(),
+  };
+  ticket.portalNotes = [entry, ...(Array.isArray(ticket.portalNotes) ? ticket.portalNotes : [])];
+}
+
+function ticketActivityEntries(ticket = {}) {
   const requester = ticketRequesterName(ticket);
-  const blocks = [];
+  const entries = ticketPortalNotes(ticket).map(note => `
+    <div class="ticket-activity-entry">
+      <span class="avatar-initials">GS</span>
+      <div>
+        <p><strong>${note.type === "private" ? "Portal private note" : "Portal public response"}</strong> <span class="subtle">${escapeHtml(formatDate(note.createdAt))}</span></p>
+        <div class="ticket-note-body">${lines(note.body)}</div>
+      </div>
+    </div>
+  `);
   if (ticket.description) {
-    blocks.push(`
+    entries.push(`
+      <div class="ticket-activity-entry">
+        <span class="avatar-initials">${escapeHtml(requester.split(/\s+/).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "GS")}</span>
+        <div>
+          <p><strong>${escapeHtml(requester)}</strong> <span class="subtle">${escapeHtml(formatDate(ticket.createdAt))}</span></p>
       <p class="ticket-activity-label">Ticket description:</p>
       ${emailPreviewHtml(ticket.description)}
+        </div>
+      </div>
     `);
   }
-  blocks.push(`<p><span class="ticket-activity-label">Requester:</span> ${escapeHtml(requester)}</p>`);
-  blocks.push(`<p><span class="ticket-activity-label">Category:</span> ${escapeHtml(ticket.category || "General")}</p>`);
-  if (ticket.internalNotes) {
-    blocks.push(`<p><span class="ticket-activity-label">Internal notes:</span> ${lines(ticket.internalNotes)}</p>`);
+  const remainingInternalNotes = internalNotesWithoutPortalNotes(ticket.internalNotes);
+  if (remainingInternalNotes) {
+    entries.push(`
+      <div class="ticket-activity-entry ticket-internal-entry">
+        <span class="avatar-initials">IN</span>
+        <div>
+          <p><strong>Internal notes</strong></p>
+          <div class="ticket-note-body">${lines(remainingInternalNotes)}</div>
+        </div>
+      </div>
+    `);
   }
-  return blocks.join("");
+  entries.push(`
+    <div class="ticket-activity-meta">
+      <p><span class="ticket-activity-label">Requester:</span> ${escapeHtml(requester)}</p>
+      <p><span class="ticket-activity-label">Category:</span> ${escapeHtml(ticket.category || "General")}</p>
+    </div>
+  `);
+  return entries;
 }
 
 function m365RequestForTicket(ticket = {}) {
@@ -1514,6 +1584,7 @@ function renderTicketDetail() {
 
   const recentTickets = recentTicketsFor(ticket);
   const responseMode = selectedTicketResponseMode === "private" ? "private" : "public";
+  const activityEntries = ticketActivityEntries(ticket);
   container.innerHTML = `
     <div class="ticket-breadcrumb">Home › Ticketing › ${escapeHtml(ticketStatusLabel(ticket.status))} tickets › #${escapeHtml(ticket.ninjaTicketId)}</div>
     <div class="ticket-detail-head">
@@ -1601,19 +1672,13 @@ function renderTicketDetail() {
 
         <article class="ticket-card ticket-activity-card">
           <div class="ticket-card-head">
-            <h3>Ticket activity (1)</h3>
+            <h3>Ticket activity (${activityEntries.length})</h3>
             <div class="toolbar compact-toolbar">
               <button>Type <span class="badge">2</span>⌄</button>
               <button>Sort by: Newest ⌄</button>
             </div>
           </div>
-          <div class="ticket-activity-entry">
-            <span class="avatar-initials">${escapeHtml(ticketRequesterName(ticket).split(/\s+/).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "GS")}</span>
-            <div>
-              <p><strong>${escapeHtml(ticketRequesterName(ticket))}</strong> <span class="subtle">${escapeHtml(formatDate(ticket.createdAt))}</span></p>
-              ${ticketActivityHtml(ticket)}
-            </div>
-          </div>
+          ${activityEntries.join("")}
         </article>
       </main>
 
@@ -4499,10 +4564,7 @@ function addTicketNote(ticketId) {
   const ticket = state.tickets.find(item => item.id === ticketId);
   const note = document.getElementById("ticket-response-text")?.value.trim();
   if (!ticket || !note) return;
-  ticket.internalNotes = [
-    ticket.internalNotes,
-    `Portal note ${today}: ${note}`
-  ].filter(Boolean).join("\n");
+  addPortalTicketActivity(ticket, note, selectedTicketResponseMode !== "private");
   ticket.updatedAt = today;
   saveState();
   renderTicketDetail();
@@ -4578,10 +4640,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
   if (ninjaResponse?.ticketFormId) ticket.ninjaTicketFormId = ninjaResponse.ticketFormId;
   if (ninjaResponse?.status?.statusId) ticket.ninjaStatusId = ninjaResponse.status.statusId;
   if (note) {
-    ticket.internalNotes = [
-      ticket.internalNotes,
-      `Portal ${publicComment ? "public response" : "private note"} ${today}: ${note}`
-    ].filter(Boolean).join("\n");
+    addPortalTicketActivity(ticket, note, publicComment);
   }
   ticket.updatedAt = today;
   saveState();
