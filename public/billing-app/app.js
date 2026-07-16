@@ -443,6 +443,21 @@ function quoteTitleLineAmount(items = [], titleIndex = 0) {
   return total;
 }
 
+function isProjectDocument(type, doc = {}) {
+  return type === "quote" || doc.type === "Project";
+}
+
+function sourceQuoteForInvoice(doc = {}) {
+  const quoteNumber = String(doc.number || "").replace("GSV-INV", "GSV-Q");
+  return state.quotes.find(quote => quote.id === doc.sourceQuoteId || quote.number === quoteNumber);
+}
+
+function projectDocumentTitle(type, doc = {}) {
+  if (type === "quote") return doc.title || "Project Quote";
+  const sourceQuote = sourceQuoteForInvoice(doc);
+  return doc.title || sourceQuote?.title || "Project Quote";
+}
+
 function documentSubtotal(doc) {
   const items = doc.items || [];
   return items.reduce((sum, item, index) => {
@@ -1840,6 +1855,8 @@ function saveEditor() {
       subject: data.subject || defaultDocumentSubject("invoice", data),
       status: data.status,
       type: existingInvoice?.type || "Manual",
+      title: existingInvoice?.title || "",
+      sourceQuoteId: existingInvoice?.sourceQuoteId || "",
       items: editorLineItems(),
       taxRate: Number(existingInvoice?.taxRate || 0),
       showShipTo: data.showShipTo === "on",
@@ -2070,6 +2087,8 @@ function invoiceFromEditor() {
     subject: data.subject || defaultDocumentSubject("invoice", data),
     status: data.status,
     type: existingInvoice?.type || "Manual",
+    title: existingInvoice?.title || "",
+    sourceQuoteId: existingInvoice?.sourceQuoteId || "",
     items: editorLineItems(),
     taxRate: Number(existingInvoice?.taxRate || 0),
     showShipTo: data.showShipTo === "on",
@@ -2380,6 +2399,8 @@ function convertQuote(quoteId) {
     month: today.slice(0, 7),
     status: "draft",
     type: "Project",
+    title: quote.title,
+    sourceQuoteId: quote.id,
     subject: defaultDocumentSubject("invoice", { ...quote, number: invoiceNumber }),
     items: structuredClone(quote.items),
     taxRate: Number(quote.taxRate || 0),
@@ -2578,6 +2599,7 @@ function renderAdminQuotePreview(doc, client) {
 function renderDocument(type, doc, client) {
   const title = type === "quote" ? "QUOTE" : "INVOICE";
   const contactEmail = type === "invoice" ? "billing@gsvisions.com" : "cory@gsvisions.com";
+  const projectDocument = isProjectDocument(type, doc);
   const subtotal = documentSubtotal(doc);
   const tax = documentTaxTotal(doc);
   const shipping = documentShippingTotal(doc);
@@ -2615,8 +2637,8 @@ function renderDocument(type, doc, client) {
         ` : ""}
       </div>
       <div class="doc-block">
-        <h2>${type === "quote" ? escapeHtml(doc.title || "Project Quote") : "Monthly IT Services"}</h2>
-        ${renderDocumentItemTable(type, doc.items || [])}
+        <h2>${projectDocument ? escapeHtml(projectDocumentTitle(type, doc)) : "Monthly IT Services"}</h2>
+        ${renderDocumentItemTable(projectDocument ? "quote" : type, doc.items || [])}
         ${(tax || shipping) ? `
           <div class="doc-summary">
             <div><span>Subtotal</span><strong>${money.format(subtotal)}</strong></div>
