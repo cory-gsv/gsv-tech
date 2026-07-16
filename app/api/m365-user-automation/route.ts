@@ -88,10 +88,30 @@ function tenantEnvValue(tenantKey: string, ...keys: string[]) {
   return envValue(...keys)
 }
 
+function graphProvisioningEnvValue(
+  tenantKey: string,
+  kind: "TENANT_ID" | "CLIENT_ID" | "CLIENT_SECRET",
+) {
+  const normalized = tenantEnvPrefix(tenantKey)
+  const baseKeys =
+    kind === "TENANT_ID"
+      ? ["MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID"]
+      : kind === "CLIENT_ID"
+        ? ["MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID"]
+        : ["MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET"]
+
+  if (normalized && normalized !== "DEFAULT") {
+    const tenantSpecific = envValue(...baseKeys.map((key) => `${normalized}_${key}`))
+    if (tenantSpecific) return tenantSpecific
+  }
+
+  return envValue(...baseKeys)
+}
+
 function tenantExpectedProvisioningEnv(tenantKey: string) {
   const prefix = tenantEnvPrefix(tenantKey)
   if (prefix && prefix !== "DEFAULT") {
-    return `${prefix}_MS_TENANT_ID / ${prefix}_MS_CLIENT_ID / ${prefix}_MS_CLIENT_SECRET, or MS_TENANT_ID / MS_CLIENT_ID / MS_CLIENT_SECRET`
+    return `${prefix}_MS_TENANT_ID / ${prefix}_MS_CLIENT_ID / ${prefix}_MS_CLIENT_SECRET`
   }
   return "MS_TENANT_ID / MS_CLIENT_ID / MS_CLIENT_SECRET"
 }
@@ -102,6 +122,18 @@ function tenantEnvPrefix(tenantKey: string) {
 
 function cleanText(value: unknown) {
   return String(value || "").trim()
+}
+
+function resolvedTenantKey(client: AutomationRequest["client"], automationRequest: AutomationRequest["request"]) {
+  const rawTenantKey = cleanText(client?.m365TenantKey || "")
+  const clientId = cleanText(automationRequest?.clientId || "")
+  const clientName = cleanText(client?.name || "")
+
+  if (!rawTenantKey || rawTenantKey === "default") {
+    if (clientId === "client_moxie" || /moxie/i.test(clientName)) return "moxie"
+  }
+
+  return rawTenantKey || "default"
 }
 
 function normalize(value: string) {
@@ -177,24 +209,9 @@ async function requirePortalSession() {
 }
 
 async function graphToken(tenantKey = "default") {
-  const tenantId = tenantEnvValue(
-    tenantKey,
-    "MS_TENANT_ID",
-    "MICROSOFT_TENANT_ID",
-    "AZURE_TENANT_ID",
-  )
-  const clientId = tenantEnvValue(
-    tenantKey,
-    "MS_CLIENT_ID",
-    "MICROSOFT_CLIENT_ID",
-    "AZURE_CLIENT_ID",
-  )
-  const clientSecret = tenantEnvValue(
-    tenantKey,
-    "MS_CLIENT_SECRET",
-    "MICROSOFT_CLIENT_SECRET",
-    "AZURE_CLIENT_SECRET",
-  )
+  const tenantId = graphProvisioningEnvValue(tenantKey, "TENANT_ID")
+  const clientId = graphProvisioningEnvValue(tenantKey, "CLIENT_ID")
+  const clientSecret = graphProvisioningEnvValue(tenantKey, "CLIENT_SECRET")
 
   if (!tenantId || !clientId || !clientSecret) {
     throw new Error(
@@ -233,6 +250,21 @@ function graphTokenDetails(accessToken: string) {
     }
   } catch {
     return { appId: "", tenantId: "", roles: [] }
+  }
+}
+
+function requireProvisioningGraphRoles(accessToken: string) {
+  const details = graphTokenDetails(accessToken)
+  const roles = new Set(details.roles)
+  const hasUserWrite = roles.has("User.ReadWrite.All") || roles.has("Directory.ReadWrite.All")
+  const hasLicenseWrite =
+    roles.has("LicenseAssignment.ReadWrite.All") || roles.has("Directory.ReadWrite.All")
+
+  if (!hasUserWrite || !hasLicenseWrite) {
+    const roleList = details.roles.length ? details.roles.join(", ") : "no application roles"
+    throw new Error(
+      `The Microsoft app selected for user creation cannot manage users and licenses yet. It currently has ${roleList}. It needs User.ReadWrite.All, Directory.ReadWrite.All, and LicenseAssignment.ReadWrite.All application permissions with admin consent. Pax8 was not changed.`,
+    )
   }
 }
 
@@ -383,15 +415,35 @@ async function graphGetAll<T>(accessToken: string, path: string) {
 
 function matchSku(skus: GraphSku[], requestedLicense: string) {
   if (!compact(requestedLicense)) return null
-  return (
-    skus.find((sku) => {
+  const matches = skus
+    .map((sku, index) => {
       const parts = [
         sku.skuPartNumber || "",
         friendlySkuName(sku.skuPartNumber || ""),
       ]
-      return parts.some((part) => licenseMatches(part, requestedLicense))
-    }) || null
-  )
+      const matched = parts.some((part) => licenseMatches(part, requestedLicense))
+      const enabled = Number(sku.prepaidUnits?.enabled || 0)
+      const consumed = Number(sku.consumedUnits || 0)
+      return {
+        sku,
+        index,
+        matched,
+        available: enabled - consumed,
+        enabled,
+      }
+    })
+    .filter((entry) => entry.matched)
+
+  matches.sort((a, b) => {
+    const aHasSeat = a.available > 0
+    const bHasSeat = b.available > 0
+    if (aHasSeat !== bHasSeat) return bHasSeat ? 1 : -1
+    if (a.available !== b.available) return b.available - a.available
+    if (a.enabled !== b.enabled) return b.enabled - a.enabled
+    return a.index - b.index
+  })
+
+  return matches[0]?.sku || null
 }
 
 async function graphLicenseAvailability(
@@ -694,7 +746,7 @@ export async function POST(request: NextRequest) {
     const mode = body.mode === "run" ? "run" : "preview"
     const automationRequest = body.request || {}
     const client = body.client || {}
-    const tenantKey = cleanText(client.m365TenantKey || "default")
+    const tenantKey = resolvedTenantKey(client, automationRequest)
     const pax8CompanyId = cleanText(client.pax8CompanyId || "")
     const userPrincipalName = cleanText(automationRequest.userPrincipalName).toLowerCase()
     const displayName = cleanText(automationRequest.displayName)
@@ -709,6 +761,7 @@ export async function POST(request: NextRequest) {
     if (!license) throw new Error("Missing requested Microsoft 365 license.")
 
     const graphAccessToken = await graphToken(tenantKey)
+    requireProvisioningGraphRoles(graphAccessToken)
     const [skus, existingUser] = await Promise.all([
       graphGetAll<GraphSku>(
         graphAccessToken,

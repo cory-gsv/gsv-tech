@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-08";
+const portalBuild = "portal-20260716-11";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
 
@@ -41,7 +41,7 @@ const defaultData = {
       phone: "(916) 652-1300",
       terms: "Net 15",
       status: "active",
-      m365TenantKey: "default",
+      m365TenantKey: "moxie",
       pax8CompanyId: "e1cda7ec-516c-4df1-b1cb-9baf660b4bda",
       ninjaOneOrgId: 3,
       userAutomationEnabled: false,
@@ -277,8 +277,8 @@ function migrateDefaultRecords() {
           existing.m365TenantKey = record.m365TenantKey;
           changed = true;
         }
-    if (existing.id === "client_moxie" && existing.m365TenantKey === "moxie") {
-      existing.m365TenantKey = "default";
+    if (existing.id === "client_moxie" && (!existing.m365TenantKey || existing.m365TenantKey === "default")) {
+      existing.m365TenantKey = "moxie";
       changed = true;
     }
     if (existing.id === "client_moxie" && normalizedLicensePhrase(existing.defaultM365License) === normalizedLicensePhrase("Microsoft 365 Business Standard")) {
@@ -2520,6 +2520,20 @@ function m365WaitingSteps(request = {}, result = {}) {
   ];
 }
 
+function friendlyM365AutomationError(error) {
+  const raw = error instanceof Error ? error.message : String(error || "");
+  const message = raw.trim() || "Automation run failed.";
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return "The portal could not reach the automation service. Refresh the page and try again. Pax8 was not changed by this failed check.";
+  }
+  return message;
+}
+
+function shouldRetryM365AutomationError(errorMessage) {
+  const message = String(errorMessage || "");
+  return /could not reach the automation service|failed to fetch|networkerror|load failed/i.test(message);
+}
+
 function m365CompleteSteps(request = {}, result = {}) {
   return [
     {
@@ -2569,22 +2583,8 @@ async function runM365Automation(requestId, options = {}) {
     render();
     return;
   }
-  if (!autoResume && currentStatus === "waiting_for_license") {
-    request.automationRunLog = m365WaitingSteps(request, {
-      license: request.license,
-      pax8Changed: false,
-      pax8Quantity: request.pax8Quantity,
-      lastCheckedAt: request.lastLicenseCheckAt,
-      licenseAvailability: request.licenseAvailability
-    });
-    request.automationPreview = "";
-    request.automationError = "";
-    saveState();
-    render();
-    scheduleM365AutomationRetry(request.id, 10000);
-    return;
-  }
-  if (!autoResume) {
+  const isWaitingCheck = currentStatus === "waiting_for_license";
+  if (!autoResume && !isWaitingCheck) {
     const ok = window.confirm(`Create ${request.userPrincipalName || "this Microsoft 365 user"} and adjust Pax8 if needed?`);
     if (!ok) return;
   }
@@ -2592,7 +2592,7 @@ async function runM365Automation(requestId, options = {}) {
   request.automationError = "";
   request.automationPreview = "";
   request.automationRunLog = m365StartingSteps(request, autoResume);
-  request.status = autoResume || currentStatus === "waiting_for_license" ? "waiting_for_license" : "running";
+  request.status = autoResume || isWaitingCheck ? "waiting_for_license" : "running";
   request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   saveState();
   renderM365Requests();
@@ -2607,6 +2607,27 @@ async function runM365Automation(requestId, options = {}) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Automation run failed.");
     if (data.result?.status === "waiting_for_microsoft_license") {
+      const availableNow = Number(data.result?.licenseAvailability?.available || 0);
+      if (availableNow > 0) {
+        request.licenseAvailability = data.result.licenseAvailability || request.licenseAvailability || {};
+        request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        request.automationRunLog = [
+          {
+            status: "done",
+            label: `${request.license || "The selected license"} is available now.`,
+            detail: `Microsoft 365 is showing ${availableNow} unused license${availableNow === 1 ? "" : "s"}. The portal is continuing automatically.`
+          },
+          ...m365StartingSteps(request, true).slice(2)
+        ];
+        request.automationPreview = "";
+        request.automationError = "";
+        request.updatedAt = today;
+        saveState();
+        render();
+        scheduleM365AutomationRetry(request.id, 1000);
+        m365AutomationActiveRuns.delete(request.id);
+        return;
+      }
       request.status = "waiting_for_license";
       request.pax8AlreadyIncreased = true;
       request.pax8SubscriptionId = data.result.pax8SubscriptionId || request.pax8SubscriptionId || "";
@@ -2636,8 +2657,9 @@ async function runM365Automation(requestId, options = {}) {
       `Automation completed ${today}. ${data.result?.note || ""}`
     ].filter(Boolean).join("\n\n");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Automation run failed.";
-    if (effectiveM365Status(request) === "waiting_for_license" || request.pax8AlreadyIncreased || request.pax8SubscriptionId) {
+    const message = friendlyM365AutomationError(error);
+    const canRetry = shouldRetryM365AutomationError(message);
+    if (canRetry && (effectiveM365Status(request) === "waiting_for_license" || request.pax8AlreadyIncreased || request.pax8SubscriptionId)) {
       request.status = "waiting_for_license";
       request.automationPreview = "";
       request.automationError = "";
@@ -2653,7 +2675,7 @@ async function runM365Automation(requestId, options = {}) {
         {
           status: "warning",
           label: "This automatic check could not reach the automation service.",
-          detail: `${message} Pax8 was not changed by this failed check. The portal will try again automatically.`
+          detail: `${message} The portal will try again automatically.`
         }
       ];
       scheduleM365AutomationRetry(request.id, 30000);
@@ -2661,8 +2683,14 @@ async function runM365Automation(requestId, options = {}) {
       request.automationError = message;
       request.status = "needs_review";
       request.automationRunLog = [
-        ...(Array.isArray(request.automationRunLog) ? request.automationRunLog : []),
-        { status: "error", label: request.automationError }
+        ...(Array.isArray(request.automationRunLog) && request.automationRunLog.length
+          ? request.automationRunLog
+          : m365StartingSteps(request, autoResume)),
+        {
+          status: "error",
+          label: "Automation stopped.",
+          detail: message
+        }
       ];
     }
   }
