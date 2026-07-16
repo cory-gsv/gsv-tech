@@ -9,17 +9,20 @@ function envValue(key: string) {
 
 function redirectUri(request: NextRequest) {
   return (
+    envValue("NINJAONE_OAUTH_REDIRECT_URI") ||
     envValue("NINJAONE_REDIRECT_URI") ||
     new URL("/api/ninjaone-oauth-callback", request.url).toString()
   )
 }
 
 export async function GET(request: NextRequest) {
-  const clientId = envValue("NINJAONE_CLIENT_ID")
+  const clientId =
+    envValue("NINJAONE_OAUTH_CLIENT_ID") ||
+    envValue("NINJAONE_CLIENT_ID")
 
   if (!clientId) {
     return NextResponse.json(
-      { error: "Missing NINJAONE_CLIENT_ID." },
+      { error: "Missing NINJAONE_OAUTH_CLIENT_ID." },
       { status: 500 },
     )
   }
