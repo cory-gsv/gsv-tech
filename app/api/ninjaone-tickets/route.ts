@@ -33,6 +33,8 @@ type PortalTicketRequest = {
   version?: number
   status?: string
   statusId?: number | string
+  assignedAppUserId?: number | string
+  additionalAssignedTechnicianIds?: number[]
   comment?: string
   publicComment?: boolean
   commentOnly?: boolean
@@ -106,6 +108,19 @@ type NinjaOneBoardRun = {
   metadata?: {
     lastCursorId?: number
   }
+}
+
+type NinjaOneAppUserContact = {
+  id?: number
+  appUserId?: number
+  userId?: number
+  name?: string
+  displayName?: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  type?: string
+  [key: string]: unknown
 }
 
 type NinjaOneCookieAuth = {
@@ -525,6 +540,35 @@ function ticketBody(ticket: PortalTicketRequest) {
     .join("\n\n")
 }
 
+function ninjaOneFirstEnvValue(...keys: string[]) {
+  return keys.map((key) => ninjaOneEnvValue(key)).find(Boolean) || ""
+}
+
+function defaultAssignedAppUserId() {
+  return Number(
+    ninjaOneFirstEnvValue(
+      "NINJAONE_DEFAULT_ASSIGNEE_ID",
+      "NINJAONE_DEFAULT_ASSIGNED_APP_USER_ID",
+      "NINJAONE_CORY_APP_USER_ID",
+    ) || 0,
+  )
+}
+
+function normalizeAppUserContact(user: NinjaOneAppUserContact) {
+  const id = Number(user.appUserId || user.id || user.userId || 0)
+  const name =
+    user.displayName ||
+    user.name ||
+    [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+    String(user.email || "")
+  return {
+    id,
+    name,
+    email: user.email || "",
+    type: user.type || "",
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     if (!(await requirePortalSession())) {
@@ -552,15 +596,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ source: "NinjaOne", tickets })
     }
 
-    const [forms, statuses] = await Promise.all([
+    const [forms, statuses, appUsers] = await Promise.all([
       ninjaOneRequest<NinjaOneTicketForm[]>(
         accessToken,
         "/v2/ticketing/ticket-form",
       ),
       ninjaOneRequest(accessToken, "/v2/ticketing/statuses"),
+      ninjaOneRequest<NinjaOneAppUserContact[]>(
+        accessToken,
+        "/v2/ticketing/app-user-contact",
+      ).catch(() => []),
     ])
 
-    return NextResponse.json({ forms, statuses })
+    return NextResponse.json({
+      forms,
+      statuses,
+      assignees: appUsers.map(normalizeAppUserContact).filter((user) => user.id),
+      defaultAssignedAppUserId: defaultAssignedAppUserId() || null,
+    })
   } catch (error) {
     return NextResponse.json(
       {
@@ -596,6 +649,7 @@ export async function POST(request: NextRequest) {
     const status = String(
       ticket.status || ninjaOneEnvValue("NINJAONE_TICKET_STATUS") || "1000",
     )
+    const assignedAppUserId = Number(ticket.assignedAppUserId || defaultAssignedAppUserId() || 0)
 
     const created = await ninjaOneRequest<Record<string, unknown>>(
       accessToken,
@@ -608,6 +662,7 @@ export async function POST(request: NextRequest) {
           subject,
           status,
           type: typeToNinjaOne(ticket.type),
+          ...(assignedAppUserId ? { assignedAppUserId } : {}),
           requesterUid: ticket.requesterUid || undefined,
           priority: priorityToNinjaOne(ticket.priority),
           severity: severityToNinjaOne(ticket.priority),
@@ -710,6 +765,12 @@ export async function PUT(request: NextRequest) {
       ticket.followupTime === null || ticket.followupTime === undefined
         ? undefined
         : Number(ticket.followupTime || 0) || undefined
+    const assignedAppUserId = Number(
+      ticket.assignedAppUserId || current.assignedAppUserId || defaultAssignedAppUserId() || 0,
+    )
+    const additionalAssignedTechnicianIds = Array.isArray(ticket.additionalAssignedTechnicianIds)
+      ? ticket.additionalAssignedTechnicianIds.map(Number).filter(Boolean)
+      : current.additionalAssignedTechnicianIds || []
     const status = await ninjaOneStatusId(
       accessToken,
       ticket.status || currentStatus?.name || "new",
@@ -738,11 +799,13 @@ export async function PUT(request: NextRequest) {
           requesterUid,
           subject,
           status,
+          ...(assignedAppUserId ? { assignedAppUserId } : {}),
           type: typeToNinjaOne(ticket.type || current.type || "service_request"),
           priority: priorityToNinjaOne(ticket.priority || current.priority),
           severity: requestedSeverityToNinjaOne(ticket.severity || current.severity, ticket.priority || current.priority),
           ...(ticket.tags ? { tags } : {}),
           ...(ticket.ccEmails ? { cc: { emails: ccEmails } } : {}),
+          ...(additionalAssignedTechnicianIds.length ? { additionalAssignedTechnicianIds } : {}),
           ...(ticket.followupTime !== undefined ? { followupTime: followupTime ?? null } : {}),
         }),
       },

@@ -224,6 +224,8 @@ const defaultData = {
   ninjaOneAudits: [],
   ninjaOneOrganizations: [],
   ninjaOneContacts: [],
+  ninjaOneAssignees: [],
+  ninjaOneDefaultAssigneeId: "",
   tickets: [],
   m365Requests: []
 };
@@ -996,6 +998,30 @@ function ticketFormOptions(selected = "Default") {
   return forms.map(form => `<option value="${escapeHtml(form)}" ${String(form) === current ? "selected" : ""}>${escapeHtml(form)}</option>`).join("");
 }
 
+function defaultNinjaOneAssigneeId() {
+  const configured = String(state.ninjaOneDefaultAssigneeId || "").trim();
+  if (configured) return configured;
+  const cory = (state.ninjaOneAssignees || []).find(user =>
+    /cory/i.test(`${user.name || ""} ${user.email || ""}`)
+  );
+  return cory?.id ? String(cory.id) : "";
+}
+
+function ticketAssignedAppUserId(ticket = {}) {
+  return String(ticket.assignedAppUserId || defaultNinjaOneAssigneeId() || "");
+}
+
+function ninjaOneAssigneeOptions(selected = "") {
+  const current = String(selected || "");
+  const assignees = state.ninjaOneAssignees || [];
+  const options = assignees.map(user => {
+    const value = String(user.id || "");
+    const label = user.email ? `${user.name || user.email} (${user.email})` : user.name || value;
+    return `<option value="${escapeHtml(value)}" ${value === current ? "selected" : ""}>${escapeHtml(label)}</option>`;
+  }).join("");
+  return `<option value="" ${!current ? "selected" : ""}>Unassigned</option>${options}`;
+}
+
 function ticketSeverityLabel(severity = "none") {
   return {
     none: "None",
@@ -1668,7 +1694,7 @@ function renderTicketDetail() {
           <h3>Details</h3>
           <div class="ticket-detail-fields">
             <label>Primary assignee</label>
-            <div class="readonly-select disabled-field" title="Technician assignment needs the NinjaOne technician list mapped next.">Manage in NinjaOne<span>⌄</span></div>
+            <select id="ticket-detail-assignee" class="readonly-select">${ninjaOneAssigneeOptions(ticketAssignedAppUserId(ticket))}</select>
             <label>Additional assignees</label>
             <div class="readonly-select disabled-field" title="Additional assignees need the NinjaOne technician list mapped next.">Manage in NinjaOne<span>⌄</span></div>
             <label>Priority</label>
