@@ -735,6 +735,7 @@ function invoiceActionButtons(inv) {
   return `
     <div class="row-actions invoice-actions">
       <button data-preview-invoice="${inv.id}">Preview</button>
+      <button data-customer-preview-invoice="${inv.id}">Customer Preview</button>
       <button data-pdf-invoice="${inv.id}">PDF</button>
       <button data-edit-invoice="${inv.id}">Edit</button>
       ${status !== "paid" && status !== "void" ? `<button data-send-invoice="${inv.id}">Send</button>` : ""}
@@ -2453,12 +2454,12 @@ function createInvoiceFromEditorQuote() {
 function previewDocument(type, idValue, previewMode = "admin") {
   const doc = type === "quote" ? state.quotes.find(q => q.id === idValue) : state.invoices.find(inv => inv.id === idValue);
   if (!doc) return;
-  const customerMode = previewMode === "customer" || type !== "quote";
+  const customerMode = previewMode === "customer";
   previewing = { type, id: idValue, mode: customerMode ? "customer" : "admin" };
   const client = documentClient(doc);
   document.getElementById("document-title").textContent = customerMode
     ? (type === "quote" ? "Customer Quote Preview" : "Invoice")
-    : "Admin Quote Preview";
+    : (type === "quote" ? "Admin Quote Preview" : "Admin Invoice Preview");
   document.getElementById("document-body").innerHTML = customerMode
     ? renderDocument(type, doc, client)
     : renderAdminQuotePreview(doc, client);
@@ -2532,6 +2533,7 @@ function rowMarginAmount(item) {
 }
 
 function renderAdminQuotePreview(doc, client) {
+  const isInvoice = state.invoices.some(invoice => invoice.id === doc.id);
   const subtotal = documentSubtotal(doc);
   const tax = documentTaxTotal(doc);
   const shipping = documentShippingTotal(doc);
@@ -2542,11 +2544,12 @@ function renderAdminQuotePreview(doc, client) {
   return `
     <div class="admin-preview">
       <div class="admin-preview-summary">
-        <div><span>Quote #</span><strong>${escapeHtml(doc.number || "")}</strong></div>
+        <div><span>${isInvoice ? "Invoice #" : "Quote #"}</span><strong>${escapeHtml(doc.number || "")}</strong></div>
         <div><span>Client</span><strong>${escapeHtml(client?.name || "")}</strong></div>
         <div><span>Date</span><strong>${escapeHtml(doc.date || "")}</strong></div>
+        ${isInvoice ? `<div><span>Due Date</span><strong>${escapeHtml(doc.dueDate || "")}</strong></div>` : ""}
         <div><span>Status</span><strong>${escapeHtml(doc.status || "")}</strong></div>
-        <div><span>Project / Title</span><strong>${escapeHtml(doc.title || "")}</strong></div>
+        <div><span>Project / Title</span><strong>${escapeHtml(projectDocumentTitle(isInvoice ? "invoice" : "quote", doc))}</strong></div>
         <div><span>Email Subject</span><strong>${escapeHtml(doc.subject || "")}</strong></div>
         <div><span>Tax Rate</span><strong>${taxRate.toFixed(2)}%</strong></div>
         <div><span>Margin</span><strong>${money.format(margin)}</strong></div>
@@ -3088,6 +3091,7 @@ document.addEventListener("click", event => {
     openEditor("payment", { invoiceId: inv.id, date: today, method: "Check", amount: invoiceTotal(inv) - paidAmount(inv.id) });
   }
   if (target.dataset.previewInvoice) previewDocument("invoice", target.dataset.previewInvoice);
+  if (target.dataset.customerPreviewInvoice) previewDocument("invoice", target.dataset.customerPreviewInvoice, "customer");
   if (target.dataset.pdfInvoice) exportDocumentPdf("invoice", state.invoices.find(inv => inv.id === target.dataset.pdfInvoice));
   if (target.dataset.previewQuote) previewDocument("quote", target.dataset.previewQuote, "admin");
   if (target.dataset.customerPreviewQuote) previewDocument("quote", target.dataset.customerPreviewQuote, "customer");
