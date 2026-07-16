@@ -68,24 +68,29 @@ function claimString(claims: Record<string, unknown> | null, name: string) {
   return typeof value === "string" ? value : ""
 }
 
+function safeCookiePath(value?: string) {
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/billing"
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const error = url.searchParams.get("error")
   const code = url.searchParams.get("code")
   const state = url.searchParams.get("state")
   const expectedState = request.cookies.get("gsv_billing_ms_state")?.value
+  const nextPath = safeCookiePath(request.cookies.get("gsv_billing_ms_next")?.value)
 
   if (error) {
-    return NextResponse.redirect(new URL("/billing?error=msdenied", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=msdenied`, request.url))
   }
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(new URL("/billing?error=msstate", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=msstate`, request.url))
   }
 
   const { tenantId, clientId, clientSecret, redirectUri } =
     billingAuthConfig(request)
   if (!tenantId || !clientId || !clientSecret) {
-    return NextResponse.redirect(new URL("/billing?error=msmissing", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=msmissing`, request.url))
   }
 
   const tokenResponse = await fetch(
@@ -106,7 +111,7 @@ export async function GET(request: NextRequest) {
   )
   const tokenJson = (await tokenResponse.json()) as MicrosoftTokenResponse
   if (!tokenResponse.ok || !tokenJson.id_token) {
-    return NextResponse.redirect(new URL("/billing?error=mstoken", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=mstoken`, request.url))
   }
 
   const claims = decodeJwtPayload(tokenJson.id_token)
@@ -119,10 +124,10 @@ export async function GET(request: NextRequest) {
   const allowlist = allowedEmails()
 
   if (audience !== clientId || !email || !allowlist.includes(email)) {
-    return NextResponse.redirect(new URL("/billing?error=msunauthorized", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=msunauthorized`, request.url))
   }
 
-  const response = NextResponse.redirect(new URL("/billing", request.url), {
+  const response = NextResponse.redirect(new URL(nextPath, request.url), {
     status: 303,
   })
   response.cookies.set("gsv_billing_session", await createBillingSession(), {
@@ -133,5 +138,6 @@ export async function GET(request: NextRequest) {
     maxAge: COOKIE_MAX_AGE_SECONDS,
   })
   response.cookies.delete("gsv_billing_ms_state")
+  response.cookies.delete("gsv_billing_ms_next")
   return response
 }

@@ -57,15 +57,15 @@ function tenantEnvPrefix(tenantKey: string) {
 }
 
 async function graphToken(tenantKey = "default") {
-  const tenantId = tenantEnvValue(tenantKey, "MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID");
-  const clientId = tenantEnvValue(tenantKey, "MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID");
-  const clientSecret = tenantEnvValue(tenantKey, "MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET");
+  const tenantId = tenantEnvValue(tenantKey, "MS_TENANT_ID", "MICROSOFT_TENANT_ID", "AZURE_TENANT_ID", "BILLING_MS_TENANT_ID", "BILLING_MICROSOFT_TENANT_ID");
+  const clientId = tenantEnvValue(tenantKey, "MS_CLIENT_ID", "MICROSOFT_CLIENT_ID", "AZURE_CLIENT_ID", "BILLING_MS_CLIENT_ID", "BILLING_MICROSOFT_CLIENT_ID");
+  const clientSecret = tenantEnvValue(tenantKey, "MS_CLIENT_SECRET", "MICROSOFT_CLIENT_SECRET", "AZURE_CLIENT_SECRET", "BILLING_MS_CLIENT_SECRET", "BILLING_MICROSOFT_CLIENT_SECRET");
 
   if (!tenantId || !clientId || !clientSecret) {
     const prefix = tenantEnvPrefix(tenantKey);
     const expected = prefix && prefix !== "DEFAULT"
-      ? `${prefix}_MS_TENANT_ID / ${prefix}_MS_CLIENT_ID / ${prefix}_MS_CLIENT_SECRET`
-      : "MS_TENANT_ID / MS_CLIENT_ID / MS_CLIENT_SECRET";
+      ? `${prefix}_MS_TENANT_ID / ${prefix}_MS_CLIENT_ID / ${prefix}_MS_CLIENT_SECRET, or shared BILLING_MS_TENANT_ID / BILLING_MS_CLIENT_ID / BILLING_MS_CLIENT_SECRET`
+      : "MS_TENANT_ID / MS_CLIENT_ID / MS_CLIENT_SECRET, or BILLING_MS_TENANT_ID / BILLING_MS_CLIENT_ID / BILLING_MS_CLIENT_SECRET";
     throw new Error(`Missing Microsoft Graph app credentials for tenant key "${tenantKey}". Add ${expected} in Vercel.`);
   }
 

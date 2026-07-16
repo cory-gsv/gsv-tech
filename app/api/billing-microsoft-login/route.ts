@@ -25,10 +25,16 @@ function billingAuthConfig(request: NextRequest) {
   return { tenantId, clientId, redirectUri }
 }
 
+function safeNextPath(request: NextRequest) {
+  const next = request.nextUrl.searchParams.get("next")
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/billing"
+}
+
 export async function GET(request: NextRequest) {
   const { tenantId, clientId, redirectUri } = billingAuthConfig(request)
+  const nextPath = safeNextPath(request)
   if (!tenantId || !clientId) {
-    return NextResponse.redirect(new URL("/billing?error=msmissing", request.url))
+    return NextResponse.redirect(new URL(`${nextPath}?error=msmissing`, request.url))
   }
 
   const state = crypto.randomUUID()
@@ -44,6 +50,13 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.redirect(authorizeUrl)
   response.cookies.set("gsv_billing_ms_state", state, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 10,
+  })
+  response.cookies.set("gsv_billing_ms_next", nextPath, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

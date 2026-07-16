@@ -27,8 +27,8 @@ function envValue(key: string) {
 }
 
 async function ninjaOneToken() {
-  const clientId = envValue("NINJAONE_CLIENT_ID");
-  const clientSecret = envValue("NINJAONE_CLIENT_SECRET");
+  const clientId = envValue("NINJAONE_SERVICE_CLIENT_ID") || envValue("NINJAONE_CLIENT_ID");
+  const clientSecret = envValue("NINJAONE_SERVICE_CLIENT_SECRET") || envValue("NINJAONE_CLIENT_SECRET");
 
   if (!clientId || !clientSecret) {
     throw new Error("Missing NinjaOne API credentials. Set NINJAONE_CLIENT_ID and NINJAONE_CLIENT_SECRET.");
