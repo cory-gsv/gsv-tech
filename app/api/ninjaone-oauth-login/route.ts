@@ -16,13 +16,14 @@ function redirectUri(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const clientId =
-    envValue("NINJAONE_OAUTH_CLIENT_ID") ||
-    envValue("NINJAONE_CLIENT_ID")
+  const clientId = envValue("NINJAONE_OAUTH_CLIENT_ID")
 
   if (!clientId) {
     return NextResponse.json(
-      { error: "Missing NINJAONE_OAUTH_CLIENT_ID." },
+      {
+        error:
+          "Missing NINJAONE_OAUTH_CLIENT_ID. Create a NinjaOne Regular Web Application for ticket comments, add its client ID/secret to Vercel, then retry.",
+      },
       { status: 500 },
     )
   }

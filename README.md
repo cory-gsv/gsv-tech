@@ -38,8 +38,8 @@ NinjaOne ticket creation uses these environment variables:
 
 - `NINJAONE_CLIENT_ID`: NinjaOne API client ID.
 - `NINJAONE_CLIENT_SECRET`: NinjaOne API client secret.
-- `NINJAONE_OAUTH_CLIENT_ID`: optional NinjaOne regular web application client ID for ticket writes and comments. If omitted, the portal falls back to `NINJAONE_CLIENT_ID`.
-- `NINJAONE_OAUTH_CLIENT_SECRET`: optional NinjaOne regular web application client secret for ticket writes and comments. If omitted, the portal falls back to `NINJAONE_CLIENT_SECRET`.
+- `NINJAONE_OAUTH_CLIENT_ID`: NinjaOne regular web application client ID for ticket writes and comments.
+- `NINJAONE_OAUTH_CLIENT_SECRET`: NinjaOne regular web application client secret for ticket writes and comments.
 - `NINJAONE_ACCESS_TOKEN`: optional user-context OAuth access token for NinjaOne ticket creation.
 - `NINJAONE_REFRESH_TOKEN`: optional user-authorized OAuth refresh token. NinjaOne may require this for ticket creation even when client credentials can read organizations and service audits.
 - `NINJAONE_TICKET_FORM_ID`: optional default ticket form ID. If omitted, the first active ticket form is used.
