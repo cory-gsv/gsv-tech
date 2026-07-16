@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260715-19";
+const portalBuild = "portal-20260716-01";
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -44,8 +44,12 @@ const defaultData = {
       ninjaOneOrgId: 3,
       userAutomationEnabled: false,
       approvedRequesterEmails: "",
-      defaultM365License: "Microsoft 365 Business Standard",
-      licenseRequestAliases: [],
+      defaultM365License: "Exchange Online Plan 1",
+      licenseRequestAliases: [
+        { phrase: "moxie email", license: "Exchange Online Plan 1" },
+        { phrase: "email only", license: "Exchange Online Plan 1" },
+        { phrase: "mailbox", license: "Exchange Online Plan 1" }
+      ],
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -271,10 +275,25 @@ function migrateDefaultRecords() {
           existing.m365TenantKey = record.m365TenantKey;
           changed = true;
         }
-        if (existing.id === "client_moxie" && existing.m365TenantKey === "moxie") {
-          existing.m365TenantKey = "default";
+    if (existing.id === "client_moxie" && existing.m365TenantKey === "moxie") {
+      existing.m365TenantKey = "default";
+      changed = true;
+    }
+    if (existing.id === "client_moxie" && normalizedLicensePhrase(existing.defaultM365License) === normalizedLicensePhrase("Microsoft 365 Business Standard")) {
+      existing.defaultM365License = "Exchange Online Plan 1";
+      changed = true;
+    }
+    if (existing.id === "client_moxie") {
+      const requiredAliases = defaultData.clients.find(client => client.id === "client_moxie")?.licenseRequestAliases || [];
+      if (!Array.isArray(existing.licenseRequestAliases)) existing.licenseRequestAliases = [];
+      requiredAliases.forEach(alias => {
+        const exists = existing.licenseRequestAliases.some(row => normalizedLicensePhrase(row.phrase) === normalizedLicensePhrase(alias.phrase));
+        if (!exists) {
+          existing.licenseRequestAliases.push(structuredClone(alias));
           changed = true;
         }
+      });
+    }
       }
     }
   }
@@ -1110,12 +1129,12 @@ function m365LicenseSelectHtml(request = {}, ticket = {}) {
       </a>
     `;
   }
-  if (current && !choices.includes(current)) choices.unshift(current);
+  const selected = matchingM365LicenseChoice(current, choices) || choices[0] || current;
   return `
     <label class="inline-field">
       <small>License</small>
       <select data-ticket-365-license="${request.id}" aria-label="Microsoft 365 license">
-        ${choices.map(choice => `<option value="${escapeHtml(choice)}" ${choice === current ? "selected" : ""}>${escapeHtml(choice)}</option>`).join("")}
+        ${choices.map(choice => `<option value="${escapeHtml(choice)}" ${choice === selected ? "selected" : ""}>${escapeHtml(choice)}</option>`).join("")}
       </select>
     </label>
   `;
@@ -1136,12 +1155,12 @@ function m365InlineLicenseHtml(request = {}, ticket = {}) {
   if (!choices.length) {
     return m365InlineFieldHtml("license", "License", current || "Exchange Online (Plan 1) [New Commerce Experience]");
   }
-  if (current && !choices.includes(current)) choices.unshift(current);
+  const selected = matchingM365LicenseChoice(current, choices) || choices[0] || current;
   return `
     <label class="m365-inline-field">
       <small>License</small>
       <select data-m365-inline-field="license">
-        ${choices.map(choice => `<option value="${escapeHtml(choice)}" ${choice === current ? "selected" : ""}>${escapeHtml(choice)}</option>`).join("")}
+        ${choices.map(choice => `<option value="${escapeHtml(choice)}" ${choice === selected ? "selected" : ""}>${escapeHtml(choice)}</option>`).join("")}
       </select>
     </label>
   `;
@@ -2105,7 +2124,12 @@ function reconcileM365RequestsFromTickets() {
       const parsedRequest = parsed.request || {};
       const nextLicense = String(parsedRequest.license || "").trim();
       const currentLicense = String(existing.license || "").trim();
-      const manualLicense = existing.licenseSource === "manual";
+      const staleMoxieSeedLicense =
+        existing.clientId === "client_moxie" &&
+        parsedRequest.licenseSource === "default" &&
+        normalizedLicensePhrase(currentLicense) === normalizedLicensePhrase("Microsoft 365 Business Standard") &&
+        normalizedLicensePhrase(nextLicense) === normalizedLicensePhrase("Exchange Online Plan 1");
+      const manualLicense = existing.licenseSource === "manual" && !staleMoxieSeedLicense;
       const defaultOrParsedLicenseChanged = nextLicense && !manualLicense && nextLicense !== currentLicense;
       const sourceEmailChanged = parsedRequest.sourceEmail && parsedRequest.sourceEmail !== existing.sourceEmail;
       const requesterChanged = parsedRequest.requester && parsedRequest.requester !== existing.requester;
@@ -2722,9 +2746,37 @@ function priceNinjaOneRows(client, audit) {
 function normalizedProductName(value) {
   return String(value || "")
     .toLowerCase()
-    .replace(/microsoft|office|365|business|online|plan|no teams|\\(|\\)|-/g, " ")
+    .replace(/\[[^\]]+\]/g, " ")
+    .replace(/new commerce experience|nce|microsoft|office|365|business|online|plan|no teams|\\(|\\)|-/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function compactLicenseName(value = "") {
+  return normalizedLicensePhrase(value).replace(/\s+/g, "");
+}
+
+function m365LicenseTokens(value = "") {
+  const normalized = normalizedLicensePhrase(value);
+  const compacted = compactLicenseName(value);
+  const tokens = new Set([compacted]);
+  if (/exchange/.test(normalized) && /\b1\b/.test(normalized)) tokens.add("exchange1");
+  if (/exchange/.test(normalized) && /\b2\b/.test(normalized)) tokens.add("exchange2");
+  if (/basic/.test(normalized)) tokens.add("basic");
+  if (/standard/.test(normalized)) tokens.add("standard");
+  if (/premium/.test(normalized)) tokens.add("premium");
+  return [...tokens].filter(Boolean);
+}
+
+function m365LicenseEquivalent(a = "", b = "") {
+  const left = m365LicenseTokens(a);
+  const right = m365LicenseTokens(b);
+  return left.some(leftToken => right.some(rightToken => leftToken === rightToken || leftToken.includes(rightToken) || rightToken.includes(leftToken)));
+}
+
+function matchingM365LicenseChoice(current = "", choices = []) {
+  return choices.find(choice => choice === current) || choices.find(choice => m365LicenseEquivalent(choice, current)) || "";
 }
 
 function assignedCountForProduct(audit, productName) {

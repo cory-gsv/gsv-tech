@@ -105,13 +105,38 @@ function cleanText(value: unknown) {
 function normalize(value: string) {
   return cleanText(value)
     .toLowerCase()
-    .replace(/microsoft|office|365|business|online|plan|no teams|\(|\)|-/g, " ")
+    .replace(/\[[^\]]+\]/g, " ")
+    .replace(/new commerce experience|nce|microsoft|office|365|business|online|plan|no teams|\(|\)|-/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
 }
 
 function compact(value: string) {
   return normalize(value).replace(/\s+/g, "")
+}
+
+function licenseTokens(value: string) {
+  const normalized = normalize(value)
+  const tokens = new Set<string>([compact(value)])
+  if (/exchange/.test(normalized) && /\b1\b/.test(normalized)) tokens.add("exchange1")
+  if (/exchange/.test(normalized) && /\b2\b/.test(normalized)) tokens.add("exchange2")
+  if (/\bbasic\b/.test(normalized)) tokens.add("basic")
+  if (/\bstandard\b/.test(normalized)) tokens.add("standard")
+  if (/\bpremium\b/.test(normalized)) tokens.add("premium")
+  return [...tokens].filter(Boolean)
+}
+
+function licenseMatches(left: string, right: string) {
+  const leftTokens = licenseTokens(left)
+  const rightTokens = licenseTokens(right)
+  return leftTokens.some((leftToken) =>
+    rightTokens.some(
+      (rightToken) =>
+        leftToken === rightToken ||
+        leftToken.includes(rightToken) ||
+        rightToken.includes(leftToken),
+    ),
+  )
 }
 
 function friendlySkuName(skuPartNumber = "") {
@@ -355,15 +380,14 @@ async function graphGetAll<T>(accessToken: string, path: string) {
 }
 
 function matchSku(skus: GraphSku[], requestedLicense: string) {
-  const requested = compact(requestedLicense)
-  if (!requested) return null
+  if (!compact(requestedLicense)) return null
   return (
     skus.find((sku) => {
       const parts = [
         sku.skuPartNumber || "",
         friendlySkuName(sku.skuPartNumber || ""),
-      ].map(compact)
-      return parts.some((part) => part === requested || part.includes(requested) || requested.includes(part))
+      ]
+      return parts.some((part) => licenseMatches(part, requestedLicense))
     }) || null
   )
 }
@@ -480,14 +504,12 @@ function matchPax8Subscription(
   companyId: string,
   requestedLicense: string,
 ) {
-  const requested = compact(requestedLicense)
   return (
     subscriptions
       .filter((subscription) => {
         if (String(subscription.companyId || "").toLowerCase() !== companyId.toLowerCase()) return false
         if (/cancel|delete/i.test(subscription.status || "")) return false
-        const product = compact(subscription.productName || "")
-        return product === requested || product.includes(requested) || requested.includes(product)
+        return licenseMatches(subscription.productName || "", requestedLicense)
       })
       .sort((a, b) => String(a.productName || "").localeCompare(String(b.productName || "")))[0] || null
   )
