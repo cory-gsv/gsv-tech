@@ -771,10 +771,16 @@ export async function PUT(request: NextRequest) {
     const additionalAssignedTechnicianIds = Array.isArray(ticket.additionalAssignedTechnicianIds)
       ? ticket.additionalAssignedTechnicianIds.map(Number).filter(Boolean)
       : current.additionalAssignedTechnicianIds || []
+    const requestedStatus = String(ticket.status || currentStatus?.name || "new")
+    const currentStatusText = `${currentStatus?.name || ""} ${currentStatus?.displayName || ""}`
+      .toLowerCase()
+    const requestedStatusMatchesCurrent =
+      !ticket.status ||
+      portalStatusPattern(requestedStatus).test(currentStatusText)
     const status = await ninjaOneStatusId(
       accessToken,
-      ticket.status || currentStatus?.name || "new",
-      ticket.statusId || currentStatus?.statusId,
+      requestedStatus,
+      ticket.statusId || (requestedStatusMatchesCurrent ? currentStatus?.statusId : undefined),
     )
 
     if (!clientId) throw new Error("Missing NinjaOne organization ID.")

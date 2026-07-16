@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-36">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-37">
 </head>
 <body>
   <aside class="sidebar">
@@ -16,22 +16,20 @@
       </div>
     </div>
     <nav class="portal-nav">
-      <button class="nav-link active" data-view="dashboard"><span class="nav-icon">◷</span><span>Dashboard</span></button>
+      <button class="nav-link active" data-view="dashboard"><span class="nav-icon">▦</span><span>Dashboard</span></button>
       <div class="nav-group" data-nav-group="ticketing">
         <button class="nav-link nav-group-head" type="button" data-nav-toggle="ticketing">
           <span class="nav-icon">▭</span>
-          <span>Ticketing</span>
+          <span>Support</span>
           <span class="nav-group-tools">
             <span id="nav-ticket-total">0</span>
             <span class="nav-chevron">⌄</span>
           </span>
         </button>
         <div class="nav-submenu">
-          <button class="nav-sub-link active" data-ticket-filter-set="all">All tickets (<span id="nav-ticket-all">0</span>)</button>
-          <button class="nav-sub-link" data-ticket-filter-set="open">My tickets (<span id="nav-ticket-mine">0</span>)</button>
-          <button class="nav-sub-link" data-ticket-filter-set="open">Open tickets (<span id="nav-ticket-open">0</span>)</button>
-          <button class="nav-sub-link" data-ticket-filter-set="deleted">Deleted tickets (<span id="nav-ticket-deleted">0</span>)</button>
-          <button class="nav-sub-link" data-ticket-filter-set="pending">Pending Emails (<span id="nav-ticket-pending">0</span>)</button>
+          <button class="nav-sub-link active" data-ticket-filter-set="all"><span class="nav-sub-dot"></span><span>Tickets</span><span id="nav-ticket-all" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="pending"><span class="nav-sub-dot"></span><span>Pending Emails</span><span id="nav-ticket-pending" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="deleted"><span class="nav-sub-dot"></span><span>Deleted Tickets</span><span id="nav-ticket-deleted" class="nav-count">0</span></button>
         </div>
       </div>
       <div class="nav-group" data-nav-group="billing">
@@ -44,12 +42,23 @@
           </span>
         </button>
         <div class="nav-submenu">
-          <button class="nav-sub-link" data-view="invoices">Invoices</button>
-          <button class="nav-sub-link" data-view="quotes">Quotes</button>
-          <button class="nav-sub-link" data-view="clients">Clients</button>
-          <button class="nav-sub-link" data-view="audit365">Services Audit</button>
-          <button class="nav-sub-link" data-view="payments">Payments</button>
-          <button class="nav-sub-link" data-view="exports">Year-End Export</button>
+          <button class="nav-sub-link" data-view="invoices"><span class="nav-sub-dot"></span><span>Invoices</span></button>
+          <button class="nav-sub-link" data-view="quotes"><span class="nav-sub-dot"></span><span>Quotes</span></button>
+          <button class="nav-sub-link" data-view="payments"><span class="nav-sub-dot"></span><span>Payments</span></button>
+          <button class="nav-sub-link" data-view="exports"><span class="nav-sub-dot"></span><span>Reports</span></button>
+        </div>
+      </div>
+      <div class="nav-group" data-nav-group="clients">
+        <button class="nav-link nav-group-head" type="button" data-nav-toggle="clients">
+          <span class="nav-icon">◎</span>
+          <span>Clients</span>
+          <span class="nav-group-tools">
+            <span class="nav-chevron">⌄</span>
+          </span>
+        </button>
+        <div class="nav-submenu">
+          <button class="nav-sub-link" data-view="clients"><span class="nav-sub-dot"></span><span>Companies</span></button>
+          <button class="nav-sub-link" data-view="audit365"><span class="nav-sub-dot"></span><span>Services Audit</span></button>
         </div>
       </div>
     </nav>
@@ -62,7 +71,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-36</small>
+      <small class="portal-build-version">Build portal-20260716-37</small>
     </div>
   </aside>
 
@@ -435,6 +444,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-36"></script>
+  <script src="app.js?v=portal-20260716-37"></script>
 </body>
 </html>
