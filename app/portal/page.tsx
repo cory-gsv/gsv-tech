@@ -92,7 +92,7 @@ export default async function PortalPage({ searchParams }: PortalPageProps) {
     <main className="gsv-billing-shell">
       <iframe
         className="gsv-billing-shell__frame"
-        src="/portal-app/index.html?v=portal-20260716-29"
+        src="/portal-app/index.html?v=portal-20260716-30"
         title="GSV Client Portal"
       />
     </main>
