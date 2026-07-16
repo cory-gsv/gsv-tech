@@ -410,12 +410,30 @@ async function graphLicenseAvailability(
   } satisfies LicenseAvailability
 }
 
+function licenseAvailabilityPayload(
+  availability: LicenseAvailability | { sku?: GraphSku | null; available?: number } | null,
+  fallbackSku?: GraphSku | null,
+) {
+  const sku = availability?.sku || fallbackSku || null
+  const enabled = Number(sku?.prepaidUnits?.enabled || 0)
+  const consumed = Number(sku?.consumedUnits || 0)
+  const available = Number(availability?.available ?? (enabled - consumed))
+  return {
+    skuId: sku?.skuId || "",
+    skuPartNumber: sku?.skuPartNumber || "",
+    name: friendlySkuName(sku?.skuPartNumber || "") || sku?.skuPartNumber || "",
+    enabled,
+    consumed,
+    available,
+  }
+}
+
 async function waitForLicenseAvailability(
   accessToken: string,
   requestedLicense: string,
 ) {
-  const attempts = Math.max(1, Number(envValue("M365_LICENSE_WAIT_ATTEMPTS") || 12))
-  const intervalMs = Math.max(1000, Number(envValue("M365_LICENSE_WAIT_INTERVAL_MS") || 10000))
+  const attempts = Math.max(1, Number(envValue("M365_LICENSE_WAIT_ATTEMPTS") || 2))
+  const intervalMs = Math.max(1000, Number(envValue("M365_LICENSE_WAIT_INTERVAL_MS") || 5000))
   let latest: LicenseAvailability | null = null
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -718,6 +736,7 @@ export async function POST(request: NextRequest) {
     const pax8AlreadyHandled = pax8AlreadyIncreased || Boolean(savedPax8SubscriptionId)
     const needsPax8Increase = availableLicenses < 1 && !pax8AlreadyHandled
     const waitingForPreviousPax8 = availableLicenses < 1 && pax8AlreadyHandled
+    const licenseAvailability = licenseAvailabilityPayload({ sku, available: availableLicenses })
     const preview = {
       tenantKey,
       userExists: Boolean(existingUser),
@@ -725,14 +744,12 @@ export async function POST(request: NextRequest) {
       setupEmail: automationRequest.setupEmail,
       sourceEmail: automationRequest.sourceEmail,
       ninjaTicketId: automationRequest.ninjaTicketId,
-      sku: {
-        skuId: sku.skuId,
-        skuPartNumber: sku.skuPartNumber,
-        name: friendlySkuName(sku.skuPartNumber || ""),
-        enabled: Number(sku.prepaidUnits?.enabled || 0),
-        consumed: Number(sku.consumedUnits || 0),
-        available: availableLicenses,
-      },
+      sku: licenseAvailability,
+      licenseAvailability,
+      pax8AlreadyHandled,
+      needsPax8Increase,
+      waitingForPreviousPax8,
+      checkedAt: new Date().toISOString(),
       pax8: pax8Match
         ? {
             subscriptionId: pax8Match.id,
@@ -771,6 +788,10 @@ export async function POST(request: NextRequest) {
 
     const pax8Changed = Boolean(needsPax8Increase && pax8Match?.id)
     let assignableSku = sku
+    let latestLicenseAvailabilityForResult = licenseAvailabilityPayload({
+      sku,
+      available: availableLicenses,
+    })
     let licenseWait:
       | {
           attempts: number
@@ -796,6 +817,10 @@ export async function POST(request: NextRequest) {
       }
 
       const availability = await waitForLicenseAvailability(graphAccessToken, license)
+      latestLicenseAvailabilityForResult = licenseAvailabilityPayload(
+        availability,
+        availability.sku || sku,
+      )
       licenseWait = {
         attempts: availability.attempts,
         waitedMs: availability.waitedMs,
@@ -818,6 +843,9 @@ export async function POST(request: NextRequest) {
               ? Number(pax8Match.quantity || 0) + (pax8Changed ? 1 : 0)
               : null,
             licenseWait,
+            licenseAvailability: latestLicenseAvailabilityForResult,
+            lastCheckedAt: new Date().toISOString(),
+            pax8AlreadyHandled: true,
             retryAfterMs: Math.max(
               10000,
               Number(envValue("M365_AUTO_RETRY_AFTER_MS") || 30000),
@@ -893,6 +921,7 @@ export async function POST(request: NextRequest) {
         userPrincipalName,
         displayName,
         license: friendlySkuName(assignableSku.skuPartNumber || "") || license,
+        licenseAvailability: latestLicenseAvailabilityForResult,
         temporaryPassword: password,
         pax8Changed,
         licenseWait,

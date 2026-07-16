@@ -1259,20 +1259,51 @@ function scheduleM365AutomationRetry(requestId, delayMs = 30000) {
   m365AutomationRetryTimers.set(requestId, timer);
 }
 
+function effectiveM365Status(request = {}) {
+  const status = request.status || "requested";
+  const hasWaitingStep = Array.isArray(request.automationRunLog)
+    && request.automationRunLog.some(step => step?.status === "waiting");
+  if (
+    status === "waiting_for_license"
+    || hasWaitingStep
+    || ((request.pax8AlreadyIncreased || request.pax8SubscriptionId) && ["running", "pax8_needed"].includes(status))
+  ) {
+    return "waiting_for_license";
+  }
+  return status;
+}
+
 function normalizeM365AutomationState(request = {}) {
   if (!request || typeof request !== "object") return request;
-  if (request.status === "running" && request.pax8AlreadyIncreased) {
+  const savedAvailable = Number(request.licenseAvailability?.available ?? NaN);
+  if (
+    Number.isFinite(savedAvailable)
+    && savedAvailable > 0
+    && effectiveM365Status(request) === "waiting_for_license"
+  ) {
+    request.status = "ready_to_provision";
+    request.pax8AlreadyIncreased = false;
+    request.pax8SubscriptionId = "";
+    request.pax8Quantity = "";
+    request.automationRunLog = [];
+    request.automationPreview = m365PreviewText({ licenseAvailability: request.licenseAvailability }, request);
+    request.automationError = "";
+  }
+  if (effectiveM365Status(request) === "waiting_for_license") {
     request.status = "waiting_for_license";
   }
   if (request.status === "waiting_for_license") {
+    const hasStaleFetchError = Array.isArray(request.automationRunLog)
+      && request.automationRunLog.some(step => /failed to fetch/i.test(`${step?.label || ""} ${step?.detail || ""}`));
     const hasWaitingStep = Array.isArray(request.automationRunLog)
       && request.automationRunLog.some(step => step?.status === "waiting");
-    if (!hasWaitingStep) {
+    if (!hasWaitingStep || hasStaleFetchError) {
       request.automationRunLog = m365WaitingSteps(request, {
         license: request.license,
         pax8Changed: false,
         pax8Quantity: request.pax8Quantity,
-        lastCheckedAt: request.lastLicenseCheckAt
+        lastCheckedAt: request.lastLicenseCheckAt,
+        licenseAvailability: request.licenseAvailability
       });
     }
     request.automationPreview = "";
@@ -1286,16 +1317,16 @@ function ticketM365AutomationCard(ticket = {}) {
   if (!request) return "";
   normalizeM365AutomationState(request);
   if (request.clientId) requestPurchasedLicensesForClient(request.clientId);
-  if (request.status === "waiting_for_license") scheduleM365AutomationRetry(request.id);
-  const displayStatus = request.pax8AlreadyIncreased && request.status === "pax8_needed" ? "waiting_for_license" : (request.status || "requested");
+  const displayStatus = effectiveM365Status(request);
+  if (displayStatus === "waiting_for_license") scheduleM365AutomationRetry(request.id);
   const displayName = request.displayName || `${request.firstName || ""} ${request.lastName || ""}`.trim() || "New user";
   const requesterEmail = request.sourceEmail || ticket.requesterEmail || request.requester || "";
   const isEditing = editingTicketM365RequestId === request.id;
-  const runButton = request.status === "waiting_for_license"
+  const runButton = displayStatus === "waiting_for_license"
     ? `<span class="button-link disabled">Auto-checking Microsoft 365</span>`
-    : request.status === "running"
+    : displayStatus === "running"
       ? `<span class="button-link disabled">Running...</span>`
-      : request.status === "complete"
+      : displayStatus === "complete"
         ? `<span class="button-link disabled">Mailbox Created</span>`
       : `<a href="${ticketM365ActionHref("run", request.id)}" data-run-365-automation="${request.id}" class="button-link primary">Create 365 Mailbox</a>`;
   return `
@@ -2333,27 +2364,32 @@ function m365AutomationPayload(request) {
   };
 }
 
-function m365PreviewText(preview = {}) {
-  const sku = preview.sku || {};
+function m365PreviewText(preview = {}, request = {}) {
+  const sku = preview.licenseAvailability || preview.sku || request.licenseAvailability || {};
   const pax8 = preview.pax8 || {};
   const available = Number(sku.available ?? 0);
   const licenseName = sku.name || sku.skuPartNumber || "the selected license";
+  const pax8AlreadyHandled = preview.pax8AlreadyHandled || preview.waitingForPreviousPax8 || request.pax8AlreadyIncreased || request.pax8SubscriptionId;
+  const pax8Current = Number(pax8.currentQuantity ?? request.pax8Quantity ?? 0);
+  const pax8Next = Number(pax8.nextQuantity ?? pax8Current);
   const lines = [
     `License: ${licenseName}`,
     available > 0
-      ? `Microsoft 365 has ${available} unused license${available === 1 ? "" : "s"} available.`
-      : "Microsoft 365 does not have an unused license available right now.",
+      ? `Microsoft 365 currently shows ${available} unused license${available === 1 ? "" : "s"} available.`
+      : "Microsoft 365 currently does not show an unused license available.",
     preview.userExists
       ? `A user already exists for ${preview.userPrincipalName || "this mailbox"}.`
       : "The mailbox is available and can be created."
   ];
 
   if (available < 1) {
-    lines.push(
-      pax8?.subscriptionId
-        ? `Pax8 has the matching subscription. The portal will increase it from ${pax8.currentQuantity ?? 0} to ${pax8.nextQuantity ?? 0}.`
-        : "Pax8 needs to be updated, but the portal could not find a matching subscription."
-    );
+    if (pax8AlreadyHandled) {
+      lines.push("Pax8 is already handled for this request. The portal will not change Pax8 again.");
+    } else if (pax8?.subscriptionId && pax8Next > pax8Current) {
+      lines.push(`Pax8 has the matching subscription. The portal will increase it from ${pax8Current} to ${pax8Next}.`);
+    } else {
+      lines.push("Pax8 needs attention because the portal could not find a matching subscription to update.");
+    }
   } else {
     lines.push("Pax8 does not need to be changed.");
   }
@@ -2389,8 +2425,34 @@ async function previewM365Automation(requestId) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Automation preview failed.");
-    request.automationPreview = m365PreviewText(data.preview || {});
-    request.status = data.preview?.sku?.available < 1 ? "pax8_needed" : "ready_to_provision";
+    const preview = data.preview || {};
+    const availability = preview.licenseAvailability || preview.sku || {};
+    const available = Number(availability.available ?? 0);
+    request.licenseAvailability = availability;
+    request.pax8SubscriptionId = preview.pax8?.subscriptionId || request.pax8SubscriptionId || "";
+    request.pax8Quantity = preview.pax8?.currentQuantity ?? request.pax8Quantity ?? "";
+    request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (available > 0) {
+      request.status = "ready_to_provision";
+      request.pax8AlreadyIncreased = false;
+      request.automationRunLog = [];
+      request.automationPreview = m365PreviewText(preview, request);
+    } else if (preview.pax8AlreadyHandled || preview.waitingForPreviousPax8 || request.pax8AlreadyIncreased || request.pax8SubscriptionId) {
+      request.status = "waiting_for_license";
+      request.pax8AlreadyIncreased = true;
+      request.automationPreview = "";
+      request.automationError = "";
+      request.automationRunLog = m365WaitingSteps(request, {
+        ...preview,
+        licenseAvailability: availability,
+        pax8Quantity: request.pax8Quantity,
+        lastCheckedAt: request.lastLicenseCheckAt
+      });
+      scheduleM365AutomationRetry(request.id, 10000);
+    } else {
+      request.status = preview.needsPax8Increase ? "pax8_needed" : "needs_review";
+      request.automationPreview = m365PreviewText(preview, request);
+    }
   } catch (error) {
     request.automationError = error instanceof Error ? error.message : "Automation preview failed.";
   }
@@ -2403,8 +2465,8 @@ async function previewM365Automation(requestId) {
 function m365StartingSteps(request = {}, autoResume = false) {
   if (autoResume || request.pax8AlreadyIncreased) {
     return [
-      { status: "done", label: "Pax8 license count is already updated." },
-      { status: "running", label: "Checking Microsoft 365 for the new license.", detail: "Pax8 will not be changed again for this request." },
+      { status: "done", label: "Pax8 is already handled for this request.", detail: "The portal will not change Pax8 again." },
+      { status: "running", label: "Checking Microsoft 365 for the license.", detail: "Waiting for Microsoft to report the license as available." },
       { status: "pending", label: "Create the new Microsoft 365 mailbox." },
       { status: "pending", label: "Assign the license." },
       { status: "pending", label: "Prepare the setup email and update the ticket." }
@@ -2423,18 +2485,34 @@ function m365StartingSteps(request = {}, autoResume = false) {
 function m365WaitingSteps(request = {}, result = {}) {
   const licenseName = result.license || request.license || "the selected license";
   const checkedAt = result.lastCheckedAt || request.lastLicenseCheckAt || "";
+  const availability = result.licenseAvailability || result.sku || request.licenseAvailability || {};
+  const hasAvailability =
+    availability
+    && (
+      availability.available !== undefined
+      || availability.enabled !== undefined
+      || availability.consumed !== undefined
+    );
+  const available = Number(availability.available ?? 0);
+  const enabled = Number(availability.enabled ?? 0);
+  const consumed = Number(availability.consumed ?? 0);
+  const countDetail = hasAvailability
+    ? `Microsoft currently shows ${enabled} total, ${consumed} assigned, and ${available} available.${checkedAt ? ` Last checked: ${checkedAt}.` : ""}`
+    : `${checkedAt ? `Last checked: ${checkedAt}. ` : ""}Waiting for Microsoft 365 to report the license as available.`;
   return [
     {
       status: "done",
       label: result.pax8Changed
         ? "Pax8 license count was increased."
-        : "Pax8 license count was already updated.",
-      detail: result.pax8Quantity ? `Current Pax8 quantity: ${result.pax8Quantity}.` : ""
+        : "Pax8 is already handled for this request.",
+      detail: result.pax8Quantity
+        ? `Current Pax8 quantity: ${result.pax8Quantity}. The portal will not change Pax8 again.`
+        : "The portal will not change Pax8 again."
     },
     {
       status: "waiting",
-      label: `Waiting for Microsoft 365 to show ${licenseName}.`,
-      detail: `The portal will keep checking automatically. You do not need to click the button again.${checkedAt ? ` Last checked: ${checkedAt}.` : ""}`
+      label: `Checking Microsoft 365 for ${licenseName}.`,
+      detail: `${countDetail} The portal will keep checking automatically.`
     },
     { status: "pending", label: "Create the new Microsoft 365 mailbox." },
     { status: "pending", label: "Assign the license." },
@@ -2481,6 +2559,7 @@ async function runM365Automation(requestId, options = {}) {
   if (!request) return;
   normalizeM365AutomationState(request);
   const autoResume = options.autoResume === true;
+  const currentStatus = effectiveM365Status(request);
   if (m365AutomationActiveRuns.has(request.id)) {
     request.automationRunLog = Array.isArray(request.automationRunLog) && request.automationRunLog.length
       ? request.automationRunLog
@@ -2490,12 +2569,13 @@ async function runM365Automation(requestId, options = {}) {
     render();
     return;
   }
-  if (!autoResume && request.status === "waiting_for_license") {
+  if (!autoResume && currentStatus === "waiting_for_license") {
     request.automationRunLog = m365WaitingSteps(request, {
       license: request.license,
       pax8Changed: false,
       pax8Quantity: request.pax8Quantity,
-      lastCheckedAt: request.lastLicenseCheckAt
+      lastCheckedAt: request.lastLicenseCheckAt,
+      licenseAvailability: request.licenseAvailability
     });
     request.automationPreview = "";
     request.automationError = "";
@@ -2512,7 +2592,7 @@ async function runM365Automation(requestId, options = {}) {
   request.automationError = "";
   request.automationPreview = "";
   request.automationRunLog = m365StartingSteps(request, autoResume);
-  request.status = autoResume ? "waiting_for_license" : "running";
+  request.status = autoResume || currentStatus === "waiting_for_license" ? "waiting_for_license" : "running";
   request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   saveState();
   renderM365Requests();
@@ -2531,6 +2611,7 @@ async function runM365Automation(requestId, options = {}) {
       request.pax8AlreadyIncreased = true;
       request.pax8SubscriptionId = data.result.pax8SubscriptionId || request.pax8SubscriptionId || "";
       request.pax8Quantity = data.result.pax8Quantity || request.pax8Quantity || "";
+      request.licenseAvailability = data.result.licenseAvailability || request.licenseAvailability || {};
       request.lastLicenseCheckAt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
       request.automationRunLog = m365WaitingSteps(request, data.result || {});
       request.automationPreview = "";
@@ -2546,6 +2627,7 @@ async function runM365Automation(requestId, options = {}) {
     request.pax8AlreadyIncreased = false;
     request.pax8SubscriptionId = "";
     request.pax8Quantity = "";
+    request.licenseAvailability = data.result?.licenseAvailability || {};
     request.temporaryPassword = data.result?.temporaryPassword || request.temporaryPassword || "";
     request.automationRunLog = m365CompleteSteps(request, data.result || {});
     request.automationPreview = "Automation complete.";
@@ -2554,12 +2636,35 @@ async function runM365Automation(requestId, options = {}) {
       `Automation completed ${today}. ${data.result?.note || ""}`
     ].filter(Boolean).join("\n\n");
   } catch (error) {
-    request.automationError = error instanceof Error ? error.message : "Automation run failed.";
-    request.status = request.pax8AlreadyIncreased || request.pax8SubscriptionId ? "waiting_for_license" : "needs_review";
-    request.automationRunLog = [
-      ...(Array.isArray(request.automationRunLog) ? request.automationRunLog : []),
-      { status: "error", label: request.automationError }
-    ];
+    const message = error instanceof Error ? error.message : "Automation run failed.";
+    if (effectiveM365Status(request) === "waiting_for_license" || request.pax8AlreadyIncreased || request.pax8SubscriptionId) {
+      request.status = "waiting_for_license";
+      request.automationPreview = "";
+      request.automationError = "";
+      const waitingSteps = m365WaitingSteps(request, {
+        license: request.license,
+        pax8Changed: false,
+        pax8Quantity: request.pax8Quantity,
+        lastCheckedAt: request.lastLicenseCheckAt,
+        licenseAvailability: request.licenseAvailability
+      });
+      request.automationRunLog = [
+        ...waitingSteps,
+        {
+          status: "warning",
+          label: "This automatic check could not reach the automation service.",
+          detail: `${message} Pax8 was not changed by this failed check. The portal will try again automatically.`
+        }
+      ];
+      scheduleM365AutomationRetry(request.id, 30000);
+    } else {
+      request.automationError = message;
+      request.status = "needs_review";
+      request.automationRunLog = [
+        ...(Array.isArray(request.automationRunLog) ? request.automationRunLog : []),
+        { status: "error", label: request.automationError }
+      ];
+    }
   }
   m365AutomationActiveRuns.delete(request.id);
   request.updatedAt = today;
@@ -2570,12 +2675,21 @@ async function runM365Automation(requestId, options = {}) {
 function updateTicketM365License(requestId, license) {
   const request = findM365Request(requestId);
   if (!request) return;
-  request.license = String(license || "").trim();
+  const nextLicense = String(license || "").trim();
+  const licenseChanged = nextLicense !== String(request.license || "").trim();
+  request.license = nextLicense;
   request.licenseSource = "manual";
   request.automationPreview = "";
   request.automationError = "";
+  if (licenseChanged) {
+    request.pax8AlreadyIncreased = false;
+    request.pax8SubscriptionId = "";
+    request.pax8Quantity = "";
+    request.licenseAvailability = null;
+    request.automationRunLog = [];
+  }
   request.updatedAt = today;
-  if (["pax8_needed", "ready_to_provision", "ready_to_run"].includes(request.status)) {
+  if (licenseChanged || ["pax8_needed", "ready_to_provision", "ready_to_run"].includes(request.status)) {
     request.status = "needs_review";
   }
   saveState();
@@ -2603,11 +2717,20 @@ function saveTicketM365InlineRequest(requestId) {
   request.setupEmail = String(fields.setupEmail || "").trim();
   request.sourceEmail = String(fields.sourceEmail || "").trim();
   const nextLicense = String(fields.license || "").trim();
-  if (nextLicense && nextLicense !== String(request.license || "").trim()) request.licenseSource = "manual";
+  const licenseChanged = nextLicense && nextLicense !== String(request.license || "").trim();
+  if (licenseChanged) request.licenseSource = "manual";
   request.license = nextLicense;
   request.notes = String(fields.notes || "").trim();
   request.automationPreview = "";
   request.automationError = "";
+  if (licenseChanged) {
+    request.pax8AlreadyIncreased = false;
+    request.pax8SubscriptionId = "";
+    request.pax8Quantity = "";
+    request.licenseAvailability = null;
+    request.automationRunLog = [];
+    request.status = "needs_review";
+  }
   if (!request.status || request.status === "requested") request.status = "needs_review";
   request.updatedAt = today;
   editingTicketM365RequestId = "";
