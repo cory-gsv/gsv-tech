@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-34";
+const portalBuild = "portal-20260716-35";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -855,7 +855,7 @@ function renderDashboard() {
     .map(inv => {
       const status = computedInvoiceStatus(inv);
       return `
-      <div class="item dashboard-invoice-item">
+      <div class="item dashboard-invoice-item clickable-card" data-open-customer-preview-invoice="${inv.id}" role="button" tabindex="0">
         <div class="item-line dashboard-invoice-main">
           <strong>${escapeHtml(inv.number)}</strong>
           <span class="badge ${status}">${status}</span>
@@ -874,18 +874,18 @@ function renderDashboard() {
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 6);
   document.getElementById("dashboard-tickets").innerHTML = recentTickets.map(ticket => `
-    <div class="item dashboard-ticket-item">
+    <button class="item dashboard-ticket-item dashboard-card-button" type="button" data-view-ticket="${ticket.id}">
       <div class="item-line">
-        <button class="link-button ticket-title-link" data-view-ticket="${ticket.id}">
+        <span class="ticket-title-link">
           ${escapeHtml(ticket.title || "Support request")}
-        </button>
+        </span>
         <span class="badge ${ticket.status || "new"}">${ticketStatusLabel(ticket.status)}</span>
       </div>
       <div class="item-line subtle">
         <span>${escapeHtml(ticket.ninjaOneOrgName || ninjaOneOrganizationName(ticket.ninjaOneOrgId) || clientName(ticket.clientId))}</span>
         <strong>${escapeHtml(formatDate(ticket.createdAt))}</strong>
       </div>
-    </div>
+    </button>
   `).join("") || `<p class="subtle">No recent tickets.</p>`;
 
   const activity = [
@@ -3201,7 +3201,7 @@ function invoiceActionButtons(inv) {
   const status = computedInvoiceStatus(inv);
   return `
     <div class="row-actions invoice-actions">
-      <button data-preview-invoice="${inv.id}">Preview</button>
+      <button data-preview-invoice="${inv.id}">Admin Preview</button>
       <button data-customer-preview-invoice="${inv.id}">Customer Preview</button>
       <button data-pdf-invoice="${inv.id}">PDF</button>
       <button data-edit-invoice="${inv.id}">Edit</button>
@@ -3763,7 +3763,7 @@ function renderInvoices() {
       const total = invoiceTotal(inv);
       const paid = paidAmount(inv.id);
       return `
-        <tr>
+        <tr class="clickable-row" data-open-customer-preview-invoice="${inv.id}" tabindex="0">
           <td><strong>${escapeHtml(inv.number)}</strong><br><span class="subtle">${escapeHtml(inv.type || "")}</span></td>
           <td>${escapeHtml(clientName(inv.clientId))}</td>
           <td>${formatDate(inv.date)}</td>
@@ -3800,7 +3800,7 @@ function renderQuotes() {
   const rows = state.quotes
     .sort((a, b) => b.date.localeCompare(a.date))
     .map(quote => `
-      <tr>
+      <tr class="clickable-row" data-open-customer-preview-quote="${quote.id}" tabindex="0">
         <td><strong>${escapeHtml(quote.number)}</strong><br><span class="subtle">${escapeHtml(quote.title || "")}</span></td>
         <td>${escapeHtml(quoteClientName(quote))}</td>
         <td>${formatDate(quote.date)}</td>
@@ -3809,7 +3809,7 @@ function renderQuotes() {
         <td class="num">${money.format(quoteMargin(quote))}</td>
         <td>
           <div class="row-actions">
-            <button data-preview-quote="${quote.id}">Preview</button>
+            <button data-preview-quote="${quote.id}">Admin Preview</button>
             <button data-customer-preview-quote="${quote.id}">Customer Preview</button>
             <button data-edit-quote="${quote.id}">Edit</button>
             ${!quote.clientId && quoteOneTimeClient(quote) ? `<button data-create-client-from-quote="${quote.id}">Create Customer</button>` : ""}
@@ -5464,17 +5464,25 @@ function previewDocument(type, idValue, previewMode = "admin") {
   document.getElementById("document-body").innerHTML = customerMode
     ? renderDocument(type, doc, client)
     : renderAdminQuotePreview(doc, client);
-  document.getElementById("create-customer-preview-document").hidden = type !== "quote" || Boolean(doc.clientId) || !quoteOneTimeClient(doc);
-  document.getElementById("create-invoice-preview-document").hidden = !customerMode || type !== "quote" || doc.status === "converted";
-  document.getElementById("send-preview-document").hidden = !customerMode || (
-    type === "invoice"
-      ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
-      : doc.status === "converted" || doc.status === "declined"
-  );
-  document.getElementById("print-document").hidden = !customerMode;
+  updatePreviewActions(type, doc, customerMode);
   const preview = document.getElementById("document-preview");
   preview.classList.toggle("is-admin-preview", !customerMode);
   preview.showModal();
+}
+
+function updatePreviewActions(type, doc, customerMode) {
+  const invoiceStatus = type === "invoice" ? computedInvoiceStatus(doc) : "";
+  const canSend = type === "invoice"
+    ? invoiceStatus !== "paid" && invoiceStatus !== "void"
+    : doc.status !== "converted" && doc.status !== "declined";
+  document.getElementById("admin-preview-document").hidden = !customerMode;
+  document.getElementById("customer-preview-document").hidden = customerMode;
+  document.getElementById("create-customer-preview-document").hidden = type !== "quote" || Boolean(doc.clientId) || !quoteOneTimeClient(doc);
+  document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
+  document.getElementById("send-preview-document").hidden = !canSend;
+  document.getElementById("pay-preview-invoice").hidden = type !== "invoice" || invoiceStatus === "paid" || invoiceStatus === "void";
+  document.getElementById("delete-preview-document").hidden = false;
+  document.getElementById("print-document").hidden = false;
 }
 
 function exportDocumentPdf(type, doc) {
@@ -5483,12 +5491,7 @@ function exportDocumentPdf(type, doc) {
   const client = documentClient(doc);
   document.getElementById("document-title").textContent = type === "quote" ? "Quote" : "Invoice";
   document.getElementById("document-body").innerHTML = renderDocument(type, doc, client);
-  document.getElementById("create-customer-preview-document").hidden = true;
-  document.getElementById("create-invoice-preview-document").hidden = type !== "quote" || doc.status === "converted";
-  document.getElementById("send-preview-document").hidden =
-    type === "invoice"
-      ? computedInvoiceStatus(doc) === "paid" || computedInvoiceStatus(doc) === "void"
-      : doc.status === "converted" || doc.status === "declined";
+  updatePreviewActions(type, doc, true);
   const preview = document.getElementById("document-preview");
   preview.classList.remove("is-admin-preview");
   if (!preview.open) preview.showModal();
@@ -5506,10 +5509,36 @@ function editPreviewDocument() {
   openEditor("invoice", state.invoices.find(invoice => invoice.id === previewing.id));
 }
 
+function switchPreviewDocumentMode(mode) {
+  if (!previewing) return;
+  previewDocument(previewing.type, previewing.id, mode);
+}
+
 function sendPreviewDocument() {
   if (!previewing) return;
   if (previewing.type === "quote") sendQuote(previewing.id);
   else sendInvoice(previewing.id);
+}
+
+function payPreviewInvoice() {
+  if (!previewing || previewing.type !== "invoice") return;
+  const inv = state.invoices.find(invoice => invoice.id === previewing.id);
+  if (!inv) return;
+  const preview = document.getElementById("document-preview");
+  if (preview.open) preview.close();
+  openEditor("payment", { invoiceId: inv.id, date: today, method: "Check", amount: invoiceTotal(inv) - paidAmount(inv.id) });
+}
+
+function deletePreviewDocument() {
+  if (!previewing) return;
+  const current = { ...previewing };
+  if (current.type === "quote") deleteQuote(current.id);
+  else deleteInvoice(current.id);
+  const stillExists = current.type === "quote"
+    ? state.quotes.some(quote => quote.id === current.id)
+    : state.invoices.some(invoice => invoice.id === current.id);
+  const preview = document.getElementById("document-preview");
+  if (!stillExists && preview.open) preview.close();
 }
 
 function createInvoiceFromPreviewQuote() {
@@ -6126,6 +6155,18 @@ document.addEventListener("click", event => {
     setView("clients");
     return;
   }
+  if (!target) {
+    const invoicePreviewCard = eventTarget?.closest?.("[data-open-customer-preview-invoice]");
+    if (invoicePreviewCard?.dataset.openCustomerPreviewInvoice) {
+      previewDocument("invoice", invoicePreviewCard.dataset.openCustomerPreviewInvoice, "customer");
+      return;
+    }
+    const quotePreviewRow = eventTarget?.closest?.("[data-open-customer-preview-quote]");
+    if (quotePreviewRow?.dataset.openCustomerPreviewQuote) {
+      previewDocument("quote", quotePreviewRow.dataset.openCustomerPreviewQuote, "customer");
+      return;
+    }
+  }
   if (!target) return;
   if (handleTicketM365Button(target)) {
     event.preventDefault();
@@ -6199,10 +6240,14 @@ document.addEventListener("click", event => {
   if (target.id === "editor-close" || target.id === "editor-cancel") document.getElementById("editor").close();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
   if (target.id === "resolve-ticket-close" || target.id === "resolve-ticket-cancel") closeResolveTicketModal();
+  if (target.id === "admin-preview-document") switchPreviewDocumentMode("admin");
+  if (target.id === "customer-preview-document") switchPreviewDocumentMode("customer");
   if (target.id === "edit-preview-document") editPreviewDocument();
   if (target.id === "create-customer-preview-document") createCustomerFromPreviewQuote();
   if (target.id === "create-invoice-preview-document") createInvoiceFromPreviewQuote();
   if (target.id === "send-preview-document") sendPreviewDocument();
+  if (target.id === "pay-preview-invoice") payPreviewInvoice();
+  if (target.id === "delete-preview-document") deletePreviewDocument();
   if (target.id === "print-document") window.print();
   if (target.id === "save-snapshot") snapshot();
   if (target.id === "export-invoices") exportInvoices();
@@ -6299,6 +6344,18 @@ document.addEventListener("submit", event => {
 });
 
 document.addEventListener("keydown", event => {
+  const previewCard = event.target?.closest?.("[data-open-customer-preview-invoice], [data-open-customer-preview-quote]");
+  if (previewCard && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    if (previewCard.dataset.openCustomerPreviewInvoice) {
+      previewDocument("invoice", previewCard.dataset.openCustomerPreviewInvoice, "customer");
+      return;
+    }
+    if (previewCard.dataset.openCustomerPreviewQuote) {
+      previewDocument("quote", previewCard.dataset.openCustomerPreviewQuote, "customer");
+      return;
+    }
+  }
   if (event.key !== "Enter") return;
   const form = event.target.closest?.("#editor-form");
   if (!form) return;
