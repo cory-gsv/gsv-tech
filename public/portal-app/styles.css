@@ -668,6 +668,10 @@ h2 {
   gap: 18px;
 }
 
+.dashboard-split {
+  grid-template-columns: minmax(320px, 1.15fr) minmax(260px, .95fr) minmax(260px, .9fr);
+}
+
 section {
   padding: 16px;
 }
