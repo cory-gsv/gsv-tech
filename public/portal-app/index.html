@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSV Client Portal</title>
+  <link rel="stylesheet" href="styles.css?v=portal-20260715-18">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/gsv-logo.png" alt="Golden State Visions">
+      <div>
+        <strong>Client Portal</strong>
+        <span>Support, users, billing</span>
+      </div>
+    </div>
+    <nav class="portal-nav">
+      <button class="nav-link active" data-view="dashboard"><span class="nav-icon">◷</span><span>Dashboard</span></button>
+      <div class="nav-group" data-nav-group="ticketing">
+        <button class="nav-link nav-group-head" type="button" data-nav-toggle="ticketing">
+          <span class="nav-icon">▭</span>
+          <span>Ticketing</span>
+          <span class="nav-group-tools">
+            <span id="nav-ticket-total">0</span>
+            <span class="nav-chevron">⌄</span>
+          </span>
+        </button>
+        <div class="nav-submenu">
+          <button class="nav-sub-link" data-ticket-filter-set="new">Unassigned tickets (<span id="nav-ticket-unassigned">0</span>)</button>
+          <button class="nav-sub-link active" data-ticket-filter-set="all">All tickets (<span id="nav-ticket-all">0</span>)</button>
+          <button class="nav-sub-link" data-ticket-filter-set="open">My tickets (<span id="nav-ticket-mine">0</span>)</button>
+          <button class="nav-sub-link" data-ticket-filter-set="open">Open tickets (<span id="nav-ticket-open">0</span>)</button>
+          <button class="nav-sub-link" data-ticket-filter-set="deleted">Deleted tickets (<span id="nav-ticket-deleted">0</span>)</button>
+          <button class="nav-sub-link" data-ticket-filter-set="pending">Pending Emails (<span id="nav-ticket-pending">0</span>)</button>
+        </div>
+      </div>
+      <div class="nav-group" data-nav-group="billing">
+        <button class="nav-link nav-group-head" type="button" data-nav-toggle="billing">
+          <span class="nav-icon">$</span>
+          <span>Billing</span>
+          <span class="nav-group-tools">
+            <span id="nav-billing-total">0</span>
+            <span class="nav-chevron">⌄</span>
+          </span>
+        </button>
+        <div class="nav-submenu">
+          <button class="nav-sub-link" data-view="clients">Clients</button>
+          <button class="nav-sub-link" data-view="audit365">Services Audit</button>
+          <button class="nav-sub-link" data-view="invoices">Invoices</button>
+          <button class="nav-sub-link" data-view="quotes">Quotes</button>
+          <button class="nav-sub-link" data-view="payments">Payments</button>
+          <button class="nav-sub-link" data-view="exports">Year-End Export</button>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="save-snapshot" class="ghost">Download Backup</button>
+      <label class="ghost file-button">
+        Restore Backup
+        <input id="restore-snapshot" type="file" accept="application/json">
+      </label>
+      <form action="/api/billing-logout" method="post" target="_top">
+        <button class="ghost" type="submit">Log Out</button>
+      </form>
+      <small class="portal-build-version">Build portal-20260715-18</small>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Golden State Visions</p>
+        <h1 id="view-title">Dashboard</h1>
+      </div>
+      <div class="actions">
+        <button id="new-ticket">New Ticket</button>
+        <button id="new-quote">New Quote</button>
+        <button id="new-invoice" class="primary">New Invoice</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="view active">
+      <div class="metric-grid">
+        <article class="metric">
+          <span>Open Invoices</span>
+          <strong id="metric-open">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Paid This Year</span>
+          <strong id="metric-paid">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Monthly MSP Revenue</span>
+          <strong id="metric-msp">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Total Pax8 Bill</span>
+          <strong id="metric-pax8">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Total NinjaOne Bill</span>
+          <strong id="metric-ninjaone">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Other Vendor Costs</span>
+          <strong id="metric-vendor-costs">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Monthly Margin</span>
+          <strong id="metric-margin">$0</strong>
+        </article>
+        <article class="metric">
+          <span>Draft Quotes</span>
+          <strong id="metric-quotes">0</strong>
+        </article>
+        <article class="metric">
+          <span>Open Tickets</span>
+          <strong id="metric-tickets">0</strong>
+        </article>
+      </div>
+      <div class="split">
+        <section>
+          <div class="section-head">
+            <h2>Receivables</h2>
+            <button data-view-jump="invoices" class="ghost">View all</button>
+          </div>
+          <div id="dashboard-invoices" class="stack"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <h2>Recent Activity</h2>
+            <button data-view-jump="payments" class="ghost">Payments</button>
+          </div>
+          <div id="dashboard-activity" class="stack"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="tickets" class="view">
+      <div class="section-head">
+        <div>
+          <h2>Support Tickets</h2>
+          <p class="subtle">NinjaOne stays the system of record. This queue is the portal view for intake, triage, and automation triggers.</p>
+        </div>
+        <div class="toolbar">
+          <select id="ticket-filter">
+            <option value="open">Open tickets</option>
+            <option value="all">All tickets</option>
+            <option value="new">New</option>
+            <option value="in_progress">In progress</option>
+            <option value="waiting">Waiting</option>
+            <option value="resolved">Resolved</option>
+            <option value="deleted">Deleted</option>
+            <option value="pending">Pending emails</option>
+          </select>
+          <span id="ticket-sync-status" class="sync-status">Live sync on</span>
+          <button id="add-ticket" class="primary">Add Ticket</button>
+        </div>
+      </div>
+      <div class="metric-grid">
+        <article class="metric">
+          <span>New</span>
+          <strong id="tickets-new">0</strong>
+        </article>
+        <article class="metric">
+          <span>In Progress</span>
+          <strong id="tickets-progress">0</strong>
+        </article>
+        <article class="metric">
+          <span>Waiting</span>
+          <strong id="tickets-waiting">0</strong>
+        </article>
+        <article class="metric">
+          <span>Urgent</span>
+          <strong id="tickets-urgent">0</strong>
+        </article>
+      </div>
+      <div id="ticket-list" class="table-card"></div>
+    </section>
+
+    <section id="ticket-detail" class="view ticket-detail-view">
+      <div id="ticket-detail-content"></div>
+    </section>
+
+    <section id="clients" class="view">
+      <div class="section-head">
+        <h2>Clients</h2>
+        <div class="toolbar">
+          <button id="audit-services-all" class="primary">Audit Services</button>
+          <button id="add-client">Add Client</button>
+        </div>
+      </div>
+      <div id="client-list" class="grid-list"></div>
+      <div id="client-detail"></div>
+    </section>
+
+    <section id="audit365" class="view">
+      <section class="audit-workspace">
+        <div class="audit-hero">
+          <div>
+            <p class="eyebrow">Client services</p>
+            <h2>Services Audit</h2>
+            <p class="subtle">Audit Microsoft 365 users, Pax8 subscription cost, and NinjaOne/other tracked service costs by client.</p>
+          </div>
+          <button id="audit-create-invoice" class="primary">Create Invoice From Services Audit</button>
+        </div>
+
+        <div class="audit-steps">
+          <div class="audit-step">
+            <span>1</span>
+            <strong>Choose client and month</strong>
+            <p>Use the month you are invoicing, even if users changed later.</p>
+          </div>
+          <div class="audit-step">
+            <span>2</span>
+            <strong>Pull latest service data</strong>
+            <p>Re-pulling the same month uses the newest license counts for invoice totals.</p>
+          </div>
+          <div class="audit-step">
+            <span>3</span>
+            <strong>Review costs</strong>
+            <p>Compare Microsoft 365 assignments, Pax8 cost, and NinjaOne/manual service costs.</p>
+          </div>
+        </div>
+
+        <div class="audit-controls">
+          <div class="field">
+            <label for="audit-client">Client</label>
+            <select id="audit-client"></select>
+          </div>
+          <div class="field">
+            <label for="audit-month">Billing month</label>
+            <input id="audit-month" type="month">
+          </div>
+          <button id="audit-pull-graph" class="primary audit-pull" type="button">Pull from Microsoft 365</button>
+          <button id="audit-pull-pax8" class="audit-pull" type="button">Pull Pax8 Costs</button>
+          <label class="field import-field fallback-import" for="audit-csv">
+            <span>Fallback only</span>
+            <strong>Import CSV</strong>
+            <input id="audit-csv" type="file" accept=".csv,text/csv">
+          </label>
+          <div class="audit-status" id="audit-status">No audit imported for this client/month yet.</div>
+        </div>
+
+        <div class="metric-grid audit-metrics">
+          <article class="metric">
+            <span>Full Users</span>
+            <strong id="audit-full">0</strong>
+          </article>
+          <article class="metric">
+            <span>Light Users</span>
+            <strong id="audit-light">0</strong>
+          </article>
+          <article class="metric">
+            <span>Service Accounts</span>
+            <strong id="audit-service">0</strong>
+          </article>
+          <article class="metric total-metric">
+            <span>Monthly Billing</span>
+            <strong id="audit-total">$0</strong>
+          </article>
+        </div>
+      </section>
+
+      <div class="split audit-review-grid">
+        <section>
+          <div class="section-head">
+            <h2>Audit Summary</h2>
+          </div>
+          <div id="audit-summary" class="stack"></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <h2>Review Needed</h2>
+          </div>
+          <div id="audit-review" class="stack"></div>
+        </section>
+      </div>
+
+      <div class="section-head table-heading">
+        <h2>Microsoft 365 Users</h2>
+      </div>
+      <div id="audit-users" class="table-card"></div>
+
+      <div class="section-head table-heading">
+        <h2>Pax8 Subscription Costs</h2>
+      </div>
+      <div id="audit-pax8-costs" class="table-card"></div>
+
+      <div class="section-head table-heading">
+        <h2>NinjaOne / Other Service Costs</h2>
+      </div>
+      <div id="audit-manual-costs" class="table-card"></div>
+    </section>
+
+    <section id="invoices" class="view">
+      <div class="section-head">
+        <h2>Invoices</h2>
+        <div class="toolbar">
+          <button id="generate-monthly" class="primary">Auto Generate Invoice</button>
+        </div>
+      </div>
+      <div class="filter-panel">
+        <div class="field">
+          <label for="invoice-client-filter">Company</label>
+          <select id="invoice-client-filter"></select>
+        </div>
+        <div class="field">
+          <label for="invoice-filter">Status</label>
+          <select id="invoice-filter">
+            <option value="all">All invoices</option>
+            <option value="draft">Draft</option>
+            <option value="ready">Ready</option>
+            <option value="sent">Sent</option>
+            <option value="paid">Paid</option>
+            <option value="overdue">Overdue</option>
+            <option value="void">Void</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="invoice-date-from">From</label>
+          <input id="invoice-date-from" type="date">
+        </div>
+        <div class="field">
+          <label for="invoice-date-to">To</label>
+          <input id="invoice-date-to" type="date">
+        </div>
+        <div class="field grow">
+          <label for="invoice-search">Search</label>
+          <input id="invoice-search" type="search" placeholder="Invoice #, company, or type">
+        </div>
+        <button id="invoice-clear-filters" type="button">Clear</button>
+      </div>
+      <div id="invoice-list" class="table-card"></div>
+    </section>
+
+    <section id="quotes" class="view">
+      <div class="section-head">
+        <h2>Quotes</h2>
+        <button id="add-quote" class="primary">Add Quote</button>
+      </div>
+      <div id="quote-list" class="table-card"></div>
+    </section>
+
+    <section id="payments" class="view">
+      <div class="section-head">
+        <h2>Check Payments</h2>
+        <button id="record-payment" class="primary">Record Payment</button>
+      </div>
+      <div id="payment-list" class="table-card"></div>
+    </section>
+
+    <section id="exports" class="view">
+      <div class="section-head">
+        <h2>Year-End Export</h2>
+      </div>
+      <div class="export-panel">
+        <p>Export invoice and check-payment history for QuickBooks, your accountant, or year-end records.</p>
+        <div class="export-actions">
+          <button id="export-invoices" class="primary">Export Invoices CSV</button>
+          <button id="export-payments">Export Payments CSV</button>
+          <button id="export-summary">Export Revenue Summary CSV</button>
+        </div>
+      </div>
+      <div id="export-preview" class="table-card"></div>
+    </section>
+  </main>
+
+  <dialog id="editor">
+    <form id="editor-form">
+      <div class="modal-head">
+        <h2 id="editor-title">Edit</h2>
+        <button id="editor-close" type="button" class="icon">×</button>
+      </div>
+      <div id="editor-error" class="editor-error" hidden></div>
+      <div id="editor-fields" class="form-grid"></div>
+      <div class="modal-actions" id="editor-actions">
+        <button id="editor-delete" class="danger ghost" type="button" hidden>Delete Invoice</button>
+        <button id="editor-create-invoice" type="button" hidden>Create Invoice</button>
+        <button id="editor-pdf" type="button" hidden>Export PDF</button>
+        <button id="editor-send" type="button" hidden>Send</button>
+        <button id="editor-cancel" type="button">Cancel</button>
+        <button id="editor-save" type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="document-preview">
+    <div class="modal-head">
+      <h2 id="document-title">Invoice</h2>
+      <button id="close-preview" class="icon">×</button>
+    </div>
+    <div id="document-body"></div>
+    <div class="modal-actions">
+      <button id="edit-preview-document" type="button">Edit</button>
+      <button id="create-customer-preview-document" type="button" hidden>Create Customer</button>
+      <button id="create-invoice-preview-document" type="button" hidden>Create Invoice</button>
+      <button id="send-preview-document" type="button">Send</button>
+      <button id="print-document" class="primary">Print / Save PDF</button>
+    </div>
+  </dialog>
+
+  <script src="app.js?v=portal-20260715-18"></script>
+</body>
+</html>
