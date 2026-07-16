@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-34">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-35">
 </head>
 <body>
   <aside class="sidebar">
@@ -63,7 +63,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-34</small>
+      <small class="portal-build-version">Build portal-20260716-35</small>
     </div>
   </aside>
 
@@ -400,10 +400,14 @@
     </div>
     <div id="document-body"></div>
     <div class="modal-actions">
+      <button id="admin-preview-document" type="button">Admin Preview</button>
+      <button id="customer-preview-document" type="button">Customer Preview</button>
       <button id="edit-preview-document" type="button">Edit</button>
       <button id="create-customer-preview-document" type="button" hidden>Create Customer</button>
       <button id="create-invoice-preview-document" type="button" hidden>Create Invoice</button>
       <button id="send-preview-document" type="button">Send</button>
+      <button id="pay-preview-invoice" type="button" hidden>Pay</button>
+      <button id="delete-preview-document" type="button" class="danger ghost">Delete</button>
       <button id="print-document" class="primary">Print / Save PDF</button>
     </div>
   </dialog>
@@ -432,6 +436,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-34"></script>
+  <script src="app.js?v=portal-20260716-35"></script>
 </body>
 </html>
