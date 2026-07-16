@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-29";
+const portalBuild = "portal-20260716-30";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -4586,6 +4586,30 @@ async function updateTicketStatus(ticketId, status) {
   render();
 }
 
+async function resolveTicketWithRequiredNote(ticketId) {
+  const ticket = state.tickets.find(item => item.id === ticketId);
+  if (!ticket) return;
+  const existingNote = document.getElementById("ticket-response-text")?.value.trim() || "";
+  const note = window.prompt(
+    `Add the resolution note for ticket #${ticket.ninjaTicketId || ticket.id}. This will be posted as a public response before resolving the ticket.`,
+    existingNote
+  );
+  if (note === null) return;
+  const cleanNote = note.trim();
+  if (!cleanNote) {
+    window.alert("A resolution note is required before resolving this ticket.");
+    return;
+  }
+  const ok = window.confirm("Resolve this ticket and post the resolution note?");
+  if (!ok) return;
+  await saveTicketUpdate(ticketId, {
+    status: "resolved",
+    comment: cleanNote,
+    publicComment: true,
+    skipDom: true
+  });
+}
+
 async function markM365TicketInProgress(request = {}) {
   const ticket = (state.tickets || []).find(item =>
     (request.ninjaTicketId && String(item.ninjaTicketId || "") === String(request.ninjaTicketId))
@@ -6075,7 +6099,7 @@ document.addEventListener("click", event => {
   if (target.dataset.editTicket) openEditor("ticket", state.tickets.find(ticket => ticket.id === target.dataset.editTicket));
   if (target.dataset.updateTicketModal) openEditor("ticket", state.tickets.find(ticket => ticket.id === target.dataset.updateTicketModal));
   if (target.dataset.ticketWaiting) updateTicketStatus(target.dataset.ticketWaiting, "waiting");
-  if (target.dataset.ticketResolved) updateTicketStatus(target.dataset.ticketResolved, "resolved");
+  if (target.dataset.ticketResolved) resolveTicketWithRequiredNote(target.dataset.ticketResolved);
   if (target.dataset.ticketResponseMode) {
     selectedTicketResponseMode = target.dataset.ticketResponseMode === "private" ? "private" : "public";
     renderTicketDetail();
