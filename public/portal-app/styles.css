@@ -1249,10 +1249,31 @@ input.readonly-select {
   display: grid;
   grid-template-columns: 28px 1fr;
   gap: 12px;
+  padding: 12px 0;
+}
+
+.ticket-activity-entry + .ticket-activity-entry,
+.ticket-activity-meta {
+  border-top: 1px solid var(--line);
 }
 
 .ticket-activity-entry p {
   margin: 0 0 8px;
+}
+
+.ticket-note-body {
+  border-left: 3px solid var(--accent);
+  padding: 8px 0 8px 12px;
+  background: #f8fbff;
+}
+
+.ticket-internal-entry .ticket-note-body {
+  border-left-color: #98a2b3;
+}
+
+.ticket-activity-meta {
+  margin-top: 8px;
+  padding-top: 12px;
 }
 
 .avatar-initials {
