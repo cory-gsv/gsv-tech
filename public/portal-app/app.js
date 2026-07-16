@@ -1909,6 +1909,8 @@ function upsertNinjaOneTicket(ninjaTicket = {}) {
   next.tags = Array.isArray(ninjaTicket.tags) ? ninjaTicket.tags : next.tags || [];
   next.ccEmails = Array.isArray(ninjaTicket.ccEmails) ? ninjaTicket.ccEmails : next.ccEmails || [];
   next.followupTime = ninjaTicket.followupTime || next.followupTime || null;
+  next.assignedAppUserId = ninjaTicket.assignedAppUserId || next.assignedAppUserId || defaultNinjaOneAssigneeId() || "";
+  next.additionalAssignedTechnicianIds = Array.isArray(ninjaTicket.additionalAssignedTechnicianIds) ? ninjaTicket.additionalAssignedTechnicianIds : next.additionalAssignedTechnicianIds || [];
   next.ninjaVersion = ninjaTicket.version || next.ninjaVersion || "";
   next.ninjaTicketFormId = ninjaTicket.ticketFormId || next.ninjaTicketFormId || "";
   next.ninjaStatusId = ninjaTicket.statusId || next.ninjaStatusId || "";
@@ -1938,6 +1940,12 @@ function updateTicketSyncStatus(status = "idle", message = "") {
 async function syncNinjaOneTickets() {
   try {
     updateTicketSyncStatus("syncing", "Syncing NinjaOne...");
+    const metadataResponse = await fetch("/api/ninjaone-tickets", { cache: "no-store" });
+    const metadata = await metadataResponse.json().catch(() => ({}));
+    if (metadataResponse.ok) {
+      if (Array.isArray(metadata.assignees)) state.ninjaOneAssignees = metadata.assignees;
+      if (metadata.defaultAssignedAppUserId) state.ninjaOneDefaultAssigneeId = String(metadata.defaultAssignedAppUserId);
+    }
     const importResponse = await fetch("/api/ninjaone-tickets?import=1", { cache: "no-store" });
     const importData = await importResponse.json().catch(() => ({}));
     let importedChanged = false;
@@ -2001,6 +2009,13 @@ async function syncNinjaOneTickets() {
       if (ninjaTicket.requesterUid && ninjaTicket.requesterUid !== ticket.requesterUid) {
         ticket.requesterUid = ninjaTicket.requesterUid;
         changed = true;
+      }
+      if (ninjaTicket.assignedAppUserId && String(ninjaTicket.assignedAppUserId) !== String(ticket.assignedAppUserId || "")) {
+        ticket.assignedAppUserId = ninjaTicket.assignedAppUserId;
+        changed = true;
+      }
+      if (Array.isArray(ninjaTicket.additionalAssignedTechnicianIds)) {
+        ticket.additionalAssignedTechnicianIds = ninjaTicket.additionalAssignedTechnicianIds;
       }
       const ninjaPriority = String(ninjaTicket.priority || "").toLowerCase();
       const nextPriority = ninjaPriority === "high" ? "high" : ninjaPriority === "low" ? "low" : ninjaPriority === "none" ? "low" : "normal";
@@ -4679,8 +4694,13 @@ async function saveTicketUpdate(ticketId, options = {}) {
   const followupTime = options.followupTime !== undefined
     ? options.followupTime
     : (useDom ? followupEpochValue(document.getElementById("ticket-detail-followup")?.value || "") : ticket.followupTime || null);
+  const assignedAppUserId = options.assignedAppUserId !== undefined
+    ? options.assignedAppUserId
+    : (useDom ? document.getElementById("ticket-detail-assignee")?.value : ticket.assignedAppUserId || defaultNinjaOneAssigneeId());
   const publicComment = options.publicComment ?? (selectedTicketResponseMode !== "private");
-  const detailsChanged = ticketDetailFieldsChanged(ticket, status, type, form, priority, severity, tags, ccEmails, followupTime);
+  const detailsChanged =
+    ticketDetailFieldsChanged(ticket, status, type, form, priority, severity, tags, ccEmails, followupTime)
+    || String(assignedAppUserId || "") !== String(ticket.assignedAppUserId || "");
   let ninjaResponse = null;
 
   try {
@@ -4701,6 +4721,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
         tags,
         ccEmails,
         followupTime,
+        assignedAppUserId,
         ticketFormId: ticket.ninjaTicketFormId,
         version: ticket.ninjaVersion,
         comment: note,
@@ -4729,6 +4750,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
   ticket.tags = tags;
   ticket.ccEmails = ccEmails;
   ticket.followupTime = followupTime;
+  ticket.assignedAppUserId = assignedAppUserId || "";
   if (ninjaResponse?.version) ticket.ninjaVersion = ninjaResponse.version;
   if (ninjaResponse?.ticketFormId) ticket.ninjaTicketFormId = ninjaResponse.ticketFormId;
   if (ninjaResponse?.status?.statusId) ticket.ninjaStatusId = ninjaResponse.status.statusId;
@@ -4814,6 +4836,7 @@ async function createNinjaOneTicket(ticketId) {
         description: ticket.description,
         internalNotes: ticket.internalNotes,
         category: ticket.category,
+        assignedAppUserId: ticket.assignedAppUserId || defaultNinjaOneAssigneeId(),
         priority: ticket.priority
       })
     });
@@ -4831,6 +4854,7 @@ async function createNinjaOneTicket(ticketId) {
   }
 
   ticket.ninjaTicketId = String(data.ticketId || data.ticket?.id || "");
+  ticket.assignedAppUserId = data.ticket?.assignedAppUserId || ticket.assignedAppUserId || defaultNinjaOneAssigneeId() || "";
   if (!ticket.ninjaTicketId) {
     ticket.syncError = "NinjaOne created the ticket but did not return a ticket ID.";
     ticket.updatedAt = today;
@@ -6253,7 +6277,7 @@ document.addEventListener("change", event => {
     updateTicketM365License(event.target.dataset.ticket365License, event.target.value);
     return;
   }
-  if (["ticket-detail-status", "ticket-detail-type", "ticket-detail-form"].includes(event.target.id)) {
+  if (["ticket-detail-status", "ticket-detail-type", "ticket-detail-form", "ticket-detail-assignee"].includes(event.target.id)) {
     if (selectedTicketId) saveTicketUpdate(selectedTicketId, { comment: "" });
     return;
   }
