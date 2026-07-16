@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-02";
+const portalBuild = "portal-20260716-03";
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -1131,7 +1131,7 @@ function m365LicenseSelectHtml(request = {}, ticket = {}) {
   }
   const selected = matchingM365LicenseChoice(current, choices) || choices[0] || current;
   return `
-    <label class="inline-field">
+    <label class="inline-field inline-field-select">
       <small>License</small>
       <select data-ticket-365-license="${request.id}" aria-label="Microsoft 365 license">
         ${choices.map(choice => `<option value="${escapeHtml(choice)}" ${choice === selected ? "selected" : ""}>${escapeHtml(choice)}</option>`).join("")}
@@ -1173,8 +1173,8 @@ function ticketM365InlineEditorHtml(request = {}, ticket = {}) {
       ${m365InlineFieldHtml("firstName", "First Name", request.firstName || "")}
       ${m365InlineFieldHtml("lastName", "Last Name", request.lastName || "")}
       ${m365InlineFieldHtml("displayName", "Display Name", displayName)}
-      ${m365InlineFieldHtml("userPrincipalName", "Mailbox", request.userPrincipalName || "", "email")}
-      ${m365InlineFieldHtml("setupEmail", "Send Setup Instructions To", request.setupEmail || request.sourceEmail || "", "email")}
+      ${m365InlineFieldHtml("userPrincipalName", "New Mailbox", request.userPrincipalName || "", "email")}
+      ${m365InlineFieldHtml("setupEmail", "Communication Email", request.setupEmail || request.sourceEmail || "", "email")}
       ${m365InlineFieldHtml("sourceEmail", "Requester Email", request.sourceEmail || ticket.requesterEmail || "", "email")}
       ${m365InlineLicenseHtml(request, ticket)}
       <label class="m365-inline-field m365-inline-notes">
@@ -1205,8 +1205,8 @@ function ticketM365AutomationCard(ticket = {}) {
       ${isEditing ? ticketM365InlineEditorHtml(request, ticket) : `
         <div class="request-detail-grid ticket-request-detail-grid">
           <span><small>User</small>${escapeHtml(displayName)}</span>
-          <span><small>Mailbox</small>${escapeHtml(request.userPrincipalName || "")}</span>
-          <span><small>Setup Email</small>${escapeHtml(request.setupEmail || request.sourceEmail || "")}</span>
+          <span><small>New Mailbox</small>${escapeHtml(request.userPrincipalName || "")}</span>
+          <span><small>Communication Email</small>${escapeHtml(request.setupEmail || request.sourceEmail || "")}</span>
           <span class="request-license-cell">${m365LicenseSelectHtml(request, ticket)}</span>
           <span><small>Requester</small>${escapeHtml(requesterEmail)}</span>
           <span><small>Client</small>${escapeHtml(clientName(request.clientId))}</span>
@@ -1757,7 +1757,7 @@ function renderM365Requests() {
       <div class="request-detail-grid">
         <span><small>Client</small>${escapeHtml(clientName(request.clientId))}</span>
         <span><small>Email</small>${escapeHtml(request.userPrincipalName || "")}</span>
-        <span><small>Setup Email</small>${escapeHtml(request.setupEmail || request.sourceEmail || "")}</span>
+        <span><small>Communication Email</small>${escapeHtml(request.setupEmail || request.sourceEmail || "")}</span>
         <span><small>License</small>${escapeHtml(request.license || "")}</span>
         <span><small>Requester</small>${escapeHtml(request.requester || "")}</span>
         <span><small>NinjaOne</small>${escapeHtml(request.ninjaTicketId ? `#${request.ninjaTicketId}` : "Not linked")}</span>
@@ -2026,6 +2026,13 @@ function extractForwardedRequesterEmail(text = "", fallback = "") {
   return String(fallback || "").toLowerCase();
 }
 
+function extractHeaderEmails(text = "", headerName = "") {
+  if (!headerName) return [];
+  const pattern = new RegExp(`(?:^|\\n)\\s*${headerName}:\\s*([^\\n]+)`, "i");
+  const match = String(text || "").match(pattern);
+  return match?.[1] ? extractEmails(match[1]) : [];
+}
+
 function selectM365UserEmail(text = "", client = {}, name = {}) {
   const explicit = extractNamedValue(text, ["email", "email address", "username", "user principal name", "upn"]);
   if (explicit) return extractEmail(explicit) || explicit.trim();
@@ -2045,11 +2052,23 @@ function selectSetupEmail(text = "", ticket = {}, userEmail = "", requesterEmail
   if (explicit) return extractEmail(explicit) || explicit.trim();
   const emails = extractEmails(text);
   const domains = clientEmailDomains(client);
-  const outsideEmail = emails.find(email =>
-    email !== String(userEmail || "").toLowerCase() &&
-    email !== String(requesterEmail || "").toLowerCase() &&
-    !domains.includes(emailDomain(email))
-  );
+  const ignoredDomains = new Set([...domains, "gsvisions.com", "gsv.rmmservices.net", "rmmservices.net"]);
+  const ignoredEmails = new Set([
+    String(userEmail || "").toLowerCase(),
+    String(requesterEmail || "").toLowerCase(),
+    String(ticket.requesterEmail || "").toLowerCase()
+  ].filter(Boolean));
+  const usableCommunicationEmail = email =>
+    email &&
+    !ignoredEmails.has(String(email || "").toLowerCase()) &&
+    !ignoredDomains.has(emailDomain(email));
+  const forwardedToEmail = extractHeaderEmails(text, "To").find(usableCommunicationEmail);
+  if (forwardedToEmail) return forwardedToEmail;
+  const userIndex = userEmail ? String(text || "").toLowerCase().indexOf(String(userEmail).toLowerCase()) : -1;
+  const afterUserText = userIndex >= 0 ? String(text || "").slice(userIndex + String(userEmail).length) : "";
+  const afterUserEmail = extractEmails(afterUserText).find(usableCommunicationEmail);
+  if (afterUserEmail) return afterUserEmail;
+  const outsideEmail = emails.find(usableCommunicationEmail);
   return outsideEmail || requesterEmail || ticket.requesterEmail || "";
 }
 
@@ -2132,9 +2151,13 @@ function reconcileM365RequestsFromTickets() {
       const manualLicense = existing.licenseSource === "manual" && !staleMoxieSeedLicense;
       const defaultOrParsedLicenseChanged = nextLicense && !manualLicense && nextLicense !== currentLicense;
       const sourceEmailChanged = parsedRequest.sourceEmail && parsedRequest.sourceEmail !== existing.sourceEmail;
+      const setupEmailChanged =
+        parsedRequest.setupEmail &&
+        parsedRequest.setupEmail !== existing.setupEmail &&
+        (/gsvisions\.com$/i.test(String(existing.setupEmail || "")) || !existing.setupEmail);
       const requesterChanged = parsedRequest.requester && parsedRequest.requester !== existing.requester;
       const clientChanged = parsedRequest.clientId && parsedRequest.clientId !== existing.clientId;
-      if (defaultOrParsedLicenseChanged || sourceEmailChanged || requesterChanged || clientChanged) {
+      if (defaultOrParsedLicenseChanged || sourceEmailChanged || setupEmailChanged || requesterChanged || clientChanged) {
         if (defaultOrParsedLicenseChanged) {
           existing.license = nextLicense;
           existing.licenseSource = parsedRequest.licenseSource || "parsed";
@@ -2142,6 +2165,7 @@ function reconcileM365RequestsFromTickets() {
           existing.automationError = "";
         }
         if (sourceEmailChanged) existing.sourceEmail = parsedRequest.sourceEmail;
+        if (setupEmailChanged) existing.setupEmail = parsedRequest.setupEmail;
         if (requesterChanged) existing.requester = parsedRequest.requester;
         if (clientChanged) existing.clientId = parsedRequest.clientId;
         existing.updatedAt = today;
@@ -3385,7 +3409,7 @@ function editorFields(mode, item) {
       ${select("clientId", "Client", clientOptions(item.clientId), false)}
       ${field("requester", "Requester", item.requester || "")}
       ${field("sourceEmail", "Source Email / Ticket", item.sourceEmail || "")}
-      ${field("setupEmail", "Send Setup Instructions To", item.setupEmail || item.sourceEmail || "", "email")}
+      ${field("setupEmail", "Communication Email", item.setupEmail || item.sourceEmail || "", "email")}
       ${field("ninjaTicketId", "NinjaOne Ticket ID", item.ninjaTicketId || "")}
       ${select("status", "Status", requestStatusOptions(item.status || "requested"), false)}
       ${field("firstName", "First Name", item.firstName || "")}
