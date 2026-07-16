@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyBillingSession } from "../../billing/billingAuth"
-import { ninjaOneEnvValue, ninjaOneUserAccessToken } from "../ninjaoneAuth"
+import {
+  ninjaOneEnvValue,
+  ninjaOneServiceAccessToken,
+  ninjaOneUserAccessToken,
+} from "../ninjaoneAuth"
 
 const NINJAONE_API_ROOT =
   process.env.NINJAONE_API_ROOT?.trim() || "https://us2.ninjarmm.com"
@@ -103,6 +107,14 @@ async function requirePortalSession() {
 
 async function ninjaOneToken() {
   return ninjaOneUserAccessToken()
+}
+
+async function ninjaOneReadToken() {
+  try {
+    return await ninjaOneServiceAccessToken("monitoring management control")
+  } catch {
+    return ninjaOneUserAccessToken()
+  }
 }
 
 async function ninjaOneRequest<T>(
@@ -411,7 +423,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Portal login required." }, { status: 401 })
     }
 
-    const accessToken = await ninjaOneToken()
+    const accessToken = await ninjaOneReadToken()
     const ticketIds = new URL(request.url).searchParams
       .get("ids")
       ?.split(",")

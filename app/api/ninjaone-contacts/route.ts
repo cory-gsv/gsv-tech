@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyBillingSession } from "../../billing/billingAuth"
-import { ninjaOneUserAccessToken } from "../ninjaoneAuth"
+import { ninjaOneServiceAccessToken, ninjaOneUserAccessToken } from "../ninjaoneAuth"
 
 const NINJAONE_API_ROOT =
   process.env.NINJAONE_API_ROOT?.trim() || "https://us2.ninjarmm.com"
@@ -32,7 +32,11 @@ async function requirePortalSession() {
 }
 
 async function accessToken() {
-  return ninjaOneUserAccessToken()
+  try {
+    return await ninjaOneServiceAccessToken("monitoring management control")
+  } catch {
+    return ninjaOneUserAccessToken()
+  }
 }
 
 async function ninjaOneRequest<T>(
