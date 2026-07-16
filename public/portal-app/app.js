@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-35";
+const portalBuild = "portal-20260716-36";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -1774,7 +1774,6 @@ function updateNavTicketCounts() {
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
   const openTickets = tickets.filter(ticket => !["resolved", "deleted"].includes(ticket.status));
   setText("nav-ticket-total", tickets.filter(ticket => ticket.status !== "deleted").length);
-  setText("nav-ticket-unassigned", tickets.filter(ticket => ticket.status === "new").length);
   setText("nav-ticket-all", tickets.filter(ticket => ticket.status !== "deleted").length);
   setText("nav-ticket-mine", openTickets.length);
   setText("nav-ticket-open", openTickets.length);
