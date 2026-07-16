@@ -1674,6 +1674,44 @@ dialog::backdrop {
   background: rgba(17,24,32,.55);
 }
 
+.resolve-ticket-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+
+.resolve-ticket-dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+.resolve-ticket-dialog .modal-head {
+  align-items: flex-start;
+  padding: 18px 20px;
+}
+
+.resolve-ticket-dialog .modal-head h2 {
+  margin: 4px 0 0;
+}
+
+.resolve-ticket-body {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 4px;
+}
+
+.resolve-ticket-body textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.resolve-ticket-dialog .modal-actions {
+  justify-content: flex-end;
+  padding: 16px 20px 20px;
+}
+
+.resolve-ticket-dialog .editor-error {
+  margin: 0;
+}
+
 .modal-head {
   display: flex;
   justify-content: space-between;

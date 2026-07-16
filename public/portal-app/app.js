@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-32";
+const portalBuild = "portal-20260716-34";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -243,6 +243,7 @@ let selectedClientId = "";
 let selectedTicketId = "";
 let selectedTicketResponseMode = "public";
 let editingTicketM365RequestId = "";
+let resolvingTicketId = "";
 const pax8LicensePulls = new Set();
 const pax8LicensePullAttempted = new Set();
 
@@ -869,7 +870,7 @@ function renderDashboard() {
     }).join("") || `<p class="subtle">No invoices yet.</p>`;
 
   const recentTickets = (state.tickets || [])
-    .filter(ticket => ticket.ninjaTicketId)
+    .filter(ticket => ticket.ninjaTicketId && ticket.status !== "deleted")
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 6);
   document.getElementById("dashboard-tickets").innerHTML = recentTickets.map(ticket => `
@@ -4646,28 +4647,69 @@ async function updateTicketStatus(ticketId, status) {
   render();
 }
 
-async function resolveTicketWithRequiredNote(ticketId) {
+function openResolveTicketModal(ticketId) {
   const ticket = state.tickets.find(item => item.id === ticketId);
   if (!ticket) return;
+  resolvingTicketId = ticketId;
+  const dialog = document.getElementById("resolve-ticket-dialog");
+  const title = document.getElementById("resolve-ticket-title");
+  const summary = document.getElementById("resolve-ticket-summary");
+  const noteInput = document.getElementById("resolve-ticket-note");
+  const error = document.getElementById("resolve-ticket-error");
   const existingNote = document.getElementById("ticket-response-text")?.value.trim() || "";
-  const note = window.prompt(
-    `Add the resolution note for ticket #${ticket.ninjaTicketId || ticket.id}. This will be posted as a public response before resolving the ticket.`,
-    existingNote
-  );
-  if (note === null) return;
-  const cleanNote = note.trim();
+  if (title) title.textContent = `Resolve #${ticket.ninjaTicketId || ticket.id}`;
+  if (summary) {
+    summary.textContent = "This note will be posted as a public response before the ticket is marked resolved.";
+  }
+  if (noteInput) noteInput.value = existingNote;
+  if (error) {
+    error.hidden = true;
+    error.textContent = "";
+  }
+  dialog?.showModal();
+  setTimeout(() => noteInput?.focus(), 0);
+}
+
+function closeResolveTicketModal() {
+  resolvingTicketId = "";
+  const dialog = document.getElementById("resolve-ticket-dialog");
+  dialog?.close();
+}
+
+async function submitResolveTicketModal() {
+  const ticketId = resolvingTicketId;
+  const noteInput = document.getElementById("resolve-ticket-note");
+  const error = document.getElementById("resolve-ticket-error");
+  const submitButton = document.getElementById("resolve-ticket-submit");
+  const cleanNote = (noteInput?.value || "").trim();
   if (!cleanNote) {
-    window.alert("A resolution note is required before resolving this ticket.");
+    if (error) {
+      error.textContent = "Add a resolution note before resolving this ticket.";
+      error.hidden = false;
+    }
+    noteInput?.focus();
     return;
   }
-  const ok = window.confirm("Resolve this ticket and post the resolution note?");
-  if (!ok) return;
-  await saveTicketUpdate(ticketId, {
+  if (!ticketId) return;
+  if (error) {
+    error.hidden = true;
+    error.textContent = "";
+  }
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Resolving...";
+  }
+  const saved = await saveTicketUpdate(ticketId, {
     status: "resolved",
     comment: cleanNote,
     publicComment: true,
     skipDom: true
   });
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.textContent = "Resolve Ticket";
+  }
+  if (saved !== false) closeResolveTicketModal();
 }
 
 async function markM365TicketInProgress(request = {}) {
@@ -4750,7 +4792,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
     saveState();
     render();
     setTicketActionStatus(ticket.syncError, true);
-    return;
+    return false;
   }
 
   ticket.status = status;
@@ -4773,6 +4815,7 @@ async function saveTicketUpdate(ticketId, options = {}) {
   render();
   setTicketActionStatus(note ? "Ticket update saved and note posted." : "Ticket details saved.");
   requestNinjaOneTicketSync();
+  return true;
 }
 
 async function ensureNinjaOneRequester(ticket, ninjaOneOrgId) {
@@ -6155,6 +6198,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-send" && editing.mode === "quote" && editing.id) sendQuote(editing.id, quoteFromEditor());
   if (target.id === "editor-close" || target.id === "editor-cancel") document.getElementById("editor").close();
   if (target.id === "close-preview") document.getElementById("document-preview").close();
+  if (target.id === "resolve-ticket-close" || target.id === "resolve-ticket-cancel") closeResolveTicketModal();
   if (target.id === "edit-preview-document") editPreviewDocument();
   if (target.id === "create-customer-preview-document") createCustomerFromPreviewQuote();
   if (target.id === "create-invoice-preview-document") createInvoiceFromPreviewQuote();
@@ -6168,7 +6212,7 @@ document.addEventListener("click", event => {
   if (target.dataset.editTicket) openEditor("ticket", state.tickets.find(ticket => ticket.id === target.dataset.editTicket));
   if (target.dataset.updateTicketModal) openEditor("ticket", state.tickets.find(ticket => ticket.id === target.dataset.updateTicketModal));
   if (target.dataset.ticketWaiting) updateTicketStatus(target.dataset.ticketWaiting, "waiting");
-  if (target.dataset.ticketResolved) resolveTicketWithRequiredNote(target.dataset.ticketResolved);
+  if (target.dataset.ticketResolved) openResolveTicketModal(target.dataset.ticketResolved);
   if (target.dataset.ticketResponseMode) {
     selectedTicketResponseMode = target.dataset.ticketResponseMode === "private" ? "private" : "public";
     renderTicketDetail();
@@ -6244,6 +6288,11 @@ document.addEventListener("click", event => {
 });
 
 document.addEventListener("submit", event => {
+  if (event.target?.id === "resolve-ticket-form") {
+    event.preventDefault();
+    submitResolveTicketModal();
+    return;
+  }
   if (event.target?.id !== "editor-form") return;
   event.preventDefault();
   saveEditor();

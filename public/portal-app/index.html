@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-32">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-34">
 </head>
 <body>
   <aside class="sidebar">
@@ -63,7 +63,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-32</small>
+      <small class="portal-build-version">Build portal-20260716-34</small>
     </div>
   </aside>
 
@@ -408,6 +408,30 @@
     </div>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-32"></script>
+  <dialog id="resolve-ticket-dialog" class="resolve-ticket-dialog">
+    <form id="resolve-ticket-form" method="dialog">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Resolve Ticket</p>
+          <h2 id="resolve-ticket-title">Resolution note required</h2>
+        </div>
+        <button id="resolve-ticket-close" type="button" class="icon">×</button>
+      </div>
+      <div class="resolve-ticket-body">
+        <p id="resolve-ticket-summary" class="subtle"></p>
+        <label class="field full">
+          <span>Resolution note</span>
+          <textarea id="resolve-ticket-note" rows="6" placeholder="Summarize what was completed, what changed, and any follow-up the requester should know."></textarea>
+        </label>
+        <p id="resolve-ticket-error" class="editor-error" hidden></p>
+      </div>
+      <div class="modal-actions">
+        <button id="resolve-ticket-cancel" type="button">Cancel</button>
+        <button id="resolve-ticket-submit" type="submit" class="primary">Resolve Ticket</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js?v=portal-20260716-34"></script>
 </body>
 </html>
