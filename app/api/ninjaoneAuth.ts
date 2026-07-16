@@ -92,12 +92,16 @@ export async function saveNinjaOneTokens(token: NinjaOneTokenResponse) {
 }
 
 export async function refreshNinjaOneUserToken(refreshToken: string) {
-  const clientId = ninjaOneEnvValue("NINJAONE_CLIENT_ID")
-  const clientSecret = ninjaOneEnvValue("NINJAONE_CLIENT_SECRET")
+  const clientId =
+    ninjaOneEnvValue("NINJAONE_OAUTH_CLIENT_ID") ||
+    ninjaOneEnvValue("NINJAONE_CLIENT_ID")
+  const clientSecret =
+    ninjaOneEnvValue("NINJAONE_OAUTH_CLIENT_SECRET") ||
+    ninjaOneEnvValue("NINJAONE_CLIENT_SECRET")
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      "Missing NinjaOne OAuth app credentials. Set NINJAONE_CLIENT_ID and NINJAONE_CLIENT_SECRET.",
+      "Missing NinjaOne OAuth app credentials. Set NINJAONE_OAUTH_CLIENT_ID and NINJAONE_OAUTH_CLIENT_SECRET.",
     )
   }
 

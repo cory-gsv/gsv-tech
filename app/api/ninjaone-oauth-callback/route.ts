@@ -18,6 +18,7 @@ function envValue(key: string) {
 
 function redirectUri(request: NextRequest) {
   return (
+    envValue("NINJAONE_OAUTH_REDIRECT_URI") ||
     envValue("NINJAONE_REDIRECT_URI") ||
     new URL("/api/ninjaone-oauth-callback", request.url).toString()
   )
@@ -99,11 +100,15 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const clientId = envValue("NINJAONE_CLIENT_ID")
-  const clientSecret = envValue("NINJAONE_CLIENT_SECRET")
+  const clientId =
+    envValue("NINJAONE_OAUTH_CLIENT_ID") ||
+    envValue("NINJAONE_CLIENT_ID")
+  const clientSecret =
+    envValue("NINJAONE_OAUTH_CLIENT_SECRET") ||
+    envValue("NINJAONE_CLIENT_SECRET")
   if (!clientId || !clientSecret) {
     return NextResponse.json(
-      { error: "Missing NINJAONE_CLIENT_ID or NINJAONE_CLIENT_SECRET." },
+      { error: "Missing NINJAONE_OAUTH_CLIENT_ID or NINJAONE_OAUTH_CLIENT_SECRET." },
       { status: 500 },
     )
   }

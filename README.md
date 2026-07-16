@@ -38,14 +38,17 @@ NinjaOne ticket creation uses these environment variables:
 
 - `NINJAONE_CLIENT_ID`: NinjaOne API client ID.
 - `NINJAONE_CLIENT_SECRET`: NinjaOne API client secret.
+- `NINJAONE_OAUTH_CLIENT_ID`: optional NinjaOne regular web application client ID for ticket writes and comments. If omitted, the portal falls back to `NINJAONE_CLIENT_ID`.
+- `NINJAONE_OAUTH_CLIENT_SECRET`: optional NinjaOne regular web application client secret for ticket writes and comments. If omitted, the portal falls back to `NINJAONE_CLIENT_SECRET`.
 - `NINJAONE_ACCESS_TOKEN`: optional user-context OAuth access token for NinjaOne ticket creation.
 - `NINJAONE_REFRESH_TOKEN`: optional user-authorized OAuth refresh token. NinjaOne may require this for ticket creation even when client credentials can read organizations and service audits.
 - `NINJAONE_TICKET_FORM_ID`: optional default ticket form ID. If omitted, the first active ticket form is used.
 - `NINJAONE_TICKET_STATUS`: optional default NinjaOne status ID/name. Defaults to `1000`.
 - `NINJAONE_API_ROOT`: optional NinjaOne API root. Defaults to `https://us2.ninjarmm.com`.
-- `NINJAONE_REDIRECT_URI`: optional OAuth redirect URI. Defaults to `/api/ninjaone-oauth-callback` on the current host.
+- `NINJAONE_OAUTH_REDIRECT_URI`: optional OAuth redirect URI for the regular web application. Defaults to `/api/ninjaone-oauth-callback` on the current host.
+- `NINJAONE_REDIRECT_URI`: legacy OAuth redirect URI fallback.
 
-To create the user-context token for ticket creation, add this redirect URI to the NinjaOne API app and visit `/api/ninjaone-oauth-login` locally or in production.
+To create the user-context token for ticket creation, create a NinjaOne regular web application with Authorization Code and Refresh Token enabled, add this redirect URI to that web app, set the `NINJAONE_OAUTH_*` variables, and visit `/api/ninjaone-oauth-login` locally or in production.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
