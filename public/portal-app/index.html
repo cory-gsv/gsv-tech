@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-26">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-28">
 </head>
 <body>
   <aside class="sidebar">
@@ -45,9 +45,9 @@
           </span>
         </button>
         <div class="nav-submenu">
+          <button class="nav-sub-link" data-view="invoices">Invoices</button>
           <button class="nav-sub-link" data-view="clients">Clients</button>
           <button class="nav-sub-link" data-view="audit365">Services Audit</button>
-          <button class="nav-sub-link" data-view="invoices">Invoices</button>
           <button class="nav-sub-link" data-view="quotes">Quotes</button>
           <button class="nav-sub-link" data-view="payments">Payments</button>
           <button class="nav-sub-link" data-view="exports">Year-End Export</button>
@@ -63,7 +63,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-26</small>
+      <small class="portal-build-version">Build portal-20260716-28</small>
     </div>
   </aside>
 
@@ -401,6 +401,6 @@
     </div>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-26"></script>
+  <script src="app.js?v=portal-20260716-28"></script>
 </body>
 </html>

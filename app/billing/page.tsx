@@ -92,7 +92,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
     <main className="gsv-billing-shell">
       <iframe
         className="gsv-billing-shell__frame"
-        src="/billing-app/index.html"
+        src="/billing-app/index.html?v=billing-20260716-01"
         title="GSV Billing Hub"
       />
     </main>
