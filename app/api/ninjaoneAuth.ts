@@ -25,6 +25,42 @@ export function ninjaOneEnvValue(key: string) {
   return process.env[key]?.trim() || ""
 }
 
+export async function ninjaOneServiceAccessToken(scope = "monitoring management control") {
+  const clientId =
+    ninjaOneEnvValue("NINJAONE_SERVICE_CLIENT_ID") ||
+    ninjaOneEnvValue("NINJAONE_CLIENT_ID")
+  const clientSecret =
+    ninjaOneEnvValue("NINJAONE_SERVICE_CLIENT_SECRET") ||
+    ninjaOneEnvValue("NINJAONE_CLIENT_SECRET")
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "Missing NinjaOne API credentials. Set NINJAONE_CLIENT_ID and NINJAONE_CLIENT_SECRET.",
+    )
+  }
+
+  const response = await fetch(`${NINJAONE_API_ROOT}/ws/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope,
+    }),
+    cache: "no-store",
+  })
+  const data = (await response.json().catch(() => ({}))) as NinjaOneTokenResponse
+
+  if (!response.ok || !data.access_token) {
+    throw new Error(
+      data.error_description || data.error || "NinjaOne authentication failed.",
+    )
+  }
+
+  return String(data.access_token)
+}
+
 async function readStoredToken(): Promise<StoredNinjaOneToken> {
   try {
     return JSON.parse(await fs.readFile(TOKEN_STORE_PATH, "utf8"))
