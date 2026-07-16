@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { verifyBillingSession } from "../../billing/billingAuth"
 import {
   ninjaOneEnvValue,
+  refreshNinjaOneUserToken,
   ninjaOneServiceAccessToken,
   ninjaOneUserAccessToken,
 } from "../ninjaoneAuth"
@@ -102,6 +103,16 @@ type NinjaOneBoardRun = {
   }
 }
 
+type NinjaOneCookieAuth = {
+  accessToken: string
+  refreshToken?: string
+  refreshed?: {
+    accessToken?: string
+    refreshToken?: string
+    expiresIn?: number
+  }
+}
+
 async function requirePortalSession() {
   const cookieStore = await cookies()
   return verifyBillingSession(cookieStore.get("gsv_billing_session")?.value)
@@ -109,6 +120,58 @@ async function requirePortalSession() {
 
 async function ninjaOneToken() {
   return ninjaOneUserAccessToken()
+}
+
+async function ninjaOneCookieToken(request: NextRequest): Promise<NinjaOneCookieAuth> {
+  const refreshToken = request.cookies.get("gsv_ninjaone_refresh_token")?.value || ""
+  const accessToken = request.cookies.get("gsv_ninjaone_access_token")?.value || ""
+  let refreshError: unknown = null
+
+  if (refreshToken) {
+    try {
+      const token = await refreshNinjaOneUserToken(refreshToken)
+      return {
+        accessToken: String(token.access_token || ""),
+        refreshToken: String(token.refresh_token || refreshToken),
+        refreshed: {
+          accessToken: token.access_token,
+          refreshToken: token.refresh_token || refreshToken,
+          expiresIn: token.expires_in,
+        },
+      }
+    } catch (error) {
+      refreshError = error
+    }
+  }
+
+  if (accessToken) return { accessToken }
+  try {
+    return { accessToken: await ninjaOneToken() }
+  } catch (error) {
+    throw refreshError || error
+  }
+}
+
+function withNinjaOneCookies(response: NextResponse, auth?: NinjaOneCookieAuth) {
+  if (auth?.refreshed?.accessToken) {
+    response.cookies.set("gsv_ninjaone_access_token", auth.refreshed.accessToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: Math.max(60, Number(auth.refreshed.expiresIn || 3600) - 60),
+    })
+  }
+  if (auth?.refreshed?.refreshToken) {
+    response.cookies.set("gsv_ninjaone_refresh_token", auth.refreshed.refreshToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    })
+  }
+  return response
 }
 
 async function ninjaOneReadToken() {
@@ -498,7 +561,8 @@ export async function POST(request: NextRequest) {
       throw new Error("Ticket subject is required.")
     }
 
-    const accessToken = await ninjaOneToken()
+    const auth = await ninjaOneCookieToken(request)
+    const accessToken = auth.accessToken
     const ticketFormId =
       Number(ticket.ticketFormId || 0) || (await defaultTicketFormId(accessToken))
     const status = String(
@@ -527,11 +591,14 @@ export async function POST(request: NextRequest) {
       },
     )
 
-    return NextResponse.json({
-      source: "NinjaOne",
-      ticket: created,
-      ticketId: created.id,
-    })
+    return withNinjaOneCookies(
+      NextResponse.json({
+        source: "NinjaOne",
+        ticket: created,
+        ticketId: created.id,
+      }),
+      auth,
+    )
   } catch (error) {
     return NextResponse.json(
       {
@@ -553,7 +620,8 @@ export async function PUT(request: NextRequest) {
     const ticketId = String(ticket.ticketId || "").trim()
     if (!ticketId) throw new Error("Missing NinjaOne ticket ID.")
 
-    const accessToken = await ninjaOneToken()
+    const auth = await ninjaOneCookieToken(request)
+    const accessToken = auth.accessToken
     const current = await ninjaOneRequest<NinjaOneTicket>(
       accessToken,
       `/v2/ticketing/ticket/${encodeURIComponent(ticketId)}`,
@@ -590,11 +658,14 @@ export async function PUT(request: NextRequest) {
     }
 
     if (ticket.commentOnly) {
-      return NextResponse.json({
-        source: "NinjaOne",
-        ticket: current,
-        comment,
-      })
+      return withNinjaOneCookies(
+        NextResponse.json({
+          source: "NinjaOne",
+          ticket: current,
+          comment,
+        }),
+        auth,
+      )
     }
 
     const clientId = Number(ticket.clientId || current.clientId || 0)
@@ -643,11 +714,14 @@ export async function PUT(request: NextRequest) {
       },
     )
 
-    return NextResponse.json({
-      source: "NinjaOne",
-      ticket: updated,
-      comment,
-    })
+    return withNinjaOneCookies(
+      NextResponse.json({
+        source: "NinjaOne",
+        ticket: updated,
+        comment,
+      }),
+      auth,
+    )
   } catch (error) {
     return NextResponse.json(
       {
