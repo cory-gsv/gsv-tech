@@ -2,7 +2,8 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-04";
+const portalBuild = "portal-20260716-05";
+const m365AutomationRetryTimers = new Map();
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -734,6 +735,23 @@ function lines(value) {
   return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
+function automationStepLogHtml(steps = []) {
+  if (!Array.isArray(steps) || !steps.length) return "";
+  return `
+    <ol class="automation-run-log" aria-live="polite">
+      ${steps.map(step => `
+        <li class="${escapeHtml(step.status || "pending")}">
+          <span class="automation-step-dot"></span>
+          <span>
+            <strong>${escapeHtml(step.label || "")}</strong>
+            ${step.detail ? `<small>${escapeHtml(step.detail)}</small>` : ""}
+          </span>
+        </li>
+      `).join("")}
+    </ol>
+  `;
+}
+
 function setView(view) {
   activeView = view;
   document.querySelectorAll(".view").forEach(el => el.classList.toggle("active", el.id === view));
@@ -1189,18 +1207,34 @@ function ticketM365InlineEditorHtml(request = {}, ticket = {}) {
   `;
 }
 
+function scheduleM365AutomationRetry(requestId, delayMs = 30000) {
+  if (!requestId || m365AutomationRetryTimers.has(requestId)) return;
+  const timer = window.setTimeout(() => {
+    m365AutomationRetryTimers.delete(requestId);
+    runM365Automation(requestId, { autoResume: true });
+  }, Math.max(10000, Number(delayMs) || 30000));
+  m365AutomationRetryTimers.set(requestId, timer);
+}
+
 function ticketM365AutomationCard(ticket = {}) {
   const request = ensureM365RequestForTicket(ticket);
   if (!request) return "";
   if (request.clientId) requestPurchasedLicensesForClient(request.clientId);
+  if (request.status === "waiting_for_license") scheduleM365AutomationRetry(request.id);
+  const displayStatus = request.pax8AlreadyIncreased && request.status === "pax8_needed" ? "waiting_for_license" : (request.status || "requested");
   const displayName = request.displayName || `${request.firstName || ""} ${request.lastName || ""}`.trim() || "New user";
   const requesterEmail = request.sourceEmail || ticket.requesterEmail || request.requester || "";
   const isEditing = editingTicketM365RequestId === request.id;
+  const runButton = request.status === "waiting_for_license"
+    ? `<span class="button-link disabled">Auto-checking Microsoft 365</span>`
+    : request.status === "running"
+      ? `<span class="button-link disabled">Running...</span>`
+      : `<a href="${ticketM365ActionHref("run", request.id)}" data-run-365-automation="${request.id}" class="button-link primary">Create 365 Mailbox</a>`;
   return `
     <article class="ticket-card ticket-m365-card">
       <div class="ticket-card-head">
         <h3>Microsoft 365 Automation</h3>
-        <span class="badge ${request.status || "requested"}">${requestStatusLabel(request.status)}</span>
+        <span class="badge ${displayStatus}">${requestStatusLabel(displayStatus)}</span>
       </div>
       ${isEditing ? ticketM365InlineEditorHtml(request, ticket) : `
         <div class="request-detail-grid ticket-request-detail-grid">
@@ -1212,6 +1246,7 @@ function ticketM365AutomationCard(ticket = {}) {
           <span><small>Client</small>${escapeHtml(clientName(request.clientId))}</span>
         </div>
       `}
+      ${automationStepLogHtml(request.automationRunLog)}
       ${request.automationPreview ? `<div class="portal-reply">${lines(request.automationPreview)}</div>` : ""}
       ${request.automationError ? `<p class="sync-error">${escapeHtml(request.automationError)}</p>` : ""}
       <p id="m365-action-status" class="action-status" aria-live="polite"></p>
@@ -1219,7 +1254,7 @@ function ticketM365AutomationCard(ticket = {}) {
         <div class="row-actions">
           <a href="${ticketM365ActionHref("edit", request.id)}" data-edit-365-request="${request.id}" class="button-link">Edit Request</a>
           <a href="${ticketM365ActionHref("preview", request.id)}" data-preview-365-automation="${request.id}" class="button-link">Preview</a>
-          <a href="${ticketM365ActionHref("run", request.id)}" data-run-365-automation="${request.id}" class="button-link primary">Create 365 Mailbox</a>
+          ${runButton}
         </div>
       `}
     </article>
@@ -1844,6 +1879,8 @@ function requestStatusLabel(status = "requested") {
     ready_to_run: "Ready to Run",
     pax8_needed: "License Needed",
     ready_to_provision: "Ready to Provision",
+    running: "Running",
+    waiting_for_license: "Waiting on Microsoft 365",
     provisioned: "Provisioned",
     complete: "Complete"
   }[status] || status;
@@ -2210,7 +2247,9 @@ function m365AutomationPayload(request) {
       setupEmail: request.setupEmail,
       ninjaTicketId: request.ninjaTicketId,
       temporaryPassword: request.temporaryPassword,
-      notes: request.notes
+      notes: request.notes,
+      pax8AlreadyIncreased: request.pax8AlreadyIncreased === true,
+      pax8SubscriptionId: request.pax8SubscriptionId || ""
     },
     client: {
       name: client.name,
@@ -2287,13 +2326,93 @@ async function previewM365Automation(requestId) {
   renderTicketDetail();
 }
 
-async function runM365Automation(requestId) {
+function m365StartingSteps(request = {}, autoResume = false) {
+  if (autoResume || request.pax8AlreadyIncreased) {
+    return [
+      { status: "done", label: "Pax8 license count is already updated." },
+      { status: "running", label: "Checking Microsoft 365 for the new license.", detail: "This can take a few minutes after Pax8 changes." },
+      { status: "pending", label: "Create the new Microsoft 365 mailbox." },
+      { status: "pending", label: "Assign the license." },
+      { status: "pending", label: "Prepare the setup email and update the ticket." }
+    ];
+  }
+  return [
+    { status: "running", label: "Checking Microsoft 365 and Pax8." },
+    { status: "pending", label: "Update Pax8 if this client needs another license." },
+    { status: "pending", label: "Wait for Microsoft 365 to show the license." },
+    { status: "pending", label: "Create the new Microsoft 365 mailbox." },
+    { status: "pending", label: "Assign the license." },
+    { status: "pending", label: "Prepare the setup email and update the ticket." }
+  ];
+}
+
+function m365WaitingSteps(request = {}, result = {}) {
+  const licenseName = result.license || request.license || "the selected license";
+  return [
+    {
+      status: "done",
+      label: result.pax8Changed
+        ? "Pax8 license count was increased."
+        : "Pax8 license count was already updated.",
+      detail: result.pax8Quantity ? `Current Pax8 quantity: ${result.pax8Quantity}.` : ""
+    },
+    {
+      status: "waiting",
+      label: `Waiting for Microsoft 365 to show ${licenseName}.`,
+      detail: "The portal will keep checking automatically. You do not need to click the button again."
+    },
+    { status: "pending", label: "Create the new Microsoft 365 mailbox." },
+    { status: "pending", label: "Assign the license." },
+    { status: "pending", label: "Prepare the setup email and update the ticket." }
+  ];
+}
+
+function m365CompleteSteps(request = {}, result = {}) {
+  return [
+    {
+      status: "done",
+      label: result.pax8Changed
+        ? "Pax8 license count was increased."
+        : request.pax8AlreadyIncreased
+          ? "Pax8 license count was already updated."
+          : "Pax8 did not need to change."
+    },
+    {
+      status: "done",
+      label: "Microsoft 365 license is available.",
+      detail: result.licenseWait
+        ? `Microsoft showed the license after ${Math.round((result.licenseWait.waitedMs || 0) / 1000)} seconds.`
+        : ""
+    },
+    { status: "done", label: `Created ${result.userPrincipalName || request.userPrincipalName || "the mailbox"}.` },
+    { status: "done", label: "Assigned the license." },
+    {
+      status: result.setupEmailError ? "warning" : "done",
+      label: result.setupEmailDraft?.to
+        ? `Prepared the setup email for ${result.setupEmailDraft.to}.`
+        : result.setupEmailError
+          ? `Setup email needs attention: ${result.setupEmailError}`
+          : "No setup email contact was provided."
+    },
+    {
+      status: result.ninjaTicketUpdated ? "done" : "warning",
+      label: result.ninjaTicketUpdated ? "Updated the NinjaOne ticket." : "No NinjaOne ticket was linked."
+    }
+  ];
+}
+
+async function runM365Automation(requestId, options = {}) {
   const request = findM365Request(requestId);
   if (!request) return;
-  const ok = window.confirm(`Create ${request.userPrincipalName || "this Microsoft 365 user"} and adjust Pax8 if needed?`);
-  if (!ok) return;
+  const autoResume = options.autoResume === true;
+  if (!autoResume) {
+    const ok = window.confirm(`Create ${request.userPrincipalName || "this Microsoft 365 user"} and adjust Pax8 if needed?`);
+    if (!ok) return;
+  }
   request.automationError = "";
-  request.automationPreview = "Running automation...";
+  request.automationPreview = "";
+  request.automationRunLog = m365StartingSteps(request, autoResume);
+  request.status = autoResume ? "waiting_for_license" : "running";
   saveState();
   renderM365Requests();
   renderTicketDetail();
@@ -2306,27 +2425,34 @@ async function runM365Automation(requestId) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "Automation run failed.");
+    if (data.result?.status === "waiting_for_microsoft_license") {
+      request.status = "waiting_for_license";
+      request.pax8AlreadyIncreased = true;
+      request.pax8SubscriptionId = data.result.pax8SubscriptionId || request.pax8SubscriptionId || "";
+      request.automationRunLog = m365WaitingSteps(request, data.result || {});
+      request.automationPreview = data.result?.message || "";
+      request.updatedAt = today;
+      saveState();
+      render();
+      scheduleM365AutomationRetry(request.id, data.result?.retryAfterMs || 30000);
+      return;
+    }
     request.status = "complete";
+    request.pax8AlreadyIncreased = false;
+    request.pax8SubscriptionId = "";
     request.temporaryPassword = data.result?.temporaryPassword || request.temporaryPassword || "";
-    request.automationPreview = [
-      "Automation complete.",
-      data.result?.pax8Changed ? "Pax8 quantity increased." : "Pax8 quantity did not need to change.",
-      data.result?.licenseWait
-        ? `Microsoft 365 license appeared after ${Math.round((data.result.licenseWait.waitedMs || 0) / 1000)} seconds.`
-        : "",
-      data.result?.setupEmailDraft?.to
-        ? `Setup email draft created for ${data.result.setupEmailDraft.to}.`
-        : data.result?.setupEmailError
-          ? `Setup email draft failed: ${data.result.setupEmailError}`
-          : "No setup email contact was provided.",
-      data.result?.ninjaTicketUpdated ? "NinjaOne ticket was updated." : "No NinjaOne ticket was linked."
-    ].filter(Boolean).join("\n");
+    request.automationRunLog = m365CompleteSteps(request, data.result || {});
+    request.automationPreview = "Automation complete.";
     request.notes = [
       request.notes,
       `Automation completed ${today}. ${data.result?.note || ""}`
     ].filter(Boolean).join("\n\n");
   } catch (error) {
     request.automationError = error instanceof Error ? error.message : "Automation run failed.";
+    request.automationRunLog = [
+      ...(Array.isArray(request.automationRunLog) ? request.automationRunLog : []),
+      { status: "error", label: request.automationError }
+    ];
   }
   request.updatedAt = today;
   saveState();
