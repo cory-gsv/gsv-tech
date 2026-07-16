@@ -79,6 +79,12 @@ button.primary,
   outline-offset: -2px;
 }
 
+.button-link.primary:hover,
+.button-link.primary:focus {
+  background: #111827;
+  color: #fff;
+}
+
 button.is-loading {
   opacity: .78;
   pointer-events: none;
@@ -1031,15 +1037,33 @@ td.num, th.num {
 }
 
 .ticket-control-row {
-  display: grid;
-  grid-template-columns: minmax(160px, max-content) minmax(170px, max-content) minmax(260px, max-content) 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
+  align-items: end;
+  justify-content: space-between;
   margin: 0 -24px 18px;
   padding: 14px 24px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: #fff;
+}
+
+.ticket-control-row > label,
+.ticket-control-row > .ticket-select-pill {
+  flex: 0 1 180px;
+}
+
+.ticket-control-row > .ticket-form-pill {
+  flex-basis: 260px;
+}
+
+.ticket-created-line {
+  flex: 1 1 360px;
+  margin: 0 0 8px;
+  text-align: right;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .ticket-select-pill,
@@ -1091,13 +1115,6 @@ input.readonly-select {
 
 .ticket-form-pill {
   min-width: 280px;
-}
-
-.ticket-created-line {
-  margin: 0;
-  text-align: right;
-  color: var(--muted);
-  font-weight: 600;
 }
 
 .status-dot {

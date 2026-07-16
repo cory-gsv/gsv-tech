@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-03";
+const portalBuild = "portal-20260716-04";
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -1240,7 +1240,7 @@ function bindTicketM365Controls(container) {
     button.addEventListener("click", wrapped);
   };
 
-  card.querySelectorAll("button[data-edit-365-request]").forEach(button => {
+  card.querySelectorAll("[data-edit-365-request]").forEach(button => {
     bindPointerAndClick(button, () => {
       const request = findM365Request(button.dataset.edit365Request);
       if (!request) {
@@ -1253,7 +1253,7 @@ function bindTicketM365Controls(container) {
     });
   });
 
-  card.querySelectorAll("button[data-cancel-365-inline]").forEach(button => {
+  card.querySelectorAll("[data-cancel-365-inline]").forEach(button => {
     bindPointerAndClick(button, () => {
       editingTicketM365RequestId = "";
       renderTicketDetail();
@@ -1261,20 +1261,20 @@ function bindTicketM365Controls(container) {
     });
   });
 
-  card.querySelectorAll("button[data-save-365-inline]").forEach(button => {
+  card.querySelectorAll("[data-save-365-inline]").forEach(button => {
     bindPointerAndClick(button, () => {
       saveTicketM365InlineRequest(button.dataset.save365Inline);
     });
   });
 
-  card.querySelectorAll("button[data-preview-365-automation]").forEach(button => {
+  card.querySelectorAll("[data-preview-365-automation]").forEach(button => {
     bindPointerAndClick(button, () => {
       setM365ActionStatus("Building setup email preview...");
       previewM365Automation(button.dataset.preview365Automation);
     });
   });
 
-  card.querySelectorAll("button[data-run-365-automation]").forEach(button => {
+  card.querySelectorAll("[data-run-365-automation]").forEach(button => {
     bindPointerAndClick(button, () => {
       setM365ActionStatus("Starting Microsoft 365 mailbox automation...");
       runM365Automation(button.dataset.run365Automation);
