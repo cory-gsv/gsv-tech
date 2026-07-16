@@ -24,6 +24,8 @@ type AutomationRequest = {
     ninjaTicketId?: string
     temporaryPassword?: string
     notes?: string
+    pax8AlreadyIncreased?: boolean
+    pax8SubscriptionId?: string
   }
   client?: {
     name?: string
@@ -679,6 +681,7 @@ export async function POST(request: NextRequest) {
     const userPrincipalName = cleanText(automationRequest.userPrincipalName).toLowerCase()
     const displayName = cleanText(automationRequest.displayName)
     const license = cleanText(automationRequest.license)
+    const pax8AlreadyIncreased = automationRequest.pax8AlreadyIncreased === true
 
     if (!displayName) throw new Error("Missing new user's display name.")
     if (!userPrincipalName || !userPrincipalName.includes("@")) {
@@ -757,11 +760,11 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       throw new Error(`Microsoft 365 user ${userPrincipalName} already exists.`)
     }
-    if (needsPax8Increase && !pax8Match?.id) {
+    if (needsPax8Increase && !pax8Match?.id && !pax8AlreadyIncreased) {
       throw new Error(`No matching Pax8 subscription found for "${license}".`)
     }
 
-    const pax8Changed = Boolean(needsPax8Increase && pax8Match?.id)
+    const pax8Changed = Boolean(needsPax8Increase && pax8Match?.id && !pax8AlreadyIncreased)
     let assignableSku = sku
     let licenseWait:
       | {
@@ -772,18 +775,20 @@ export async function POST(request: NextRequest) {
         }
       | null = null
 
-    if (pax8Changed && pax8Match) {
-      const pax8AccessToken = await pax8Token()
-      await pax8Request(
-        pax8AccessToken,
-        `/v1/subscriptions/${encodeURIComponent(pax8Match.id || "")}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            quantity: Number(pax8Match.quantity || 0) + 1,
-          }),
-        },
-      )
+    if (needsPax8Increase) {
+      if (pax8Changed && pax8Match?.id) {
+        const pax8AccessToken = await pax8Token()
+        await pax8Request(
+          pax8AccessToken,
+          `/v1/subscriptions/${encodeURIComponent(pax8Match.id || "")}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              quantity: Number(pax8Match.quantity || 0) + 1,
+            }),
+          },
+        )
+      }
 
       const availability = await waitForLicenseAvailability(graphAccessToken, license)
       licenseWait = {
@@ -793,10 +798,29 @@ export async function POST(request: NextRequest) {
         available: availability.available,
       }
       if (!availability.sku?.skuId || availability.available < 1) {
-        const minutes = Math.round((availability.waitedMs / 60000) * 10) / 10
-        throw new Error(
-          `Pax8 quantity was increased, but Microsoft 365 has not exposed the new "${license}" seat yet after ${minutes} minute${minutes === 1 ? "" : "s"}. Try running the automation again shortly; it will re-check the license before creating the user.`,
-        )
+        return NextResponse.json({
+          source: "GSV Portal",
+          result: {
+            status: "waiting_for_microsoft_license",
+            userPrincipalName,
+            displayName,
+            license: friendlySkuName(sku.skuPartNumber || "") || license,
+            pax8Changed,
+            pax8AlreadyIncreased: true,
+            pax8SubscriptionId:
+              pax8Match?.id || automationRequest.pax8SubscriptionId || "",
+            pax8Quantity: pax8Match
+              ? Number(pax8Match.quantity || 0) + (pax8Changed ? 1 : 0)
+              : null,
+            licenseWait,
+            retryAfterMs: Math.max(
+              10000,
+              Number(envValue("M365_AUTO_RETRY_AFTER_MS") || 30000),
+            ),
+            message:
+              "Pax8 is updated. Microsoft 365 is still making the new license available, so the portal will keep checking automatically.",
+          },
+        })
       }
       assignableSku = availability.sku
     }
