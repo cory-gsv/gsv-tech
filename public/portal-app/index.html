@@ -46,9 +46,9 @@
         </button>
         <div class="nav-submenu">
           <button class="nav-sub-link" data-view="invoices">Invoices</button>
+          <button class="nav-sub-link" data-view="quotes">Quotes</button>
           <button class="nav-sub-link" data-view="clients">Clients</button>
           <button class="nav-sub-link" data-view="audit365">Services Audit</button>
-          <button class="nav-sub-link" data-view="quotes">Quotes</button>
           <button class="nav-sub-link" data-view="payments">Payments</button>
           <button class="nav-sub-link" data-view="exports">Year-End Export</button>
         </div>
@@ -63,7 +63,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-30</small>
+      <small class="portal-build-version">Build portal-20260716-31</small>
     </div>
   </aside>
 
@@ -122,15 +122,15 @@
       <div class="split">
         <section>
           <div class="section-head">
-            <h2>Receivables</h2>
+            <h2>Invoices</h2>
             <button data-view-jump="invoices" class="ghost">View all</button>
           </div>
           <div id="dashboard-invoices" class="stack"></div>
         </section>
         <section>
           <div class="section-head">
-            <h2>Recent Activity</h2>
-            <button data-view-jump="payments" class="ghost">Payments</button>
+            <h2>Recent Tickets</h2>
+            <button data-view-jump="tickets" class="ghost">View all</button>
           </div>
           <div id="dashboard-activity" class="stack"></div>
         </section>
@@ -401,6 +401,6 @@
     </div>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-30"></script>
+  <script src="app.js?v=portal-20260716-31"></script>
 </body>
 </html>
