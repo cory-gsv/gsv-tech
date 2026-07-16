@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-31";
+const portalBuild = "portal-20260716-32";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -872,7 +872,7 @@ function renderDashboard() {
     .filter(ticket => ticket.ninjaTicketId)
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 6);
-  document.getElementById("dashboard-activity").innerHTML = recentTickets.map(ticket => `
+  document.getElementById("dashboard-tickets").innerHTML = recentTickets.map(ticket => `
     <div class="item dashboard-ticket-item">
       <div class="item-line">
         <button class="link-button ticket-title-link" data-view-ticket="${ticket.id}">
@@ -886,6 +886,17 @@ function renderDashboard() {
       </div>
     </div>
   `).join("") || `<p class="subtle">No recent tickets.</p>`;
+
+  const activity = [
+    ...state.payments.map(p => ({ date: p.date, text: `Payment ${money.format(Number(p.amount || 0))} for ${invoiceNumber(p.invoiceId)}` })),
+    ...state.quotes.map(q => ({ date: q.date, text: `Quote ${q.number} ${q.status}` }))
+  ].sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))).slice(0, 6);
+  document.getElementById("dashboard-activity").innerHTML = activity.map(item => `
+    <div class="item">
+      <strong>${escapeHtml(item.text)}</strong>
+      <div class="subtle">${formatDate(item.date)}</div>
+    </div>
+  `).join("") || `<p class="subtle">No recent activity.</p>`;
   updateNavBillingCounts();
 }
 
