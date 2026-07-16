@@ -91,7 +91,7 @@ export async function saveNinjaOneTokens(token: NinjaOneTokenResponse) {
   }
 }
 
-async function refreshUserToken(refreshToken: string) {
+export async function refreshNinjaOneUserToken(refreshToken: string) {
   const clientId = ninjaOneEnvValue("NINJAONE_CLIENT_ID")
   const clientSecret = ninjaOneEnvValue("NINJAONE_CLIENT_SECRET")
 
@@ -123,6 +123,11 @@ async function refreshUserToken(refreshToken: string) {
     )
   }
 
+  return data
+}
+
+async function refreshUserToken(refreshToken: string) {
+  const data = await refreshNinjaOneUserToken(refreshToken)
   await saveNinjaOneTokens({
     ...data,
     refresh_token: data.refresh_token || refreshToken,

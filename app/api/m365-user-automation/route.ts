@@ -811,7 +811,7 @@ async function createSetupEmailDraft(
       "BILLING_SEND_FROM",
       "MS_SEND_FROM",
       "MICROSOFT_SEND_FROM",
-    ) || "cory@gsvisions.com"
+    ) || "support@gsvisions.com"
   const accessToken = await billingGraphToken()
   const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {
     method: "POST",

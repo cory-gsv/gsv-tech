@@ -139,6 +139,24 @@ export async function GET(request: NextRequest) {
   const response = new NextResponse(tokenPage(token), {
     headers: { "Content-Type": "text/html; charset=utf-8" },
   })
+  if (token.access_token) {
+    response.cookies.set("gsv_ninjaone_access_token", token.access_token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: Math.max(60, Number(token.expires_in || 3600) - 60),
+    })
+  }
+  if (token.refresh_token) {
+    response.cookies.set("gsv_ninjaone_refresh_token", token.refresh_token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    })
+  }
   response.cookies.delete("gsv_ninjaone_oauth_state")
   return response
 }
