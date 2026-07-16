@@ -715,6 +715,10 @@ export async function POST(request: NextRequest) {
     const preview = {
       tenantKey,
       userExists: Boolean(existingUser),
+      userPrincipalName,
+      setupEmail: automationRequest.setupEmail,
+      sourceEmail: automationRequest.sourceEmail,
+      ninjaTicketId: automationRequest.ninjaTicketId,
       sku: {
         skuId: sku.skuId,
         skuPartNumber: sku.skuPartNumber,

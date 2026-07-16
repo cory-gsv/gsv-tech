@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-01";
+const portalBuild = "portal-20260716-02";
 
 function showPortalRuntimeError(message = "") {
   const text = String(message || "Portal interaction failed.").slice(0, 300);
@@ -1842,7 +1842,7 @@ function requestStatusLabel(status = "requested") {
     requested: "Requested",
     needs_review: "Needs Review",
     ready_to_run: "Ready to Run",
-    pax8_needed: "Pax8 Needed",
+    pax8_needed: "License Needed",
     ready_to_provision: "Ready to Provision",
     provisioned: "Provisioned",
     complete: "Complete"
@@ -2199,16 +2199,40 @@ function m365AutomationPayload(request) {
 function m365PreviewText(preview = {}) {
   const sku = preview.sku || {};
   const pax8 = preview.pax8 || {};
-  return [
-    `Tenant: ${preview.tenantKey || "default"}`,
-    `Microsoft license: ${sku.name || sku.skuPartNumber || "Not matched"}`,
-    `Available now: ${sku.available ?? 0}`,
-    preview.userExists ? "User check: already exists" : "User check: ready to create",
-    pax8.subscriptionId
-      ? `Pax8: ${pax8.productName || "subscription"} ${pax8.currentQuantity ?? 0} -> ${pax8.nextQuantity ?? 0}`
-      : "Pax8: no matching subscription found or not needed",
-    ...(preview.steps || [])
-  ].join("\n");
+  const available = Number(sku.available ?? 0);
+  const licenseName = sku.name || sku.skuPartNumber || "the selected license";
+  const lines = [
+    `License: ${licenseName}`,
+    available > 0
+      ? `Microsoft 365 has ${available} unused license${available === 1 ? "" : "s"} available.`
+      : "Microsoft 365 does not have an unused license available right now.",
+    preview.userExists
+      ? `A user already exists for ${preview.userPrincipalName || "this mailbox"}.`
+      : "The mailbox is available and can be created."
+  ];
+
+  if (available < 1) {
+    lines.push(
+      pax8?.subscriptionId
+        ? `Pax8 has the matching subscription. The portal will increase it from ${pax8.currentQuantity ?? 0} to ${pax8.nextQuantity ?? 0}.`
+        : "Pax8 needs to be updated, but the portal could not find a matching subscription."
+    );
+  } else {
+    lines.push("Pax8 does not need to be changed.");
+  }
+
+  const setupTarget = preview.setupEmail || preview.sourceEmail;
+  lines.push(
+    "Then the portal will:",
+    preview.userExists ? "Stop before creating a duplicate user." : "Create the Microsoft 365 user.",
+    "Assign the license.",
+    setupTarget
+      ? `Prepare the setup email for ${setupTarget}.`
+      : "Skip the setup email because no contact email was found.",
+    preview.ninjaTicketId ? "Add a completion note to the NinjaOne ticket." : "Skip the NinjaOne ticket note."
+  );
+
+  return lines.join("\n");
 }
 
 async function previewM365Automation(requestId) {
