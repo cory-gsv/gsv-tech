@@ -132,7 +132,7 @@ button.ghost, .file-button {
 
 .sidebar {
   min-height: 100vh;
-  background: #111820;
+  background: #242628;
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -140,24 +140,33 @@ button.ghost, .file-button {
 }
 
 .brand {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+  justify-items: center;
+  text-align: center;
   padding-bottom: 18px;
   border-bottom: 1px solid rgba(255,255,255,.12);
 }
 
 .brand img {
-  width: 76px;
+  width: 168px;
   height: auto;
+  justify-self: center;
 }
 
 .brand strong, .brand span {
   display: block;
 }
 
+.brand strong {
+  font-size: 19px;
+  line-height: 1.15;
+}
+
 .brand span {
-  color: #b9c4d0;
+  color: #aeb6bf;
   font-size: 12px;
 }
 
@@ -176,7 +185,7 @@ button.ghost, .file-button {
   gap: 12px;
   justify-content: flex-start;
   text-align: left;
-  color: #d7dee8;
+  color: #f2f3f4;
   border-color: transparent;
   background: transparent;
   border-radius: 0;
@@ -188,7 +197,7 @@ button.ghost, .file-button {
 
 .nav-link.active {
   background: var(--gold);
-  color: #111820;
+  color: #202124;
 }
 
 .nav-link.active .nav-icon,
@@ -197,7 +206,7 @@ button.ghost, .file-button {
 .nav-group-head.active .nav-icon,
 .nav-group-head.active .nav-group-tools,
 .nav-group-head.active .nav-chevron {
-  color: #111820;
+  color: #202124;
 }
 
 .nav-link:hover,
@@ -206,14 +215,42 @@ button.ghost, .file-button {
 }
 
 .nav-icon {
-  color: #b8ccd8;
-  font-size: 15px;
+  color: #aeb6bf;
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 23px;
+  line-height: 1;
   text-align: center;
+  justify-self: center;
+}
+
+.nav-svg-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  justify-self: center;
+}
+
+.nav-svg-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .nav-group {
   background: transparent;
   border-left: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 8px;
+  margin-top: 4px;
 }
 
 .nav-group.expanded {
@@ -225,28 +262,28 @@ button.ghost, .file-button {
 }
 
 .nav-group-head.active {
-  background: var(--gold);
-  color: #111820;
+  background: transparent;
+  color: #f2f3f4;
 }
 
 .nav-group-tools {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  color: #b8ccd8;
+  color: #aeb6bf;
   font-size: 14px;
   font-weight: 500;
 }
 
 .nav-chevron {
   margin-left: auto;
-  color: #b8ccd8;
+  color: #aeb6bf;
 }
 
 .nav-submenu {
   display: none;
-  gap: 0;
-  padding: 4px 0 10px 34px;
+  gap: 2px;
+  padding: 2px 0 10px 12px;
   border-left: 1px solid rgba(255, 255, 255, 0.14);
   margin-left: 12px;
 }
@@ -258,23 +295,47 @@ button.ghost, .file-button {
 .nav-sub-link {
   width: 100%;
   min-height: 34px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 8px;
   align-items: center;
-  justify-content: flex-start;
   border: 0;
   background: transparent;
-  color: #d7dee8;
+  color: #aeb6bf;
   text-align: left;
-  padding: 0 16px;
-  border-radius: 0;
+  padding: 0 10px;
+  border-radius: 0 6px 6px 0;
   font-size: 14px;
 }
 
 .nav-sub-link.active {
+  background: rgba(255, 199, 44, 0.12);
+  color: #f2f3f4;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.nav-sub-link.active .nav-sub-dot {
   background: var(--gold);
-  color: #111820;
-  font-weight: 700;
-  border-radius: 6px;
+}
+
+.nav-sub-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  justify-self: center;
+}
+
+.nav-count {
+  min-width: 26px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: #2c2f32;
+  color: #f2f3f4;
+  font-size: 12px;
+  text-align: center;
 }
 
 .nav-divider {
@@ -1294,6 +1355,19 @@ input.readonly-select {
 
 .ticket-activity-entry p {
   margin: 0 0 8px;
+}
+
+.ticket-activity-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ticket-note-delete {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .ticket-note-body {
