@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-37";
+const portalBuild = "portal-20260716-38";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -797,7 +797,8 @@ function updateNavGroups(view = activeView) {
     const name = group.dataset.navGroup;
     const shouldExpand =
       (name === "ticketing" && ["tickets", "ticket-detail"].includes(view)) ||
-      (name === "billing" && ["clients", "audit365", "invoices", "quotes", "payments", "exports"].includes(view));
+      (name === "billing" && ["invoices", "quotes", "payments", "exports"].includes(view)) ||
+      (name === "clients" && ["clients", "audit365"].includes(view));
     group.classList.toggle("expanded", shouldExpand || group.dataset.userExpanded === "true");
     const chevron = group.querySelector(".nav-chevron");
     if (chevron) chevron.textContent = group.classList.contains("expanded") ? "⌃" : "⌄";
@@ -1191,16 +1192,45 @@ function addPortalTicketActivity(ticket, note, publicComment = true) {
   ticket.portalNotes = [entry, ...(Array.isArray(ticket.portalNotes) ? ticket.portalNotes : [])];
 }
 
+function latestPortalResolutionNote(ticket = {}) {
+  return ticketPortalNotes(ticket).find(note => note.type !== "private" && String(note.body || "").trim()) || null;
+}
+
+function hasMatchingPortalNote(ticket = {}, noteBody = "", publicComment = true) {
+  const cleanBody = String(noteBody || "").trim();
+  if (!cleanBody) return false;
+  const expectedType = publicComment ? "public" : "private";
+  return ticketPortalNotes(ticket).some(note =>
+    note.type === expectedType && String(note.body || "").trim() === cleanBody
+  );
+}
+
+function deletePortalTicketActivity(ticketId, noteId) {
+  const ticket = state.tickets.find(item => item.id === ticketId);
+  if (!ticket || !Array.isArray(ticket.portalNotes)) return;
+  const before = ticket.portalNotes.length;
+  ticket.portalNotes = ticket.portalNotes.filter(note => String(note.id || "") !== String(noteId || ""));
+  if (ticket.portalNotes.length === before) return;
+  ticket.updatedAt = today;
+  saveState();
+  renderTicketDetail();
+}
+
 function ticketActivityEntries(ticket = {}) {
   const requester = ticketRequesterName(ticket);
   const entries = ticketPortalNotes(ticket).map(note => {
     const authorName = note.authorName || portalNoteAuthorName || "GSV Portal";
     const initials = authorName.split(/\s+/).map(part => part[0]).join("").slice(0, 2).toUpperCase() || "GS";
+    const canDelete = Array.isArray(ticket.portalNotes)
+      && ticket.portalNotes.some(item => String(item.id || "") === String(note.id || ""));
     return `
       <div class="ticket-activity-entry">
         <span class="avatar-initials">${escapeHtml(initials)}</span>
         <div>
-          <p><strong>${escapeHtml(authorName)}</strong> <span class="ticket-activity-label">${note.type === "private" ? "Portal private note" : "Portal public response"}</span> <span class="subtle">${escapeHtml(formatDate(note.createdAt))}</span></p>
+          <p class="ticket-activity-title-row">
+            <span><strong>${escapeHtml(authorName)}</strong> <span class="ticket-activity-label">${note.type === "private" ? "Portal private note" : "Portal public response"}</span> <span class="subtle">${escapeHtml(formatDate(note.createdAt))}</span></span>
+            ${canDelete ? `<button class="link-button ticket-note-delete" type="button" data-delete-portal-note="${escapeHtml(note.id || "")}" data-ticket-id="${escapeHtml(ticket.id || "")}">Delete</button>` : ""}
+          </p>
           <div class="ticket-note-body">${lines(note.body)}</div>
         </div>
       </div>
@@ -4656,9 +4686,12 @@ function openResolveTicketModal(ticketId) {
   const noteInput = document.getElementById("resolve-ticket-note");
   const error = document.getElementById("resolve-ticket-error");
   const existingNote = document.getElementById("ticket-response-text")?.value.trim() || "";
+  const lastResolutionNote = latestPortalResolutionNote(ticket);
   if (title) title.textContent = `Resolve #${ticket.ninjaTicketId || ticket.id}`;
   if (summary) {
-    summary.textContent = "This note will be posted as a public response before the ticket is marked resolved.";
+    summary.textContent = lastResolutionNote
+      ? "This ticket already has a portal response. Leave this blank to resolve without posting another note."
+      : "This note will be posted as a public response before the ticket is marked resolved.";
   }
   if (noteInput) noteInput.value = existingNote;
   if (error) {
@@ -4677,11 +4710,13 @@ function closeResolveTicketModal() {
 
 async function submitResolveTicketModal() {
   const ticketId = resolvingTicketId;
+  const ticket = state.tickets.find(item => item.id === ticketId);
   const noteInput = document.getElementById("resolve-ticket-note");
   const error = document.getElementById("resolve-ticket-error");
   const submitButton = document.getElementById("resolve-ticket-submit");
   const cleanNote = (noteInput?.value || "").trim();
-  if (!cleanNote) {
+  const existingResolutionNote = ticket ? latestPortalResolutionNote(ticket) : null;
+  if (!cleanNote && !existingResolutionNote) {
     if (error) {
       error.textContent = "Add a resolution note before resolving this ticket.";
       error.hidden = false;
@@ -4690,6 +4725,9 @@ async function submitResolveTicketModal() {
     return;
   }
   if (!ticketId) return;
+  const commentToPost = ticket && cleanNote && !hasMatchingPortalNote(ticket, cleanNote, true)
+    ? cleanNote
+    : "";
   if (error) {
     error.hidden = true;
     error.textContent = "";
@@ -4700,7 +4738,7 @@ async function submitResolveTicketModal() {
   }
   const saved = await saveTicketUpdate(ticketId, {
     status: "resolved",
-    comment: cleanNote,
+    comment: commentToPost,
     publicComment: true,
     skipDom: true
   });
@@ -6260,6 +6298,10 @@ document.addEventListener("click", event => {
   if (target.dataset.ticketResponseMode) {
     selectedTicketResponseMode = target.dataset.ticketResponseMode === "private" ? "private" : "public";
     renderTicketDetail();
+    return;
+  }
+  if (target.dataset.deletePortalNote) {
+    deletePortalTicketActivity(target.dataset.ticketId || selectedTicketId, target.dataset.deletePortalNote);
     return;
   }
   if (target.dataset.saveTicketNote) addTicketNote(target.dataset.saveTicketNote);

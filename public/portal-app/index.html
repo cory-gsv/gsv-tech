@@ -4,15 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-37">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-38">
 </head>
 <body>
   <aside class="sidebar">
     <div class="brand">
       <img src="assets/gsv-logo.png" alt="Golden State Visions">
       <div>
-        <strong>Client Portal</strong>
-        <span>Support, users, billing</span>
+        <strong>GSV Portal</strong>
       </div>
     </div>
     <nav class="portal-nav">
@@ -50,7 +49,12 @@
       </div>
       <div class="nav-group" data-nav-group="clients">
         <button class="nav-link nav-group-head" type="button" data-nav-toggle="clients">
-          <span class="nav-icon">◎</span>
+          <span class="nav-icon nav-svg-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M5 21c1.5-4 4-6 7-6s5.5 2 7 6"></path>
+            </svg>
+          </span>
           <span>Clients</span>
           <span class="nav-group-tools">
             <span class="nav-chevron">⌄</span>
@@ -71,7 +75,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-37</small>
+      <small class="portal-build-version">Build portal-20260716-38</small>
     </div>
   </aside>
 
@@ -444,6 +448,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-37"></script>
+  <script src="app.js?v=portal-20260716-38"></script>
 </body>
 </html>
