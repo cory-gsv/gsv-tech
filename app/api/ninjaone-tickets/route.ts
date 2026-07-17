@@ -488,7 +488,7 @@ function cleanStringArray(value: unknown) {
 }
 
 function portalStatusPattern(status = "") {
-  if (status === "resolved") return /resolved|closed|completed|complete/i
+  if (status === "resolved") return /resolved|closed|completed|complete|done|solved/i
   if (status === "waiting") return /waiting|pending|hold/i
   if (status === "in_progress") return /progress|assigned|working/i
   return /new|open/i
@@ -509,7 +509,25 @@ async function ninjaOneStatusId(
     const text = `${item.name || ""} ${item.displayName || ""}`
     return pattern.test(text)
   })
-  return String(match?.statusId || match?.id || ninjaOneEnvValue("NINJAONE_TICKET_STATUS") || "1000")
+  const matchedStatus = match?.statusId || match?.id
+  if (matchedStatus) return String(matchedStatus)
+
+  const configuredStatus = ninjaOneFirstEnvValue(
+    `NINJAONE_${String(status || "").toUpperCase()}_STATUS_ID`,
+    `NINJAONE_TICKET_${String(status || "").toUpperCase()}_STATUS_ID`,
+    status === "new" ? "NINJAONE_TICKET_STATUS" : "",
+  )
+  if (configuredStatus) return String(configuredStatus)
+
+  if (status !== "new") {
+    const available = statuses
+      .map((item) => `${item.name || item.displayName || item.id || item.statusId || ""}`.trim())
+      .filter(Boolean)
+      .join(", ")
+    throw new Error(`Could not find NinjaOne status for ${status}. Available statuses: ${available || "none"}.`)
+  }
+
+  return "1000"
 }
 
 async function defaultTicketFormId(accessToken: string) {
@@ -782,6 +800,8 @@ export async function PUT(request: NextRequest) {
       requestedStatus,
       ticket.statusId || (requestedStatusMatchesCurrent ? currentStatus?.statusId : undefined),
     )
+    const numericStatus = Number(status)
+    const statusValue = Number.isFinite(numericStatus) ? numericStatus : status
 
     if (!clientId) throw new Error("Missing NinjaOne organization ID.")
     if (!requesterUid) throw new Error("Missing NinjaOne requester.")
@@ -804,7 +824,8 @@ export async function PUT(request: NextRequest) {
           ticketFormId,
           requesterUid,
           subject,
-          status,
+          status: statusValue,
+          statusId: statusValue,
           ...(assignedAppUserId ? { assignedAppUserId } : {}),
           type: typeToNinjaOne(ticket.type || current.type || "service_request"),
           priority: priorityToNinjaOne(ticket.priority || current.priority),

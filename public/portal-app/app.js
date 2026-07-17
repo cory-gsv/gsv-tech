@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-38";
+const portalBuild = "portal-20260716-39";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -871,7 +871,7 @@ function renderDashboard() {
     }).join("") || `<p class="subtle">No invoices yet.</p>`;
 
   const recentTickets = (state.tickets || [])
-    .filter(ticket => ticket.ninjaTicketId && ticket.status !== "deleted")
+    .filter(ticket => ticket.ninjaTicketId && isActiveTicket(ticket))
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 6);
   document.getElementById("dashboard-tickets").innerHTML = recentTickets.map(ticket => `
@@ -906,12 +906,11 @@ function renderTickets() {
   const list = document.getElementById("ticket-list");
   if (!list) return;
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
-  const filter = document.getElementById("ticket-filter")?.value || "open";
+  const filter = document.getElementById("ticket-filter")?.value || "assigned";
   const visible = tickets
     .filter(ticket => {
-      if (filter === "all") return ticket.status !== "deleted";
-      if (filter === "open") return !["resolved", "deleted"].includes(ticket.status);
-      if (filter === "pending") return ticket.source === "email" && ticket.status === "pending";
+      if (filter === "assigned") return isActiveTicket(ticket) && isTicketAssignedToMe(ticket);
+      if (filter === "all") return isActiveTicket(ticket);
       return ticket.status === filter;
     })
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
@@ -919,7 +918,7 @@ function renderTickets() {
   setText("tickets-new", tickets.filter(ticket => ticket.status === "new").length);
   setText("tickets-progress", tickets.filter(ticket => ticket.status === "in_progress").length);
   setText("tickets-waiting", tickets.filter(ticket => ticket.status === "waiting").length);
-  setText("tickets-urgent", tickets.filter(ticket => ticket.priority === "urgent" && ticket.status !== "resolved").length);
+  setText("tickets-urgent", tickets.filter(ticket => ticket.priority === "urgent" && isActiveTicket(ticket)).length);
   updateNavTicketCounts();
 
   list.innerHTML = `
@@ -1022,6 +1021,16 @@ function defaultNinjaOneAssigneeId() {
 
 function ticketAssignedAppUserId(ticket = {}) {
   return String(ticket.assignedAppUserId || defaultNinjaOneAssigneeId() || "");
+}
+
+function isActiveTicket(ticket = {}) {
+  return !["resolved", "deleted"].includes(ticket.status);
+}
+
+function isTicketAssignedToMe(ticket = {}) {
+  const assigned = String(ticket.assignedAppUserId || "");
+  const mine = String(defaultNinjaOneAssigneeId() || "");
+  return Boolean(assigned && mine && assigned === mine);
 }
 
 function ninjaOneAssigneeOptions(selected = "") {
@@ -1802,17 +1811,16 @@ function renderTicketDetail() {
 
 function updateNavTicketCounts() {
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
-  const openTickets = tickets.filter(ticket => !["resolved", "deleted"].includes(ticket.status));
-  setText("nav-ticket-total", tickets.filter(ticket => ticket.status !== "deleted").length);
-  setText("nav-ticket-all", tickets.filter(ticket => ticket.status !== "deleted").length);
-  setText("nav-ticket-mine", openTickets.length);
-  setText("nav-ticket-open", openTickets.length);
+  const activeTickets = tickets.filter(isActiveTicket);
+  setText("nav-ticket-total", activeTickets.length);
+  setText("nav-ticket-assigned", activeTickets.filter(isTicketAssignedToMe).length);
+  setText("nav-ticket-all", activeTickets.length);
+  setText("nav-ticket-resolved", tickets.filter(ticket => ticket.status === "resolved").length);
   setText("nav-ticket-deleted", tickets.filter(ticket => ticket.status === "deleted").length);
-  setText("nav-ticket-pending", tickets.filter(ticket => ticket.source === "email" && ticket.status === "pending").length);
 
-  const filter = document.getElementById("ticket-filter")?.value || "open";
+  const filter = document.getElementById("ticket-filter")?.value || "assigned";
   document.querySelectorAll("[data-ticket-filter-set]").forEach(button => {
-    button.classList.toggle("active", activeView === "tickets" && button.dataset.ticketFilterSet === filter && !button.textContent.includes("My tickets"));
+    button.classList.toggle("active", activeView === "tickets" && button.dataset.ticketFilterSet === filter);
   });
 }
 
@@ -6214,7 +6222,7 @@ document.addEventListener("click", event => {
     return;
   }
   if (target.dataset.ticketFilterSet) {
-    const filter = target.dataset.ticketFilterSet || "open";
+    const filter = target.dataset.ticketFilterSet || "assigned";
     const ticketFilter = document.getElementById("ticket-filter");
     if (ticketFilter) ticketFilter.value = filter;
     setView("tickets");
