@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-51";
+const portalBuild = "portal-20260716-52";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -3283,12 +3283,22 @@ function invoiceMatchesQueue(inv, queue) {
 }
 
 function invoiceQueueSummary(queue) {
-  const invoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, queue));
+  const invoices = state.invoices.filter(inv => queue === "paid_ytd" ? invoicePaidThisYear(inv) : invoiceMatchesQueue(inv, queue));
   const total = invoices.reduce((sum, inv) => {
-    if (queue === "paid") return sum + invoiceTotal(inv);
+    if (queue === "paid" || queue === "paid_ytd") return sum + invoiceTotal(inv);
     return sum + Math.max(0, invoiceRemainingBalance(inv));
   }, 0);
   return { invoices, total };
+}
+
+function invoicePaidThisYear(inv) {
+  if (computedInvoiceStatus(inv) !== "paid") return false;
+  const currentYear = String(year);
+  const invoiceDateIsThisYear = String(inv.date || "").startsWith(currentYear);
+  const paymentDateIsThisYear = state.payments.some(payment =>
+    payment.invoiceId === inv.id && String(payment.date || "").startsWith(currentYear)
+  );
+  return invoiceDateIsThisYear || paymentDateIsThisYear;
 }
 
 function invoiceActionLabel(inv) {
@@ -3897,15 +3907,15 @@ function renderInvoiceDashboard() {
   const cards = [
     { queue: "new", label: "New", detail: "Last 30 days, unpaid", tone: "new" },
     { queue: "payment_due", label: "Payment due", detail: "Sent or overdue balance", tone: "due" },
-    { queue: "paid", label: "Paid", detail: "Completed invoices", tone: "paid" }
+    { queue: "paid", summaryQueue: "paid_ytd", label: "Paid YTD", detail: "Completed invoices this year", tone: "paid" }
   ];
   dashboard.innerHTML = cards.map(card => {
-    const summary = invoiceQueueSummary(card.queue);
+    const summary = invoiceQueueSummary(card.summaryQueue || card.queue);
     const preview = summary.invoices
       .slice()
       .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
       .slice(0, 3)
-      .map(inv => `<span>${escapeHtml(inv.number)} <strong>${money.format(card.queue === "paid" ? invoiceTotal(inv) : Math.max(0, invoiceRemainingBalance(inv)))}</strong></span>`)
+      .map(inv => `<span>${escapeHtml(inv.number)} <strong>${money.format(card.summaryQueue === "paid_ytd" ? invoiceTotal(inv) : Math.max(0, invoiceRemainingBalance(inv)))}</strong></span>`)
       .join("");
     return `
       <button class="invoice-dashboard-card ${card.tone}" type="button" data-invoice-filter-set="${card.queue}">
