@@ -319,6 +319,23 @@ button.ghost, .file-button {
   background: var(--gold);
 }
 
+.nav-sub-parent {
+  margin-top: 2px;
+}
+
+.nav-nested-submenu {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 4px 18px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nav-sub-child {
+  min-height: 30px;
+  font-size: 13px;
+}
+
 .nav-sub-dot {
   width: 7px;
   height: 7px;
@@ -1074,6 +1091,78 @@ section {
 
 .client-dashboard {
   margin-bottom: 18px;
+}
+
+.invoice-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.invoice-dashboard-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  min-height: 130px;
+  padding: 16px;
+  text-align: left;
+  background: #fff;
+  border-color: var(--line);
+  align-content: start;
+}
+
+.invoice-dashboard-card:hover {
+  background: #f8fafc;
+}
+
+.invoice-dashboard-card span {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.invoice-dashboard-card strong {
+  font-size: 20px;
+}
+
+.invoice-dashboard-card b {
+  justify-self: end;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.invoice-dashboard-card em {
+  grid-column: 1 / -1;
+  color: var(--ink);
+  font-style: normal;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.invoice-dashboard-card small {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.invoice-dashboard-card small span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.invoice-dashboard-card.due {
+  box-shadow: inset 4px 0 0 #ffc72c;
+}
+
+.invoice-dashboard-card.paid {
+  box-shadow: inset 4px 0 0 var(--good);
 }
 
 .table-card {
@@ -2660,6 +2749,10 @@ button.danger {
     min-height: auto;
   }
   .metric-grid, .split, .audit-steps, .audit-controls, .filter-panel, .pricing-grid, .request-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-dashboard-grid {
     grid-template-columns: 1fr;
   }
   .audit-step {
