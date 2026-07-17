@@ -940,7 +940,8 @@ section {
   color: #4b5563;
 }
 
-.badge.draft {
+.badge.draft,
+.badge.sent {
   background: #fff2bf;
   color: #8a6100;
 }
@@ -948,11 +949,6 @@ section {
 .badge.ready {
   background: #e7f0ff;
   color: #175cd3;
-}
-
-.badge.sent {
-  background: #e0f2fe;
-  color: #075985;
 }
 
 .badge.new, .badge.requested {
