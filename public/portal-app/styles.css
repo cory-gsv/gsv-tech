@@ -799,6 +799,49 @@ section {
   gap: 8px;
 }
 
+.dashboard-invoice-badges {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.invoice-action-needed {
+  background: #fffbeb;
+  box-shadow: inset 4px 0 0 #ffc72c;
+}
+
+.clickable-row.invoice-action-needed td {
+  background: #fffbeb;
+}
+
+.clickable-row.invoice-action-needed td:first-child {
+  box-shadow: inset 4px 0 0 #ffc72c;
+}
+
+.clickable-row.invoice-action-needed:hover,
+.clickable-card.invoice-action-needed:hover {
+  background: #fff7d6;
+}
+
+.clickable-row.invoice-action-needed:hover td {
+  background: #fff7d6;
+}
+
+.action-needed-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #ffc72c;
+  color: #1f2933;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .clickable-card,
 .clickable-row {
   cursor: pointer;
