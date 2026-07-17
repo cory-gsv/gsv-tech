@@ -26,10 +26,12 @@
           </span>
         </button>
         <div class="nav-submenu">
-          <button class="nav-sub-link active" data-ticket-filter-set="assigned"><span class="nav-sub-dot"></span><span>Assigned to Me</span><span id="nav-ticket-assigned" class="nav-count">0</span></button>
-          <button class="nav-sub-link" data-ticket-filter-set="all"><span class="nav-sub-dot"></span><span>All Tickets</span><span id="nav-ticket-all" class="nav-count">0</span></button>
-          <button class="nav-sub-link" data-ticket-filter-set="resolved"><span class="nav-sub-dot"></span><span>Resolved Tickets</span><span id="nav-ticket-resolved" class="nav-count">0</span></button>
-          <button class="nav-sub-link" data-ticket-filter-set="deleted"><span class="nav-sub-dot"></span><span>Deleted Tickets</span><span id="nav-ticket-deleted" class="nav-count">0</span></button>
+          <button class="nav-sub-link active" data-ticket-filter-set="unassigned"><span class="nav-sub-dot"></span><span>Unassigned tickets</span><span id="nav-ticket-unassigned" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="all"><span class="nav-sub-dot"></span><span>All tickets</span><span id="nav-ticket-all" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="assigned"><span class="nav-sub-dot"></span><span>My tickets</span><span id="nav-ticket-assigned" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="open"><span class="nav-sub-dot"></span><span>Open tickets</span><span id="nav-ticket-open" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="deleted"><span class="nav-sub-dot"></span><span>Deleted tickets</span><span id="nav-ticket-deleted" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-ticket-filter-set="pending"><span class="nav-sub-dot"></span><span>Pending Emails</span><span id="nav-ticket-pending" class="nav-count">0</span></button>
         </div>
       </div>
       <div class="nav-group" data-nav-group="billing">
@@ -165,13 +167,12 @@
         </div>
         <div class="toolbar">
           <select id="ticket-filter">
-            <option value="assigned">Assigned to me</option>
+            <option value="unassigned">Unassigned tickets</option>
             <option value="all">All tickets</option>
-            <option value="new">New</option>
-            <option value="in_progress">In progress</option>
-            <option value="waiting">Waiting</option>
-            <option value="resolved">Resolved</option>
+            <option value="assigned">My tickets</option>
+            <option value="open">Open tickets</option>
             <option value="deleted">Deleted</option>
+            <option value="pending">Pending emails</option>
           </select>
           <span id="ticket-sync-status" class="sync-status">Live sync on</span>
           <button id="add-ticket" class="primary">Add Ticket</button>

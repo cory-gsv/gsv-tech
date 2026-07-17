@@ -906,11 +906,14 @@ function renderTickets() {
   const list = document.getElementById("ticket-list");
   if (!list) return;
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
-  const filter = document.getElementById("ticket-filter")?.value || "assigned";
+  const filter = document.getElementById("ticket-filter")?.value || "unassigned";
   const visible = tickets
     .filter(ticket => {
-      if (filter === "assigned") return isActiveTicket(ticket) && isTicketAssignedToMe(ticket);
-      if (filter === "all") return isActiveTicket(ticket);
+      if (filter === "unassigned") return isActiveTicket(ticket) && !ticket.assignedAppUserId;
+      if (filter === "all") return ticket.status !== "deleted";
+      if (filter === "assigned") return ticket.status !== "deleted" && isTicketAssignedToMe(ticket);
+      if (filter === "open") return isActiveTicket(ticket);
+      if (filter === "pending") return ticket.source === "email" && ticket.status === "pending";
       return ticket.status === filter;
     })
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
@@ -1820,13 +1823,16 @@ function renderTicketDetail() {
 function updateNavTicketCounts() {
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
   const activeTickets = tickets.filter(isActiveTicket);
-  setText("nav-ticket-total", activeTickets.length);
-  setText("nav-ticket-assigned", activeTickets.filter(isTicketAssignedToMe).length);
-  setText("nav-ticket-all", activeTickets.length);
-  setText("nav-ticket-resolved", tickets.filter(ticket => ticket.status === "resolved").length);
+  const nonDeletedTickets = tickets.filter(ticket => ticket.status !== "deleted");
+  setText("nav-ticket-total", nonDeletedTickets.length);
+  setText("nav-ticket-unassigned", activeTickets.filter(ticket => !ticket.assignedAppUserId).length);
+  setText("nav-ticket-all", nonDeletedTickets.length);
+  setText("nav-ticket-assigned", nonDeletedTickets.filter(isTicketAssignedToMe).length);
+  setText("nav-ticket-open", activeTickets.length);
   setText("nav-ticket-deleted", tickets.filter(ticket => ticket.status === "deleted").length);
+  setText("nav-ticket-pending", tickets.filter(ticket => ticket.source === "email" && ticket.status === "pending").length);
 
-  const filter = document.getElementById("ticket-filter")?.value || "assigned";
+  const filter = document.getElementById("ticket-filter")?.value || "unassigned";
   document.querySelectorAll("[data-ticket-filter-set]").forEach(button => {
     button.classList.toggle("active", activeView === "tickets" && button.dataset.ticketFilterSet === filter);
   });
@@ -6235,7 +6241,7 @@ document.addEventListener("click", event => {
     return;
   }
   if (target.dataset.ticketFilterSet) {
-    const filter = target.dataset.ticketFilterSet || "assigned";
+    const filter = target.dataset.ticketFilterSet || "unassigned";
     const ticketFilter = document.getElementById("ticket-filter");
     if (ticketFilter) ticketFilter.value = filter;
     setView("tickets");
