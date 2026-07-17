@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-49";
+const portalBuild = "portal-20260716-50";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -1850,6 +1850,7 @@ function updateNavBillingCounts() {
   const paidInvoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, "paid")).length;
   const draftQuotes = state.quotes.filter(quote => quote.status === "draft").length;
   setText("nav-billing-total", openInvoices || "");
+  setText("nav-invoice-action", openInvoices || "");
   setText("nav-invoice-new", newInvoices);
   setText("nav-invoice-sent", sentInvoices);
   setText("nav-invoice-due", paymentDueInvoices);
@@ -3281,6 +3282,15 @@ function invoiceMatchesQueue(inv, queue) {
   return status === queue;
 }
 
+function invoiceQueueSummary(queue) {
+  const invoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, queue));
+  const total = invoices.reduce((sum, inv) => {
+    if (queue === "paid") return sum + invoiceTotal(inv);
+    return sum + Math.max(0, invoiceRemainingBalance(inv));
+  }, 0);
+  return { invoices, total };
+}
+
 function invoiceActionLabel(inv) {
   const status = computedInvoiceStatus(inv);
   if (status === "draft") return "Review draft";
@@ -3840,6 +3850,7 @@ function renderInvoices() {
   const dateTo = document.getElementById("invoice-date-to").value;
   const search = document.getElementById("invoice-search").value.trim().toLowerCase();
   renderInvoiceClientFilter(clientFilter);
+  renderInvoiceDashboard();
   updateNavInvoiceQueueActive(filter);
   const rows = state.invoices
     .filter(inv => invoiceMatchesQueue(inv, filter))
@@ -3880,7 +3891,38 @@ function renderInvoices() {
   `;
 }
 
+function renderInvoiceDashboard() {
+  const dashboard = document.getElementById("invoice-dashboard");
+  if (!dashboard) return;
+  const cards = [
+    { queue: "new", label: "New", detail: "Last 30 days, unpaid", tone: "new" },
+    { queue: "payment_due", label: "Payment due", detail: "Sent or overdue balance", tone: "due" },
+    { queue: "paid", label: "Paid", detail: "Completed invoices", tone: "paid" }
+  ];
+  dashboard.innerHTML = cards.map(card => {
+    const summary = invoiceQueueSummary(card.queue);
+    const preview = summary.invoices
+      .slice()
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
+      .slice(0, 3)
+      .map(inv => `<span>${escapeHtml(inv.number)} <strong>${money.format(card.queue === "paid" ? invoiceTotal(inv) : Math.max(0, invoiceRemainingBalance(inv)))}</strong></span>`)
+      .join("");
+    return `
+      <button class="invoice-dashboard-card ${card.tone}" type="button" data-invoice-filter-set="${card.queue}">
+        <span>${escapeHtml(card.detail)}</span>
+        <strong>${escapeHtml(card.label)}</strong>
+        <b>${summary.invoices.length}</b>
+        <em>${money.format(summary.total)}</em>
+        <small>${preview || "No invoices"}</small>
+      </button>
+    `;
+  }).join("");
+}
+
 function updateNavInvoiceQueueActive(filter) {
+  document.querySelectorAll("[data-invoice-parent]").forEach(button => {
+    button.classList.toggle("active", activeView === "invoices");
+  });
   document.querySelectorAll("[data-invoice-filter-set]").forEach(button => {
     button.classList.toggle("active", activeView === "invoices" && button.dataset.invoiceFilterSet === filter);
   });
@@ -6300,6 +6342,13 @@ document.addEventListener("click", event => {
     const filter = target.dataset.invoiceFilterSet || "all";
     const invoiceFilter = document.getElementById("invoice-filter");
     if (invoiceFilter) invoiceFilter.value = filter;
+    setView("invoices");
+    renderInvoices();
+    return;
+  }
+  if (target.dataset.invoiceParent) {
+    const invoiceFilter = document.getElementById("invoice-filter");
+    if (invoiceFilter) invoiceFilter.value = "all";
     setView("invoices");
     renderInvoices();
     return;
