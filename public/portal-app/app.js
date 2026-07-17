@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-44";
+const portalBuild = "portal-20260716-45";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -1845,8 +1845,7 @@ function updateNavTicketCounts() {
 function updateNavBillingCounts() {
   const openInvoices = state.invoices.filter(invoiceNeedsAction).length;
   const draftQuotes = state.quotes.filter(quote => quote.status === "draft").length;
-  const actionTotal = openInvoices + draftQuotes;
-  setText("nav-billing-total", actionTotal || "");
+  setText("nav-billing-total", openInvoices || "");
   setText("nav-invoice-open", openInvoices);
   setText("nav-quote-draft", draftQuotes);
 }
