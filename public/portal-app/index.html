@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-47">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-48">
 </head>
 <body>
   <aside class="sidebar">
@@ -44,7 +44,11 @@
           </span>
         </button>
         <div class="nav-submenu">
-          <button class="nav-sub-link" data-view="invoices"><span class="nav-sub-dot"></span><span>Invoices</span><span id="nav-invoice-open" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-invoice-filter-set="new"><span class="nav-sub-dot"></span><span>New invoices</span><span id="nav-invoice-new" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-invoice-filter-set="sent"><span class="nav-sub-dot"></span><span>Sent invoices</span><span id="nav-invoice-sent" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-invoice-filter-set="payment_due"><span class="nav-sub-dot"></span><span>Payment due</span><span id="nav-invoice-due" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-invoice-filter-set="paid"><span class="nav-sub-dot"></span><span>Paid invoices</span><span id="nav-invoice-paid" class="nav-count">0</span></button>
+          <button class="nav-sub-link" data-invoice-filter-set="all"><span class="nav-sub-dot"></span><span>All invoices</span><span id="nav-invoice-all" class="nav-count">0</span></button>
           <button class="nav-sub-link" data-view="quotes"><span class="nav-sub-dot"></span><span>Quotes</span><span id="nav-quote-draft" class="nav-count">0</span></button>
           <button class="nav-sub-link" data-view="payments"><span class="nav-sub-dot"></span><span>Payments</span></button>
           <button class="nav-sub-link" data-view="exports"><span class="nav-sub-dot"></span><span>Reports</span></button>
@@ -78,7 +82,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-47</small>
+      <small class="portal-build-version">Build portal-20260716-48</small>
     </div>
   </aside>
 
@@ -327,9 +331,11 @@
           <select id="invoice-client-filter"></select>
         </div>
         <div class="field">
-          <label for="invoice-filter">Status</label>
+          <label for="invoice-filter">Queue / Status</label>
           <select id="invoice-filter">
             <option value="all">All invoices</option>
+            <option value="new">New - last 30 days</option>
+            <option value="payment_due">Payment due</option>
             <option value="draft">Draft</option>
             <option value="ready">Ready</option>
             <option value="sent">Sent</option>
@@ -449,6 +455,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-47"></script>
+  <script src="app.js?v=portal-20260716-48"></script>
 </body>
 </html>
