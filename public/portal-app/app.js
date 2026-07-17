@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-48";
+const portalBuild = "portal-20260716-49";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -3276,7 +3276,7 @@ function invoiceRemainingBalance(inv) {
 function invoiceMatchesQueue(inv, queue) {
   const status = computedInvoiceStatus(inv);
   if (queue === "all") return true;
-  if (queue === "new") return inv.date >= addDays(today, -30);
+  if (queue === "new") return inv.date >= addDays(today, -30) && !["paid", "void"].includes(status);
   if (queue === "payment_due") return ["sent", "overdue"].includes(status) && invoiceRemainingBalance(inv) > 0.005;
   return status === queue;
 }
