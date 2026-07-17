@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-47";
+const portalBuild = "portal-20260716-48";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -1844,9 +1844,17 @@ function updateNavTicketCounts() {
 
 function updateNavBillingCounts() {
   const openInvoices = state.invoices.filter(invoiceNeedsAction).length;
+  const newInvoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, "new")).length;
+  const sentInvoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, "sent")).length;
+  const paymentDueInvoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, "payment_due")).length;
+  const paidInvoices = state.invoices.filter(inv => invoiceMatchesQueue(inv, "paid")).length;
   const draftQuotes = state.quotes.filter(quote => quote.status === "draft").length;
   setText("nav-billing-total", openInvoices || "");
-  setText("nav-invoice-open", openInvoices);
+  setText("nav-invoice-new", newInvoices);
+  setText("nav-invoice-sent", sentInvoices);
+  setText("nav-invoice-due", paymentDueInvoices);
+  setText("nav-invoice-paid", paidInvoices);
+  setText("nav-invoice-all", state.invoices.length);
   setText("nav-quote-draft", draftQuotes);
 }
 
@@ -3257,8 +3265,20 @@ function invoiceNumber(invoiceId) {
 
 function invoiceNeedsAction(inv) {
   const status = computedInvoiceStatus(inv);
-  const balance = invoiceTotal(inv) - paidAmount(inv.id);
+  const balance = invoiceRemainingBalance(inv);
   return !["paid", "void"].includes(status) && balance > 0.005;
+}
+
+function invoiceRemainingBalance(inv) {
+  return invoiceTotal(inv) - paidAmount(inv.id);
+}
+
+function invoiceMatchesQueue(inv, queue) {
+  const status = computedInvoiceStatus(inv);
+  if (queue === "all") return true;
+  if (queue === "new") return inv.date >= addDays(today, -30);
+  if (queue === "payment_due") return ["sent", "overdue"].includes(status) && invoiceRemainingBalance(inv) > 0.005;
+  return status === queue;
 }
 
 function invoiceActionLabel(inv) {
@@ -3820,8 +3840,9 @@ function renderInvoices() {
   const dateTo = document.getElementById("invoice-date-to").value;
   const search = document.getElementById("invoice-search").value.trim().toLowerCase();
   renderInvoiceClientFilter(clientFilter);
+  updateNavInvoiceQueueActive(filter);
   const rows = state.invoices
-    .filter(inv => filter === "all" || computedInvoiceStatus(inv) === filter)
+    .filter(inv => invoiceMatchesQueue(inv, filter))
     .filter(inv => !clientFilter || inv.clientId === clientFilter)
     .filter(inv => !dateFrom || inv.date >= dateFrom)
     .filter(inv => !dateTo || inv.date <= dateTo)
@@ -3857,6 +3878,12 @@ function renderInvoices() {
       <tbody>${rows || `<tr><td colspan="8">No invoices found.</td></tr>`}</tbody>
     </table>
   `;
+}
+
+function updateNavInvoiceQueueActive(filter) {
+  document.querySelectorAll("[data-invoice-filter-set]").forEach(button => {
+    button.classList.toggle("active", activeView === "invoices" && button.dataset.invoiceFilterSet === filter);
+  });
 }
 
 function renderInvoiceClientFilter(selected = "") {
@@ -6267,6 +6294,14 @@ document.addEventListener("click", event => {
     setView("tickets");
     renderTickets();
     requestNinjaOneTicketSync();
+    return;
+  }
+  if (target.dataset.invoiceFilterSet) {
+    const filter = target.dataset.invoiceFilterSet || "all";
+    const invoiceFilter = document.getElementById("invoice-filter");
+    if (invoiceFilter) invoiceFilter.value = filter;
+    setView("invoices");
+    renderInvoices();
     return;
   }
   if (target.dataset.view) {
