@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-43";
+const portalBuild = "portal-20260716-44";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -855,11 +855,15 @@ function renderDashboard() {
     .slice(0, 5)
     .map(inv => {
       const status = computedInvoiceStatus(inv);
+      const needsAction = invoiceNeedsAction(inv);
       return `
-      <div class="item dashboard-invoice-item clickable-card" data-open-customer-preview-invoice="${inv.id}" role="button" tabindex="0">
+      <div class="item dashboard-invoice-item clickable-card ${needsAction ? "invoice-action-needed" : ""}" data-open-customer-preview-invoice="${inv.id}" role="button" tabindex="0">
         <div class="item-line dashboard-invoice-main">
           <strong>${escapeHtml(inv.number)}</strong>
-          <span class="badge ${status}">${status}</span>
+          <span class="dashboard-invoice-badges">
+            ${needsAction ? `<span class="action-needed-pill">${escapeHtml(invoiceActionLabel(inv))}</span>` : ""}
+            <span class="badge ${status}">${status}</span>
+          </span>
         </div>
         <div class="item-line subtle">
           <span>${escapeHtml(clientName(inv.clientId))}</span>
@@ -1824,7 +1828,7 @@ function updateNavTicketCounts() {
   const tickets = (state.tickets || []).filter(ticket => ticket.ninjaTicketId);
   const activeTickets = tickets.filter(isActiveTicket);
   const nonDeletedTickets = tickets.filter(ticket => ticket.status !== "deleted");
-  setText("nav-ticket-total", nonDeletedTickets.length);
+  setText("nav-ticket-total", activeTickets.length || "");
   setText("nav-ticket-unassigned", activeTickets.filter(ticket => !ticket.assignedAppUserId).length);
   setText("nav-ticket-all", nonDeletedTickets.length);
   setText("nav-ticket-assigned", nonDeletedTickets.filter(isTicketAssignedToMe).length);
@@ -1839,9 +1843,10 @@ function updateNavTicketCounts() {
 }
 
 function updateNavBillingCounts() {
-  const openInvoices = state.invoices.filter(invoice => !["paid", "void"].includes(computedInvoiceStatus(invoice))).length;
+  const openInvoices = state.invoices.filter(invoiceNeedsAction).length;
   const draftQuotes = state.quotes.filter(quote => quote.status === "draft").length;
-  setText("nav-billing-total", openInvoices + draftQuotes);
+  const actionTotal = openInvoices + draftQuotes;
+  setText("nav-billing-total", actionTotal || "");
   setText("nav-invoice-open", openInvoices);
   setText("nav-quote-draft", draftQuotes);
 }
@@ -3251,6 +3256,21 @@ function invoiceNumber(invoiceId) {
   return state.invoices.find(inv => inv.id === invoiceId)?.number || "unlinked invoice";
 }
 
+function invoiceNeedsAction(inv) {
+  const status = computedInvoiceStatus(inv);
+  const balance = invoiceTotal(inv) - paidAmount(inv.id);
+  return !["paid", "void"].includes(status) && balance > 0.005;
+}
+
+function invoiceActionLabel(inv) {
+  const status = computedInvoiceStatus(inv);
+  if (status === "draft") return "Review draft";
+  if (status === "ready") return "Ready to send";
+  if (status === "overdue") return "Overdue";
+  if (status === "sent") return "Payment due";
+  return "Action needed";
+}
+
 function invoiceActionButtons(inv) {
   const status = computedInvoiceStatus(inv);
   return `
@@ -3816,9 +3836,10 @@ function renderInvoices() {
       const status = computedInvoiceStatus(inv);
       const total = invoiceTotal(inv);
       const paid = paidAmount(inv.id);
+      const needsAction = invoiceNeedsAction(inv);
       return `
-        <tr class="clickable-row" data-open-customer-preview-invoice="${inv.id}" tabindex="0">
-          <td><strong>${escapeHtml(inv.number)}</strong><br><span class="subtle">${escapeHtml(inv.type || "")}</span></td>
+        <tr class="clickable-row ${needsAction ? "invoice-action-needed" : ""}" data-open-customer-preview-invoice="${inv.id}" tabindex="0">
+          <td><strong>${escapeHtml(inv.number)}</strong><br><span class="subtle">${escapeHtml(inv.type || "")}</span>${needsAction ? `<br><span class="action-needed-pill">${escapeHtml(invoiceActionLabel(inv))}</span>` : ""}</td>
           <td>${escapeHtml(clientName(inv.clientId))}</td>
           <td>${formatDate(inv.date)}</td>
           <td>${formatDate(inv.dueDate)}</td>
