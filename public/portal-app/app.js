@@ -2,9 +2,8 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-41";
+const portalBuild = "portal-20260716-42";
 const portalNoteAuthorName = "Cory";
-const forcedResolvedNinjaTicketIds = new Set(["1006"]);
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
 
@@ -1207,7 +1206,6 @@ function latestPortalResolutionNote(ticket = {}) {
 }
 
 function hasPortalResolutionOverride(ticket = {}) {
-  if (forcedResolvedNinjaTicketIds.has(String(ticket.ninjaTicketId || ""))) return true;
   if (ticket.portalStatusOverride === "resolved") return true;
   return ticketPortalNotes(ticket).some(note => {
     if (note.type === "private") return false;
@@ -1838,6 +1836,8 @@ function updateNavBillingCounts() {
   const openInvoices = state.invoices.filter(invoice => !["paid", "void"].includes(computedInvoiceStatus(invoice))).length;
   const draftQuotes = state.quotes.filter(quote => quote.status === "draft").length;
   setText("nav-billing-total", openInvoices + draftQuotes);
+  setText("nav-invoice-open", openInvoices);
+  setText("nav-quote-draft", draftQuotes);
 }
 
 function portalStatusFromNinja(ticket = {}) {

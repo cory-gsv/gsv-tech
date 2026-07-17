@@ -825,7 +825,6 @@ export async function PUT(request: NextRequest) {
           requesterUid,
           subject,
           status: statusValue,
-          statusId: statusValue,
           ...(assignedAppUserId ? { assignedAppUserId } : {}),
           type: typeToNinjaOne(ticket.type || current.type || "service_request"),
           priority: priorityToNinjaOne(ticket.priority || current.priority),
