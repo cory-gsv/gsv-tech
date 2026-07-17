@@ -323,12 +323,24 @@ button.ghost, .file-button {
   margin-top: 2px;
 }
 
+.nav-sub-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
 .nav-nested-submenu {
-  display: grid;
+  display: none;
   gap: 2px;
   margin: 0 0 4px 18px;
   padding-left: 10px;
   border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nav-sub-parent.expanded + .nav-nested-submenu {
+  display: grid;
 }
 
 .nav-sub-child {

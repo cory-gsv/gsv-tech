@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-50">
+  <link rel="stylesheet" href="styles.css?v=portal-20260716-51">
 </head>
 <body>
   <aside class="sidebar">
@@ -44,7 +44,7 @@
           </span>
         </button>
         <div class="nav-submenu">
-          <button class="nav-sub-link nav-sub-parent" data-invoice-parent="true"><span class="nav-sub-dot"></span><span>Invoices</span><span id="nav-invoice-action" class="nav-count">0</span></button>
+          <button class="nav-sub-link nav-sub-parent" data-invoice-parent="true" aria-expanded="false"><span class="nav-sub-dot"></span><span class="nav-sub-label">Invoices <span data-invoice-chevron>⌄</span></span><span id="nav-invoice-action" class="nav-count">0</span></button>
           <div class="nav-nested-submenu">
             <button class="nav-sub-link nav-sub-child" data-invoice-filter-set="new"><span class="nav-sub-dot"></span><span>New</span><span id="nav-invoice-new" class="nav-count">0</span></button>
             <button class="nav-sub-link nav-sub-child" data-invoice-filter-set="sent"><span class="nav-sub-dot"></span><span>Sent</span><span id="nav-invoice-sent" class="nav-count">0</span></button>
@@ -85,7 +85,7 @@
       <form action="/api/billing-logout" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-50</small>
+      <small class="portal-build-version">Build portal-20260716-51</small>
     </div>
   </aside>
 
@@ -459,6 +459,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-50"></script>
+  <script src="app.js?v=portal-20260716-51"></script>
 </body>
 </html>

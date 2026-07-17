@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-50";
+const portalBuild = "portal-20260716-51";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -3928,6 +3928,15 @@ function updateNavInvoiceQueueActive(filter) {
   });
 }
 
+function setInvoiceNavExpanded(expanded) {
+  const parent = document.querySelector("[data-invoice-parent]");
+  if (!parent) return;
+  parent.classList.toggle("expanded", expanded);
+  parent.setAttribute("aria-expanded", expanded ? "true" : "false");
+  const chevron = parent.querySelector("[data-invoice-chevron]");
+  if (chevron) chevron.textContent = expanded ? "⌃" : "⌄";
+}
+
 function renderInvoiceClientFilter(selected = "") {
   const selectNode = document.getElementById("invoice-client-filter");
   if (!selectNode) return;
@@ -6342,11 +6351,13 @@ document.addEventListener("click", event => {
     const filter = target.dataset.invoiceFilterSet || "all";
     const invoiceFilter = document.getElementById("invoice-filter");
     if (invoiceFilter) invoiceFilter.value = filter;
+    if (target.closest(".nav-nested-submenu")) setInvoiceNavExpanded(true);
     setView("invoices");
     renderInvoices();
     return;
   }
   if (target.dataset.invoiceParent) {
+    setInvoiceNavExpanded(!target.classList.contains("expanded"));
     const invoiceFilter = document.getElementById("invoice-filter");
     if (invoiceFilter) invoiceFilter.value = "all";
     setView("invoices");
