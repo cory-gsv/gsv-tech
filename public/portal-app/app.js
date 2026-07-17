@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-39";
+const portalBuild = "portal-20260716-40";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -1205,6 +1205,14 @@ function latestPortalResolutionNote(ticket = {}) {
   return ticketPortalNotes(ticket).find(note => note.type !== "private" && String(note.body || "").trim()) || null;
 }
 
+function hasPortalResolutionOverride(ticket = {}) {
+  if (ticket.portalStatusOverride === "resolved") return true;
+  return ticketPortalNotes(ticket).some(note => {
+    if (note.type === "private") return false;
+    return /\b(completed|complete|resolved|done|closed)\b/i.test(String(note.body || ""));
+  });
+}
+
 function hasMatchingPortalNote(ticket = {}, noteBody = "", publicComment = true) {
   const cleanBody = String(noteBody || "").trim();
   if (!cleanBody) return false;
@@ -1952,7 +1960,8 @@ function upsertNinjaOneTicket(ninjaTicket = {}) {
     next.requesterLastName = "";
     next.requesterMappingNote = `Portal set requester from forwarded email content. NinjaOne requester was ${next.ninjaOneRequester || next.ninjaOneRequesterEmail || "unknown"}.`;
   }
-  next.status = portalStatusFromNinja(ninjaTicket);
+  const ninjaStatus = portalStatusFromNinja(ninjaTicket);
+  next.status = hasPortalResolutionOverride(next) && ninjaStatus === "new" ? "resolved" : ninjaStatus;
   next.priority = portalPriorityFromNinja(ninjaTicket.priority || next.priority);
   next.severity = String(ninjaTicket.severity || next.severity || "none").toLowerCase();
   next.tags = Array.isArray(ninjaTicket.tags) ? ninjaTicket.tags : next.tags || [];
@@ -4841,6 +4850,8 @@ async function saveTicketUpdate(ticketId, options = {}) {
   }
 
   ticket.status = status;
+  if (status === "resolved") ticket.portalStatusOverride = "resolved";
+  else if (ticket.portalStatusOverride === "resolved") ticket.portalStatusOverride = "";
   ticket.type = type;
   ticket.form = form;
   ticket.priority = priority;
