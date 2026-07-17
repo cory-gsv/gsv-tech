@@ -56,11 +56,19 @@ function decodeJwtPayload(token: string) {
   }
 }
 
-function allowedEmails() {
+function legacyAllowedEmails() {
   return envValue("BILLING_AUTH_ALLOWED_EMAILS", "BILLING_HUB_ALLOWED_EMAILS")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
+}
+
+function allowedEmail() {
+  return (
+    envValue("BILLING_AUTH_OWNER_EMAIL", "BILLING_AUTH_ALLOWED_EMAIL").toLowerCase() ||
+    legacyAllowedEmails()[0] ||
+    "cory@gsvisions.com"
+  )
 }
 
 function claimString(claims: Record<string, unknown> | null, name: string) {
@@ -121,9 +129,9 @@ export async function GET(request: NextRequest) {
     claimString(claims, "email") ||
     claimString(claims, "upn")
   ).toLowerCase()
-  const allowlist = allowedEmails()
+  const permittedEmail = allowedEmail()
 
-  if (audience !== clientId || !email || !allowlist.includes(email)) {
+  if (audience !== clientId || !email || email !== permittedEmail) {
     return NextResponse.redirect(new URL(`${nextPath}?error=msunauthorized`, request.url))
   }
 
