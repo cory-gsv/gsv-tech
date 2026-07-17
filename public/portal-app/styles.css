@@ -930,13 +930,19 @@ section {
   color: var(--good);
 }
 
-.badge.overdue, .badge.declined, .badge.void {
+.badge.overdue, .badge.declined {
   background: #fee4e2;
   color: var(--danger);
 }
 
+.badge.void {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
 .badge.draft {
   background: #fff2bf;
+  color: #8a6100;
 }
 
 .badge.ready {
@@ -945,8 +951,8 @@ section {
 }
 
 .badge.sent {
-  background: #e8f7ef;
-  color: #157347;
+  background: #e0f2fe;
+  color: #075985;
 }
 
 .badge.new, .badge.requested {
