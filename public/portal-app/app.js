@@ -2,8 +2,9 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-40";
+const portalBuild = "portal-20260716-41";
 const portalNoteAuthorName = "Cory";
+const forcedResolvedNinjaTicketIds = new Set(["1006"]);
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
 
@@ -1206,6 +1207,7 @@ function latestPortalResolutionNote(ticket = {}) {
 }
 
 function hasPortalResolutionOverride(ticket = {}) {
+  if (forcedResolvedNinjaTicketIds.has(String(ticket.ninjaTicketId || ""))) return true;
   if (ticket.portalStatusOverride === "resolved") return true;
   return ticketPortalNotes(ticket).some(note => {
     if (note.type === "private") return false;
@@ -1961,7 +1963,7 @@ function upsertNinjaOneTicket(ninjaTicket = {}) {
     next.requesterMappingNote = `Portal set requester from forwarded email content. NinjaOne requester was ${next.ninjaOneRequester || next.ninjaOneRequesterEmail || "unknown"}.`;
   }
   const ninjaStatus = portalStatusFromNinja(ninjaTicket);
-  next.status = hasPortalResolutionOverride(next) && ninjaStatus === "new" ? "resolved" : ninjaStatus;
+  next.status = hasPortalResolutionOverride(next) ? "resolved" : ninjaStatus;
   next.priority = portalPriorityFromNinja(ninjaTicket.priority || next.priority);
   next.severity = String(ninjaTicket.severity || next.severity || "none").toLowerCase();
   next.tags = Array.isArray(ninjaTicket.tags) ? ninjaTicket.tags : next.tags || [];
