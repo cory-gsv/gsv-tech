@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260716-52";
+const portalBuild = "portal-20260716-53";
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
 const m365AutomationActiveRuns = new Set();
@@ -5642,6 +5642,27 @@ function previewDocument(type, idValue, previewMode = "admin") {
   preview.showModal();
 }
 
+function closeDocumentPreview() {
+  const preview = document.getElementById("document-preview");
+  if (preview?.open) preview.close();
+}
+
+function focusNextControl(container, current) {
+  const controls = [...container.querySelectorAll("input, select, textarea, button, [tabindex]")]
+    .filter(control =>
+      !control.disabled &&
+      control.type !== "hidden" &&
+      control.offsetParent !== null &&
+      control.tabIndex !== -1
+    );
+  const currentIndex = controls.indexOf(current);
+  const nextControl = controls[currentIndex + 1] || controls[0];
+  if (nextControl) {
+    nextControl.focus();
+    if (nextControl.select) nextControl.select();
+  }
+}
+
 function updatePreviewActions(type, doc, customerMode) {
   const invoiceStatus = type === "invoice" ? computedInvoiceStatus(doc) : "";
   const canSend = type === "invoice"
@@ -6427,7 +6448,7 @@ document.addEventListener("click", event => {
   if (target.id === "editor-send" && editing.mode === "invoice" && editing.id) sendInvoice(editing.id, invoiceFromEditor());
   if (target.id === "editor-send" && editing.mode === "quote" && editing.id) sendQuote(editing.id, quoteFromEditor());
   if (target.id === "editor-close" || target.id === "editor-cancel") document.getElementById("editor").close();
-  if (target.id === "close-preview") document.getElementById("document-preview").close();
+  if (target.id === "close-preview") closeDocumentPreview();
   if (target.id === "resolve-ticket-close" || target.id === "resolve-ticket-cancel") closeResolveTicketModal();
   if (target.id === "admin-preview-document") switchPreviewDocumentMode("admin");
   if (target.id === "customer-preview-document") switchPreviewDocumentMode("customer");
@@ -6537,6 +6558,13 @@ document.addEventListener("submit", event => {
 });
 
 document.addEventListener("keydown", event => {
+  const previewDialog = document.getElementById("document-preview");
+  if (event.key === "Enter" && previewDialog?.open && previewDialog.contains(event.target)) {
+    event.preventDefault();
+    focusNextControl(previewDialog, event.target);
+    return;
+  }
+
   const previewCard = event.target?.closest?.("[data-open-customer-preview-invoice], [data-open-customer-preview-quote]");
   if (previewCard && (event.key === "Enter" || event.key === " ")) {
     event.preventDefault();
@@ -6573,9 +6601,11 @@ document.addEventListener("keydown", event => {
   if (nextControl && nextControl.id !== "editor-cancel") {
     nextControl.focus();
     if (nextControl.select) nextControl.select();
-    return;
   }
-  saveEditor();
+});
+
+document.getElementById("document-preview")?.addEventListener("click", event => {
+  if (event.target === event.currentTarget) closeDocumentPreview();
 });
 
 document.addEventListener("input", event => {
