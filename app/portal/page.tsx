@@ -55,7 +55,6 @@ export default async function PortalPage({ searchParams }: PortalPageProps) {
             </span>
             <span>
               <strong>Sign in with Microsoft 365</strong>
-              <small>Use your Golden State Visions account</small>
             </span>
           </a>
           <div className="gsv-billing-login__divider">Backup login</div>
