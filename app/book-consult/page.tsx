@@ -1,8 +1,8 @@
 "use client";
 
 import SiteFooter from "@/app/components/SiteFooter";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import Image from "next/image";
+import SiteHeader from "@/app/components/SiteHeader";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 
 type Slot = {
@@ -193,6 +193,7 @@ export default function BookConsultPage() {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const submittingRef = useRef(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -331,6 +332,10 @@ export default function BookConsultPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (submittingRef.current) {
+      return;
+    }
+
     if (!selectedSlot) {
       setError("Please select a time slot first.");
       return;
@@ -346,6 +351,7 @@ export default function BookConsultPage() {
       return;
     }
 
+    submittingRef.current = true;
     setStatus("Booking your consultation...");
     setError("");
 
@@ -386,6 +392,8 @@ export default function BookConsultPage() {
     } catch (err: unknown) {
       setStatus("");
       setError(getErrorMessage(err, "Booking failed"));
+    } finally {
+      submittingRef.current = false;
     }
   }
 
@@ -410,32 +418,7 @@ export default function BookConsultPage() {
   return (
     <main id="top" className="gsv-book-page">
       <div className="gsv-book-shell">
-        <header className="gsv-header">
-          <Link href="/" className="gsv-brand gsv-logo-link" aria-label="Golden State Visions home">
-            <Image
-              src="/images/gsv-logo.png"
-              alt="Golden State Visions Managed IT Services"
-              width={1798}
-              height={877}
-              className="gsv-logo-img"
-              priority
-            />
-          </Link>
-
-          <nav className="gsv-nav">
-            <div className="gsv-nav-dropdown">
-              <Link href="/#services" className="gsv-nav-dropdown-trigger">Services</Link>
-              <div className="gsv-nav-dropdown-menu">
-                <Link href="/commercial-it-support-lincoln-ca">Commercial IT Support</Link>
-                <Link href="/home-network-security-lincoln-ca">Home Networking & Cameras</Link>
-                <Link href="/#services">All Services</Link>
-              </div>
-            </div>
-            <Link href="/#how-we-work">How We Work</Link>
-            <Link href="/#why-us">Why Choose Us</Link>
-            <Link href="/#contact">Contact</Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
         <section className="gsv-book-top">
           <div className="gsv-book-hero">

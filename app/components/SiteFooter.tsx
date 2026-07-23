@@ -32,7 +32,7 @@ export default function SiteFooter() {
 
         .gsvsf-grid {
           display: grid;
-          grid-template-columns: 260px 240px 340px 250px;
+          grid-template-columns: 250px 330px 310px 230px;
           column-gap: 36px;
           align-items: start;
           width: 100%;
@@ -201,7 +201,14 @@ export default function SiteFooter() {
 
           <div className="gsvsf-column">
             <h4>Services</h4>
-            <Link href="/services/managed-it">Managed IT Services</Link>
+            <Link href="/services/managed-it">
+              Managed IT Services (Monitoring, Patching &amp; Maintenance)
+            </Link>
+            <Link href="/services/managed-it">
+              Endpoint Protection &amp; Threat Detection (EDR)
+            </Link>
+            <Link href="/services/managed-it">Backup &amp; Disaster Recovery</Link>
+            <Link href="/services/managed-it">HIPAA &amp; PCI Compliance Support</Link>
             <Link href="/services/networks-security-systems">Networks &amp; Security Systems</Link>
             <Link href="/services/smart-home-automation">Smart Home Automation</Link>
             <Link href="/services/audio-video-surveillance">Audio, Video &amp; Surveillance</Link>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import MenuAutoClose from "./components/MenuAutoClose";
+import SiteChatWidget from "./components/SiteChatWidget";
 import { siteUrl } from "./config/site";
 
 const socialImage = "/assets/images/portfolio/network-services-infographic-even.png";
@@ -58,6 +59,7 @@ export default function RootLayout({
       <body>
         <MenuAutoClose />
         {children}
+        <SiteChatWidget />
       </body>
     </html>
   );

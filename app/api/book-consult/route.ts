@@ -3,6 +3,21 @@ import { NextResponse } from "next/server";
 const FUNCTION_NAME = "gcal-sync";
 const BOOKING_SERVICE_UNAVAILABLE_MESSAGE =
   "Booking availability is temporarily unavailable. Please contact Golden State Visions directly and we’ll help schedule your consultation.";
+const BOOKING_COULD_NOT_COMPLETE_MESSAGE =
+  "Booking could not be completed right now. Please call Golden State Visions at (916) 432-3373 and we’ll help schedule your consultation.";
+const CONSULT_BOOKING_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+
+type SupabaseFunctionResult = {
+  ok: boolean;
+  status: number;
+  body: unknown;
+};
+
+const consultBookingPending = new Map<string, Promise<SupabaseFunctionResult>>();
+const consultBookingCache = new Map<
+  string,
+  { expiresAt: number; result: SupabaseFunctionResult }
+>();
 
 function getResponseMessage(data: unknown, key: "error" | "message") {
   if (!data || typeof data !== "object" || !(key in data)) return "";
@@ -62,52 +77,60 @@ export async function POST(request: Request) {
       );
     }
 
-    let res: Response;
+    const dedupeKey = getConsultBookingDedupeKey(body);
 
-    try {
-      res = await fetch(functionUrl.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${supabaseAnonKey}`,
-        },
-        body: JSON.stringify(body),
-        cache: "no-store",
-      });
-    } catch (error: unknown) {
-      console.error("Booking Supabase function request failed", error);
+    if (dedupeKey) {
+      pruneConsultBookingCache();
 
-      return NextResponse.json(
-        { error: BOOKING_SERVICE_UNAVAILABLE_MESSAGE },
-        { status: 503 },
+      const cached = consultBookingCache.get(dedupeKey);
+
+      if (cached && cached.expiresAt > Date.now()) {
+        console.info("Deduped repeated consult_book request", {
+          action: getBodyString(body, "action"),
+          start: getBodyString(body, "start"),
+        });
+
+        return createBookingResponse(cached.result);
+      }
+
+      const pending = consultBookingPending.get(dedupeKey);
+
+      if (pending) {
+        console.info("Deduped concurrent consult_book request", {
+          action: getBodyString(body, "action"),
+          start: getBodyString(body, "start"),
+        });
+
+        return createBookingResponse(await pending);
+      }
+
+      const requestPromise = invokeSupabaseBookingFunction(
+        functionUrl.url,
+        supabaseAnonKey,
+        body,
       );
+
+      consultBookingPending.set(dedupeKey, requestPromise);
+
+      try {
+        const result = await requestPromise;
+
+        if (result.ok) {
+          consultBookingCache.set(dedupeKey, {
+            expiresAt: Date.now() + CONSULT_BOOKING_DEDUPE_WINDOW_MS,
+            result,
+          });
+        }
+
+        return createBookingResponse(result);
+      } finally {
+        consultBookingPending.delete(dedupeKey);
+      }
     }
 
-    const text = await res.text();
-
-    let data: unknown = {};
-
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch {
-      data = { raw: text };
-    }
-
-    if (!res.ok) {
-      return NextResponse.json(
-        {
-          error:
-            getResponseMessage(data, "error") ||
-            getResponseMessage(data, "message") ||
-            `Supabase function failed with ${res.status}`,
-          details: data,
-        },
-        { status: res.status },
-      );
-    }
-
-    return NextResponse.json(data);
+    return createBookingResponse(
+      await invokeSupabaseBookingFunction(functionUrl.url, supabaseAnonKey, body),
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       {
@@ -119,4 +142,128 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+async function invokeSupabaseBookingFunction(
+  functionUrl: string,
+  supabaseAnonKey: string,
+  body: unknown,
+): Promise<SupabaseFunctionResult> {
+  let res: Response;
+
+  try {
+    res = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch (error: unknown) {
+    console.error("Booking Supabase function request failed", error);
+
+    return {
+      ok: false,
+      status: 503,
+      body: { error: BOOKING_SERVICE_UNAVAILABLE_MESSAGE },
+    };
+  }
+
+  const text = await res.text();
+
+  let data: unknown = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    console.error("Booking Supabase function returned an error", {
+      status: res.status,
+      action: getBodyString(body, "action"),
+      data,
+    });
+
+    const responseMessage =
+      getResponseMessage(data, "error") ||
+      getResponseMessage(data, "message") ||
+      `Supabase function failed with ${res.status}`;
+
+    return {
+      ok: false,
+      status: res.status,
+      body: {
+        error: getPublicBookingError(responseMessage, getBodyString(body, "action")),
+      },
+    };
+  }
+
+  console.info("Booking Supabase function succeeded", {
+    action: getBodyString(body, "action"),
+    start: getBodyString(body, "start"),
+  });
+
+  return { ok: true, status: res.status, body: data };
+}
+
+function createBookingResponse(result: SupabaseFunctionResult) {
+  return NextResponse.json(result.body, { status: result.status });
+}
+
+function getConsultBookingDedupeKey(body: unknown) {
+  if (!body || typeof body !== "object") return "";
+
+  const action = getBodyString(body, "action");
+
+  if (action !== "consult_book") return "";
+
+  return [
+    action,
+    getBodyString(body, "start"),
+    getBodyString(body, "end"),
+    getBodyString(body, "email").toLowerCase(),
+    getBodyString(body, "phone").replace(/\D/g, ""),
+  ].join("|");
+}
+
+function getBodyString(body: unknown, key: string) {
+  if (!body || typeof body !== "object" || !(key in body)) return "";
+
+  const value = (body as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : "";
+}
+
+function pruneConsultBookingCache() {
+  const now = Date.now();
+
+  for (const [key, entry] of consultBookingCache) {
+    if (entry.expiresAt <= now) {
+      consultBookingCache.delete(key);
+    }
+  }
+}
+
+function getPublicBookingError(message: string, action: unknown) {
+  const normalized = message.toLowerCase();
+
+  if (action === "availability") {
+    return BOOKING_SERVICE_UNAVAILABLE_MESSAGE;
+  }
+
+  if (
+    normalized.includes("resend") ||
+    normalized.includes("domain is not verified") ||
+    normalized.includes("verify your domain") ||
+    normalized.includes("validation_error") ||
+    normalized.includes("supabase function failed")
+  ) {
+    return BOOKING_COULD_NOT_COMPLETE_MESSAGE;
+  }
+
+  return message || BOOKING_COULD_NOT_COMPLETE_MESSAGE;
 }
