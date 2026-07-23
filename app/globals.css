@@ -5190,7 +5190,9 @@ header.gsv-header {
 .gsv-shared-brand:focus-visible,
 .gsv-shared-consult-cta:focus-visible,
 .gsv-shared-phone-link:focus-visible,
-.gsv-shared-utility-link:focus-visible {
+.gsv-shared-utility-link:focus-visible,
+.gsv-shared-menu-trigger:focus-visible,
+.gsv-shared-menu-link:focus-visible {
   outline: 2px solid #ffc72c;
   outline-offset: 4px;
 }
@@ -5276,7 +5278,8 @@ header.gsv-header {
   text-align: center;
 }
 
-.gsv-shared-nav a {
+.gsv-shared-nav a,
+.gsv-shared-menu-trigger {
   color: inherit;
   transition:
     border-color 0.2s ease,
@@ -5285,7 +5288,8 @@ header.gsv-header {
     transform 0.2s ease;
 }
 
-.gsv-shared-nav a:hover {
+.gsv-shared-nav a:hover,
+.gsv-shared-menu-trigger:hover {
   color: #ffc72c;
 }
 
@@ -5302,7 +5306,8 @@ header.gsv-header {
   line-height: 1;
 }
 
-.gsv-shared-utility-link svg {
+.gsv-shared-utility-link svg,
+.gsv-shared-menu-link svg {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
@@ -5313,10 +5318,51 @@ header.gsv-header {
   stroke-linejoin: round;
 }
 
-.gsv-shared-utility-link:hover {
+.gsv-shared-utility-link:hover,
+.gsv-shared-menu[open] .gsv-shared-menu-trigger {
   border-color: rgba(255, 199, 44, 0.5);
   background: rgba(255, 199, 44, 0.08);
   transform: translateY(-1px);
+}
+
+.gsv-shared-menu {
+  position: relative;
+}
+
+.gsv-shared-menu-trigger {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.gsv-shared-menu-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.gsv-shared-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  min-width: 220px;
+  padding: 8px;
+  border: 1px solid rgba(244, 239, 230, 0.16);
+  border-radius: 18px;
+  background: rgba(26, 21, 15, 0.98);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
+.gsv-shared-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.gsv-shared-menu-link:hover {
+  background: rgba(255, 199, 44, 0.08);
 }
 
 @media (max-width: 760px) {
@@ -5364,6 +5410,15 @@ header.gsv-header {
   .gsv-shared-phone-link {
     position: static;
     width: min(100%, 330px);
+  }
+
+  .gsv-shared-menu {
+    position: relative;
+  }
+
+  .gsv-shared-menu-panel {
+    right: 50%;
+    transform: translateX(50%);
   }
 
   .gsv-shared-consult-cta,

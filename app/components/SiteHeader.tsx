@@ -1,6 +1,44 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const menuLinks = [
+  {
+    href: "/services",
+    label: "Services",
+    icon: (
+      <>
+        <rect x="4" y="4" width="6" height="6" rx="1.2" />
+        <rect x="14" y="4" width="6" height="6" rx="1.2" />
+        <rect x="4" y="14" width="6" height="6" rx="1.2" />
+        <rect x="14" y="14" width="6" height="6" rx="1.2" />
+      </>
+    ),
+  },
+  {
+    href: "/resources",
+    label: "Resources",
+    icon: (
+      <>
+        <path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H8a3 3 0 0 0-3 3V5.5Z" />
+        <path d="M5 18a3 3 0 0 1 3-3h11" />
+        <path d="M9 7h6" />
+        <path d="M9 10h4" />
+      </>
+    ),
+  },
+  {
+    href: "/about",
+    label: "About",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 10v6" />
+        <path d="M12 7h.01" />
+      </>
+    ),
+  },
+];
+
 export default function SiteHeader() {
   return (
     <header className="gsv-header gsv-shared-header">
@@ -35,32 +73,26 @@ export default function SiteHeader() {
           </a>
 
           <nav className="gsv-shared-nav" aria-label="Primary navigation">
-            <Link href="/services" className="gsv-shared-utility-link">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="4" y="4" width="6" height="6" rx="1.2" />
-                <rect x="14" y="4" width="6" height="6" rx="1.2" />
-                <rect x="4" y="14" width="6" height="6" rx="1.2" />
-                <rect x="14" y="14" width="6" height="6" rx="1.2" />
-              </svg>
-              <span>Services</span>
-            </Link>
-            <Link href="/resources" className="gsv-shared-utility-link">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H8a3 3 0 0 0-3 3V5.5Z" />
-                <path d="M5 18a3 3 0 0 1 3-3h11" />
-                <path d="M9 7h6" />
-                <path d="M9 10h4" />
-              </svg>
-              <span>Resources</span>
-            </Link>
-            <Link href="/about" className="gsv-shared-utility-link">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 10v6" />
-                <path d="M12 7h.01" />
-              </svg>
-              <span>About</span>
-            </Link>
+            <details className="gsv-shared-menu">
+              <summary className="gsv-shared-utility-link gsv-shared-menu-trigger">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 7h14" />
+                  <path d="M5 12h14" />
+                  <path d="M5 17h14" />
+                </svg>
+                <span>Menu</span>
+              </summary>
+              <div className="gsv-shared-menu-panel">
+                {menuLinks.map((item) => (
+                  <Link key={item.href} href={item.href} className="gsv-shared-menu-link">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      {item.icon}
+                    </svg>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </details>
             <Link href="/billing" className="gsv-shared-utility-link">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.5" />
