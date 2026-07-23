@@ -1,20 +1,109 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import JsonLd from "@/app/components/JsonLd";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
-import type { LocalCity } from "@/app/data/localSeo";
+import type { BusinessIndustryKey, LocalCity } from "@/app/data/localSeo";
+import { commercialCityStructuredData } from "@/app/data/structuredData";
 
-export function businessCityMeta(city: LocalCity) {
+const businessCitySocialImage =
+  "/assets/images/portfolio/managed-it-infrastructure-illustration-transparent-tight.png";
+
+export function businessCityMeta(city: LocalCity): Metadata {
   const title = `Commercial IT Support & Network Infrastructure | ${city.city}, ${city.state}`;
-  const description = `Golden State Visions provides commercial IT support, managed networks, Microsoft 365, Google Workspace, WiFi, security cameras, and infrastructure support for restaurants, retail, dental offices, medical offices, and small businesses across ${city.city} and the greater ${city.region} area.`;
+  const description = city.commercial.intro;
+  const path = `/commercial-it-support-${city.slug}`;
 
-  return { title, description };
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: "Golden State Visions",
+      type: "website",
+      images: [
+        {
+          url: businessCitySocialImage,
+          width: 1460,
+          height: 658,
+          alt: "Managed IT infrastructure illustration for Golden State Visions business technology support",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [businessCitySocialImage],
+    },
+  };
+}
+
+type BusinessIndustryCard = {
+  key: BusinessIndustryKey;
+  title: string;
+  body: string;
+};
+
+const businessIndustryCards: BusinessIndustryCard[] = [
+  {
+    key: "restaurants",
+    title: "Restaurants & Hospitality",
+    body:
+      "Support for guest WiFi, POS network segmentation to support PCI compliance, cameras, office computers, printers, internet failover planning, and vendor coordination.",
+  },
+  {
+    key: "retail",
+    title: "Retail & Showrooms",
+    body:
+      "Reliable WiFi, secure networks, camera visibility, workstation setup, payment-device segmentation to support PCI compliance, and clean equipment organization.",
+  },
+  {
+    key: "medical",
+    title: "Dental & Medical Offices",
+    body:
+      "Structured network support, secure access planning and network segmentation to support HIPAA compliance, workstation deployment, WiFi coverage, printer support, and technology coordination.",
+  },
+  {
+    key: "professional",
+    title: "Professional Offices",
+    body:
+      "Email, cloud platforms, document access, device support, conference-room connectivity, and dependable day-to-day IT management.",
+  },
+  {
+    key: "warehouse",
+    title: "Warehouses & Light Industrial",
+    body:
+      "WiFi coverage planning, cameras, network expansion, device connectivity, cabling, and support for operational systems.",
+  },
+  {
+    key: "multiSite",
+    title: "Multi-Site Businesses",
+    body:
+      "Secure site-to-site connectivity, standardized network design, remote access, device management, and consistent support across locations.",
+  },
+];
+
+function getOrderedBusinessIndustryCards(order: BusinessIndustryKey[]) {
+  const byKey = new Map(businessIndustryCards.map((card) => [card.key, card]));
+
+  return order
+    .map((key) => byKey.get(key))
+    .filter((card): card is BusinessIndustryCard => Boolean(card));
 }
 
 export default function BusinessCityPage({ city }: { city: LocalCity }) {
   const servingLine = `Serving ${city.city}, ${city.state} and the greater ${city.region} area`;
+  const industryCards = getOrderedBusinessIndustryCards(city.commercial.industryOrder);
 
   return (
     <main id="top" className="gsv-page">
+      <JsonLd data={commercialCityStructuredData(city)} />
       <div className="gsv-shell">
         <SiteHeader />
 
@@ -22,13 +111,9 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
           <div className="gsv-hero-copy">
             <div className="gsv-eyebrow">Commercial IT Support • {city.city}, {city.state}</div>
 
-            <h1>Reliable IT and network support for local businesses.</h1>
+            <h1>{city.commercial.h1}</h1>
 
-            <p>
-              Golden State Visions supports restaurants, retail shops, dental offices,
-              medical offices, professional service firms, warehouses, small offices,
-              and growing businesses across {city.city} and the greater {city.region} area.
-            </p>
+            <p>{city.commercial.intro}</p>
 
             <div className="gsv-hero-actions">
               <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
@@ -45,16 +130,13 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
             <div className="gsv-status-card gsv-capability-lead">
               <div className="gsv-status-label">Built for real-world business operations</div>
               <div className="gsv-status-value">Support, Security, WiFi, Cloud, and Infrastructure</div>
-              <p>
-                From daily user support to network buildouts, camera systems, cloud platforms,
-                and vendor coordination, we help keep business technology dependable and organized.
-              </p>
+              <p>{city.commercial.servicesIntro}</p>
             </div>
 
             <div className="gsv-status-grid gsv-capability-grid">
               <div className="gsv-mini-stat gsv-capability-card">
                 <span>Business Types</span>
-                <strong>Restaurants, retail, dental, medical, and office environments</strong>
+                <strong>{city.commercial.businessTypes}</strong>
               </div>
 
               <div className="gsv-mini-stat gsv-capability-card">
@@ -79,11 +161,7 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
           <div className="gsv-section-head">
             <div className="gsv-eyebrow">Business IT Services</div>
             <h2>Practical technology support for businesses that depend on uptime.</h2>
-            <p>
-              We work with small and medium-sized businesses that need dependable systems,
-              clean infrastructure, secure networks, and responsive support without juggling
-              multiple vendors.
-            </p>
+            <p>{city.commercial.servicesIntro}</p>
           </div>
 
           <div className="gsv-card-grid">
@@ -138,56 +216,16 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
           <div className="gsv-section-head">
             <div className="gsv-eyebrow">Industries We Support</div>
             <h2>Technology support for service businesses, offices, and operational teams.</h2>
+            <p>{city.commercial.industriesIntro}</p>
           </div>
 
           <div className="gsv-feature-grid">
-            <div className="gsv-feature">
-              <h3>Restaurants & Hospitality</h3>
-              <p>
-                Support for guest WiFi, POS networks, cameras, office computers, printers,
-                internet failover planning, and vendor coordination.
-              </p>
-            </div>
-
-            <div className="gsv-feature">
-              <h3>Retail & Showrooms</h3>
-              <p>
-                Reliable WiFi, secure networks, camera visibility, workstation setup,
-                payment-device segmentation, and clean equipment organization.
-              </p>
-            </div>
-
-            <div className="gsv-feature">
-              <h3>Dental & Medical Offices</h3>
-              <p>
-                Structured network support, secure access planning, workstation deployment,
-                WiFi coverage, printer support, and technology coordination.
-              </p>
-            </div>
-
-            <div className="gsv-feature">
-              <h3>Professional Offices</h3>
-              <p>
-                Email, cloud platforms, document access, device support, conference-room
-                connectivity, and dependable day-to-day IT management.
-              </p>
-            </div>
-
-            <div className="gsv-feature">
-              <h3>Warehouses & Light Industrial</h3>
-              <p>
-                WiFi coverage planning, cameras, network expansion, device connectivity,
-                cabling, and support for operational systems.
-              </p>
-            </div>
-
-            <div className="gsv-feature">
-              <h3>Multi-Site Businesses</h3>
-              <p>
-                Secure site-to-site connectivity, standardized network design, remote access,
-                device management, and consistent support across locations.
-              </p>
-            </div>
+            {industryCards.map((card) => (
+              <div key={card.key} className="gsv-feature">
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 

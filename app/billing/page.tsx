@@ -1,7 +1,32 @@
+import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import Image from "next/image"
 import "./billing.css"
 import { verifyBillingSession } from "./billingAuth"
+
+export const metadata: Metadata = {
+  title: "Client Portal | Golden State Visions",
+  description: "Golden State Visions client portal login for billing and account access.",
+  alternates: {
+    canonical: "/billing",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: "Client Portal | Golden State Visions",
+    description: "Golden State Visions client portal login for billing and account access.",
+    url: "/billing",
+    siteName: "Golden State Visions",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Client Portal | Golden State Visions",
+    description: "Golden State Visions client portal login for billing and account access.",
+  },
+}
 
 type BillingPageProps = {
   searchParams?: Promise<{ error?: string }>

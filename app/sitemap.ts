@@ -12,6 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/services/networks-security-systems",
     "/services/smart-home-automation",
     "/services/audio-video-surveillance",
+    "/resources",
+    "/about",
     "/book-consult",
     "/privacy-policy",
     "/sms-terms",

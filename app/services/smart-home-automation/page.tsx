@@ -1,5 +1,7 @@
+import JsonLd from "@/app/components/JsonLd";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
+import { smartHomeStructuredData } from "@/app/data/structuredData";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -7,6 +9,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
  title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
  description: "Smart home automation, Lutron lighting and shades, Control4, Home Assistant, media rooms, whole-home audio, and local surveillance systems across Lincoln, Roseville, Rocklin, Granite Bay, and Northern California.",
+ alternates: {
+  canonical: "/services/smart-home-automation",
+ },
  openGraph: {
   title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
   description:
@@ -35,6 +40,7 @@ export const metadata: Metadata = {
 export default function SmartHomeAutomationPage() {
  return (
  <main id="top" className="gsv-page">
+ <JsonLd data={smartHomeStructuredData()} />
  <div className="gsv-shell">
  <SiteHeader />
 

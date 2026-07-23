@@ -215,10 +215,9 @@ export default function BookConsultPage() {
       email.trim().length > 0 &&
       emailIsValid &&
       phone.trim().length > 0 &&
-      company.trim().length > 0 &&
       questions.trim().length > 0
     );
-  }, [selectedSlot, name, email, emailIsValid, phone, company, questions]);
+  }, [selectedSlot, name, email, emailIsValid, phone, questions]);
 
   const invokeFunction = useCallback(async (body: unknown) => {
     const res = await fetch("/api/book-consult", {
@@ -341,7 +340,7 @@ export default function BookConsultPage() {
       return;
     }
 
-    if (!name.trim() || !email.trim() || !phone.trim() || !company.trim() || !questions.trim()) {
+    if (!name.trim() || !email.trim() || !phone.trim() || !questions.trim()) {
       setError("Please complete all required fields.");
       return;
     }
@@ -356,12 +355,14 @@ export default function BookConsultPage() {
     setError("");
 
     try {
+      const companyForBooking = company.trim() || "Not provided";
+
       const result = await invokeFunction({
         action: "consult_book",
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        company: company.trim(),
+        company: companyForBooking,
         questions: questions.trim(),
         smsConsent,
         smsConsentText:
@@ -373,12 +374,16 @@ export default function BookConsultPage() {
       const resultObject =
         result && typeof result === "object" ? (result as Record<string, unknown>) : {};
       const confirmation = getConfirmationPayload(resultObject.confirmation);
+      const confirmedCompany =
+        confirmation?.company && confirmation.company !== "Not provided"
+          ? confirmation.company
+          : company.trim();
 
       setBookingConfirmationDetails({
         name: confirmation?.name || name.trim(),
         email: confirmation?.email || email.trim(),
         phone: confirmation?.phone || phone.trim(),
-        company: confirmation?.company || company.trim(),
+        company: confirmedCompany,
         questions: confirmation?.questions || questions.trim(),
         start: confirmation?.start || selectedSlot.start,
         end: confirmation?.end || selectedSlot.end,
@@ -646,13 +651,12 @@ export default function BookConsultPage() {
 
                   <div className="gsv-book-field">
                     <label htmlFor="company">
-                      Company <span className="gsv-required">*</span>
+                      Company / household <span className="gsv-optional">(optional)</span>
                     </label>
                     <input
                       id="company"
                       name="company"
-                      placeholder="Company name"
-                      required
+                      placeholder="Company or household name"
                       disabled={formLocked}
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
@@ -771,10 +775,12 @@ export default function BookConsultPage() {
                   <strong>{bookingConfirmationDetails.phone}</strong>
                 </div>
 
-                <div>
-                  <span>Company</span>
-                  <strong>{bookingConfirmationDetails.company}</strong>
-                </div>
+                {bookingConfirmationDetails.company ? (
+                  <div>
+                    <span>Company / household</span>
+                    <strong>{bookingConfirmationDetails.company}</strong>
+                  </div>
+                ) : null}
 
                 <div>
                   <span>Start</span>
@@ -1330,6 +1336,11 @@ export default function BookConsultPage() {
         .gsv-required {
           color: #b42318;
           font-weight: 900;
+        }
+
+        .gsv-optional {
+          color: rgba(22, 22, 22, 0.48);
+          font-weight: 700;
         }
 
         .gsv-book-form {

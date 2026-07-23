@@ -3,6 +3,8 @@ import Link from "next/link";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
 
+const socialImage = "/images/gsv-logo.png";
+
 export const metadata: Metadata = {
   title: "SMS Terms & Conditions | Golden State Visions",
   description:
@@ -17,6 +19,21 @@ export const metadata: Metadata = {
     url: "/sms-terms",
     siteName: "Golden State Visions",
     type: "article",
+    images: [
+      {
+        url: socialImage,
+        width: 1798,
+        height: 877,
+        alt: "Golden State Visions logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SMS Terms & Conditions | Golden State Visions",
+    description:
+      "Terms for conversational SMS/text message communications from Golden State Visions.",
+    images: [socialImage],
   },
 };
 
@@ -35,7 +52,7 @@ const sections = [
           <li>Support requests</li>
           <li>Follow-up conversations</li>
           <li>
-            Real estate media, managed IT, networking, smart home, and related service
+            Managed IT, networking, smart home, audio/video, and related service
             communication
           </li>
         </ul>

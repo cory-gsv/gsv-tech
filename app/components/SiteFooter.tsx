@@ -119,6 +119,24 @@ export default function SiteFooter() {
           box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
         }
 
+        .gsvsf-next-links {
+          display: grid;
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .gsvsf-next-links a {
+          color: rgba(255, 255, 255, 0.66);
+          font-size: 13px;
+          line-height: 1.25;
+          font-weight: 650;
+          text-decoration: none;
+        }
+
+        .gsvsf-next-links a:hover {
+          color: #ffffff;
+        }
+
         .gsvsf-bottom {
           width: 100%;
           max-width: 1240px;
@@ -232,6 +250,10 @@ export default function SiteFooter() {
             <Link href="/book-consult" className="gsvsf-button">
               Book a Consult
             </Link>
+            <div className="gsvsf-next-links" aria-label="Company links">
+              <Link href="/about">About Golden State Visions</Link>
+              <Link href="/resources">Resources &amp; FAQ</Link>
+            </div>
           </div>
         </div>
 

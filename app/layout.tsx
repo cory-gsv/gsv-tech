@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import JsonLd from "./components/JsonLd";
 import MenuAutoClose from "./components/MenuAutoClose";
 import SiteChatWidget from "./components/SiteChatWidget";
 import { siteUrl } from "./config/site";
+import { globalStructuredData } from "./data/structuredData";
 
 const socialImage = "/assets/images/portfolio/network-services-infographic-even.png";
 
@@ -58,6 +60,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <MenuAutoClose />
+        <JsonLd data={globalStructuredData()} />
         {children}
         <SiteChatWidget />
       </body>

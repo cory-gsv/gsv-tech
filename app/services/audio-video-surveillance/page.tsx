@@ -1,5 +1,7 @@
+import JsonLd from "@/app/components/JsonLd";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
+import { audioVideoStructuredData } from "@/app/data/structuredData";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -7,6 +9,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
  title: "Audio, Video & Surveillance Systems | Golden State Visions",
  description: "Custom whole-home audio, dedicated media rooms, home theater systems, AI surveillance, local NVR recording, and secure residential AV infrastructure across Northern California.",
+ alternates: {
+  canonical: "/services/audio-video-surveillance",
+ },
  openGraph: {
   title: "Audio, Video & Surveillance Systems | Golden State Visions",
   description:
@@ -33,10 +38,11 @@ export const metadata: Metadata = {
 };
 
 export default function AudioVideoSurveillancePage() {
- return (
+  return (
   <main id="top" className="gsv-page">
-   <div className="gsv-shell">
- <SiteHeader />
+  <JsonLd data={audioVideoStructuredData()} />
+  <div className="gsv-shell">
+  <SiteHeader />
 
  <section id="managed-it-support" className="gsv-section">
   <div className="gsv-section-head">

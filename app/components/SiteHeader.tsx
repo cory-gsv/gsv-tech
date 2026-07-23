@@ -44,6 +44,23 @@ export default function SiteHeader() {
               </svg>
               <span>Services</span>
             </Link>
+            <Link href="/resources" className="gsv-shared-utility-link">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H8a3 3 0 0 0-3 3V5.5Z" />
+                <path d="M5 18a3 3 0 0 1 3-3h11" />
+                <path d="M9 7h6" />
+                <path d="M9 10h4" />
+              </svg>
+              <span>Resources</span>
+            </Link>
+            <Link href="/about" className="gsv-shared-utility-link">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 10v6" />
+                <path d="M12 7h.01" />
+              </svg>
+              <span>About</span>
+            </Link>
             <Link href="/billing" className="gsv-shared-utility-link">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="8" r="3.5" />

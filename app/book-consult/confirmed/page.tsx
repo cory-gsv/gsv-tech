@@ -53,7 +53,9 @@ function Content() {
           <div className="gsv-confirm-row"><span>Name</span><strong>{name}</strong></div>
           <div className="gsv-confirm-row"><span>Email</span><strong>{email}</strong></div>
           <div className="gsv-confirm-row"><span>Phone</span><strong>{phone}</strong></div>
-          <div className="gsv-confirm-row"><span>Company</span><strong>{company}</strong></div>
+          {company && company !== "Not provided" ? (
+            <div className="gsv-confirm-row"><span>Company / household</span><strong>{company}</strong></div>
+          ) : null}
           <div className="gsv-confirm-row"><span>Start</span><strong>{startDisplay}</strong></div>
           <div className="gsv-confirm-row"><span>End</span><strong>{endDisplay}</strong></div>
 

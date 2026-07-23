@@ -1,13 +1,47 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import JsonLd from "@/app/components/JsonLd";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
 import type { LocalCity } from "@/app/data/localSeo";
+import { residentialCityStructuredData } from "@/app/data/structuredData";
 
-export function residentialCityMeta(city: LocalCity) {
+const residentialCitySocialImage =
+  "/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png";
+
+export function residentialCityMeta(city: LocalCity): Metadata {
   const title = `Home Networking & Security Camera Systems | ${city.city}, ${city.state}`;
-  const description = `Golden State Visions designs and supports home networking, WiFi, camera security systems, smart home infrastructure, and Lutron HomeWorks integration for ${city.city} and the greater ${city.region} area.`;
+  const description = city.residential.intro;
+  const path = `/home-network-security-${city.slug}`;
 
-  return { title, description };
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: "Golden State Visions",
+      type: "website",
+      images: [
+        {
+          url: residentialCitySocialImage,
+          width: 1655,
+          height: 797,
+          alt: "Smart home automation illustration for Golden State Visions residential technology systems",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [residentialCitySocialImage],
+    },
+  };
 }
 
 export default function ResidentialCityPage({ city }: { city: LocalCity }) {
@@ -15,6 +49,7 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
 
   return (
     <main id="top" className="gsv-page">
+      <JsonLd data={residentialCityStructuredData(city)} />
       <div className="gsv-shell">
         <SiteHeader />
 
@@ -22,13 +57,9 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
           <div className="gsv-hero-copy">
             <div className="gsv-eyebrow">Home Networking • Security Cameras • Smart Systems</div>
 
-            <h1>Reliable home networks and security camera systems.</h1>
+            <h1>{city.residential.h1}</h1>
 
-            <p>
-              Golden State Visions designs and supports premium residential networking,
-              WiFi, security camera systems, smart home infrastructure, and Lutron HomeWorks
-              integration for homeowners across {city.city} and the greater {city.region} area.
-            </p>
+            <p>{city.residential.intro}</p>
 
             <div className="gsv-hero-actions">
               <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
@@ -45,16 +76,13 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
             <div className="gsv-status-card gsv-capability-lead">
               <div className="gsv-status-label">Residential Technology</div>
               <div className="gsv-status-value">WiFi, Cameras, Smart Home, and Network Design</div>
-              <p>
-                We help homeowners build dependable technology systems that are clean,
-                secure, easy to use, and ready to support modern connected living.
-              </p>
+              <p>{city.residential.servicesIntro}</p>
             </div>
 
             <div className="gsv-status-grid gsv-capability-grid">
               <div className="gsv-mini-stat gsv-capability-card">
                 <span>Networking</span>
-                <strong>Whole-home WiFi, switches, gateways, and coverage planning</strong>
+                <strong>{city.residential.propertyTypes}</strong>
               </div>
 
               <div className="gsv-mini-stat gsv-capability-card">
@@ -79,10 +107,7 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
           <div className="gsv-section-head">
             <div className="gsv-eyebrow">Residential Services</div>
             <h2>Home technology systems designed for coverage, security, and simplicity.</h2>
-            <p>
-              From WiFi dead zones to camera coverage and smart home integration, we help
-              homeowners design systems that feel polished, reliable, and easy to live with.
-            </p>
+            <p>{city.residential.servicesIntro}</p>
           </div>
 
           <div className="gsv-card-grid">

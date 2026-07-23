@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
 
+const socialImage = "/images/gsv-logo.png";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Golden State Visions",
   description:
@@ -16,6 +18,21 @@ export const metadata: Metadata = {
     url: "/privacy-policy",
     siteName: "Golden State Visions",
     type: "article",
+    images: [
+      {
+        url: socialImage,
+        width: 1798,
+        height: 877,
+        alt: "Golden State Visions logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | Golden State Visions",
+    description:
+      "How Golden State Visions collects, uses, shares, and protects information provided through website, service, and SMS communications.",
+    images: [socialImage],
   },
 };
 
@@ -37,8 +54,8 @@ const sections = [
           <li>Appointment or project details</li>
           <li>Messages or support requests you send to us</li>
           <li>
-            Information needed to provide real estate media, managed IT, networking,
-            smart home, or related services
+            Information needed to provide managed IT, networking, smart home,
+            audio/video, or related services
           </li>
         </ul>
       </>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import JsonLd from "@/app/components/JsonLd";
 import { getLocalCity, localCities } from "@/app/data/localSeo";
+import { locationHubStructuredData } from "@/app/data/structuredData";
 import LocationPageClient from "./LocationPageClient";
 
 type LocationPageProps = {
@@ -63,32 +65,9 @@ export default async function LocationPage({ params }: LocationPageProps) {
 
   if (!city) notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: `Golden State Visions - ${city.city} Technology Services`,
-    image: "/assets/images/portfolio/network-services-infographic-even.png",
-    telephone: "(916) 432-3373",
-    areaServed: {
-      "@type": "City",
-      name: `${city.city}, ${city.state}`,
-    },
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: city.city,
-      addressRegion: city.state,
-      addressCountry: "US",
-    },
-    url: `/locations/${city.slug}`,
-    description: `Managed IT, network infrastructure, smart home automation, audio/video, and surveillance services in ${city.city}, ${city.state}.`,
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={locationHubStructuredData(city)} />
       <LocationPageClient city={city} />
     </>
   );

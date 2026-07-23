@@ -1,5 +1,7 @@
+import JsonLd from "@/app/components/JsonLd";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
+import { networksSecurityStructuredData } from "@/app/data/structuredData";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -7,6 +9,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
  title: "Networks & Security Systems | Golden State Visions",
  description: "Structured cabling, secure business networks, IP surveillance, NVR systems, wireless coverage, and access control systems for businesses and properties in Northern California.",
+ alternates: {
+  canonical: "/services/networks-security-systems",
+ },
  openGraph: {
   title: "Networks & Security Systems | Golden State Visions",
   description:
@@ -35,6 +40,7 @@ export const metadata: Metadata = {
 export default function NetworksSecuritySystemsPage() {
  return (
  <main id="top" className="gsv-page">
+ <JsonLd data={networksSecurityStructuredData()} />
  <div className="gsv-shell">
  <SiteHeader />
 

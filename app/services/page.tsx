@@ -1,6 +1,32 @@
+import type { Metadata } from "next";
+import JsonLd from "@/app/components/JsonLd";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
 import TechnologyPartnersSection from "@/app/components/TechnologyPartnersSection";
+import { servicesPageStructuredData } from "@/app/data/structuredData";
+
+export const metadata: Metadata = {
+  title: "Services | Golden State Visions",
+  description:
+    "Managed IT services, networks and security systems, smart home automation, and audio/video surveillance from Golden State Visions.",
+  alternates: {
+    canonical: "/services",
+  },
+  openGraph: {
+    title: "Services | Golden State Visions",
+    description:
+      "Explore managed IT, cybersecurity, network infrastructure, smart home automation, and audio/video services from Golden State Visions.",
+    url: "/services",
+    siteName: "Golden State Visions",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Services | Golden State Visions",
+    description:
+      "Explore managed IT, cybersecurity, network infrastructure, smart home automation, and audio/video services from Golden State Visions.",
+  },
+};
 
 function ServiceBlock({
   eyebrow,
@@ -30,6 +56,7 @@ function ServiceBlock({
 export default function ServicesPage() {
   return (
     <main id="top" className="gsv-page">
+      <JsonLd data={servicesPageStructuredData()} />
       <div className="gsv-shell">
         <SiteHeader />
 
