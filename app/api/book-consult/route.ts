@@ -6,6 +6,9 @@ const BOOKING_SERVICE_UNAVAILABLE_MESSAGE =
 const BOOKING_COULD_NOT_COMPLETE_MESSAGE =
   "Booking could not be completed right now. Please call Golden State Visions at (916) 909-0500 and we’ll help schedule your consultation.";
 const CONSULT_BOOKING_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+const MINIMUM_BOOKING_NOTICE_MS = 2 * 60 * 60 * 1000;
+const MINIMUM_BOOKING_NOTICE_MESSAGE =
+  "Appointments must be booked at least two hours in advance.";
 
 type SupabaseFunctionResult = {
   ok: boolean;
@@ -47,6 +50,21 @@ function getSupabaseFunctionUrl(supabaseUrl: string) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const action = getBodyString(body, "action");
+
+    if (action === "consult_book") {
+      const bookingStart = new Date(getBodyString(body, "start")).getTime();
+
+      if (
+        !Number.isFinite(bookingStart) ||
+        bookingStart < Date.now() + MINIMUM_BOOKING_NOTICE_MS
+      ) {
+        return NextResponse.json(
+          { error: MINIMUM_BOOKING_NOTICE_MESSAGE },
+          { status: 400 },
+        );
+      }
+    }
 
     const supabaseUrl =
       process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
