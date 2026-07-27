@@ -422,9 +422,9 @@ export default function BookConsultPage() {
 
   return (
     <main id="top" className="gsv-book-page">
-      <div className="gsv-book-shell">
-        <SiteHeader />
+      <SiteHeader />
 
+      <div className="gsv-book-shell">
         <section className="gsv-book-top">
           <div className="gsv-book-hero">
             <div className="gsv-book-hero-inner">
@@ -839,9 +839,9 @@ export default function BookConsultPage() {
         </div>
       ) : null}
 
-      <SiteFooter />
-
       </div>
+
+      <SiteFooter />
 
       <style jsx>{`
         html {
@@ -851,18 +851,14 @@ export default function BookConsultPage() {
         .gsv-book-page {
           min-height: 100vh;
           background:
-            radial-gradient(circle at top left, rgba(255, 199, 44, 0.12), transparent 28%),
-            linear-gradient(180deg, #f7f3ea 0%, #f8f5ee 48%, #f3efe6 100%);
+            radial-gradient(circle at 8% 10%, rgba(255, 199, 44, 0.14), transparent 24%),
+            linear-gradient(180deg, #f8f5ed 0%, #f3efe5 100%);
           color: #161616;
-          padding: 20px 20px 34px;
-        }
-
-        .gsv-book-page :global(.gsv-header) {
-          padding: 8px 0 22px;
+          overflow: clip;
         }
 
         .gsv-book-page :global(.gsv-footer) {
-          margin-top: 34px;
+          margin-top: 80px;
           margin-bottom: 0;
         }
 
@@ -871,8 +867,8 @@ export default function BookConsultPage() {
           --gsv-left-col: minmax(0, 1.45fr);
           --gsv-right-col: minmax(370px, 0.85fr);
           --gsv-two-col-layout: var(--gsv-left-col) var(--gsv-right-col);
-          max-width: 1380px;
-          margin: 0 auto;
+          width: min(calc(100% - 48px), 1380px);
+          margin: 44px auto 0;
         }
 
         .gsv-book-top,
@@ -890,19 +886,49 @@ export default function BookConsultPage() {
         .gsv-book-hero,
         .gsv-book-expect,
         .gsv-book-card {
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.94);
           border: 1px solid rgba(25, 25, 25, 0.08);
-          border-radius: 28px;
-          box-shadow: 0 10px 40px rgba(22, 22, 22, 0.06), 0 2px 10px rgba(22, 22, 22, 0.03);
+          border-radius: 30px;
+          box-shadow: 0 18px 54px rgba(22, 22, 22, 0.07);
         }
 
         .gsv-book-hero,
         .gsv-book-expect {
           min-width: 0;
           height: 100%;
-          padding: 22px 24px;
+          padding: clamp(28px, 4vw, 54px);
           display: flex;
           align-items: stretch;
+        }
+
+        .gsv-book-hero {
+          position: relative;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 8% 0%, rgba(255, 199, 44, 0.2), transparent 34%),
+            linear-gradient(135deg, #211e18 0%, #11110f 68%);
+          border-color: rgba(255, 255, 255, 0.08);
+          color: #f8f5ec;
+        }
+
+        .gsv-book-hero::after {
+          content: "";
+          position: absolute;
+          right: -76px;
+          bottom: -116px;
+          width: 260px;
+          height: 260px;
+          border: 1px solid rgba(255, 199, 44, 0.22);
+          border-radius: 50%;
+          box-shadow:
+            0 0 0 36px rgba(255, 199, 44, 0.04),
+            0 0 0 72px rgba(255, 199, 44, 0.025);
+          pointer-events: none;
+        }
+
+        .gsv-book-expect {
+          background: #ffc72c;
+          border-color: rgba(17, 17, 17, 0.08);
         }
 
         .gsv-book-hero-inner,
@@ -943,16 +969,32 @@ export default function BookConsultPage() {
           text-transform: uppercase;
         }
 
+        .gsv-book-hero .gsv-book-eyebrow,
+        .gsv-book-expect .gsv-book-eyebrow {
+          color: #ffc72c;
+        }
+
+        .gsv-book-expect .gsv-book-eyebrow {
+          color: rgba(17, 17, 17, 0.62);
+        }
+
         .gsv-book-hero h1 {
           margin: 0 0 14px;
           font-size: clamp(44px, 5vw, 72px);
           line-height: 0.96;
           letter-spacing: -0.05em;
-          color: #161616;
+          color: #ffffff;
           text-wrap: balance;
         }
 
-        .gsv-book-hero p,
+        .gsv-book-hero p {
+          max-width: 720px;
+          margin: 0;
+          color: rgba(255, 255, 255, 0.68);
+          font-size: 17px;
+          line-height: 1.65;
+        }
+
         .gsv-book-expect ul,
         .gsv-book-note {
           color: rgba(22, 22, 22, 0.72);
@@ -981,8 +1023,8 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-callout {
-          border: 1px solid rgba(255, 199, 44, 0.36);
-          background: rgba(255, 199, 44, 0.12);
+          border: 1px solid rgba(17, 17, 17, 0.12);
+          background: rgba(255, 255, 255, 0.38);
           border-radius: 14px;
           padding: 10px 12px;
         }
@@ -994,7 +1036,7 @@ export default function BookConsultPage() {
           font-weight: 900;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #7c5a0d;
+          color: rgba(17, 17, 17, 0.58);
         }
 
         .gsv-book-callout strong {
@@ -1019,7 +1061,7 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-card {
-          padding: 20px;
+          padding: clamp(22px, 3vw, 34px);
           min-width: 0;
           transition:
             transform 220ms ease,
@@ -1035,22 +1077,7 @@ export default function BookConsultPage() {
         }
 
         .gsv-book-sticky {
-          max-height: calc(100vh - 36px);
-          overflow: auto;
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-        }
-
-        .gsv-book-sticky::-webkit-scrollbar {
-          width: 10px;
-        }
-
-        .gsv-book-sticky::-webkit-scrollbar-thumb {
-          background: rgba(255, 199, 44, 0.22);
-          border-radius: 999px;
-          border: 2px solid transparent;
-          background-clip: content-box;
+          overflow: visible;
         }
 
         .gsv-book-card-head {
@@ -1686,8 +1713,13 @@ export default function BookConsultPage() {
         }
 
         @media (max-width: 640px) {
-          .gsv-book-page {
-            padding: 20px 14px 40px;
+          .gsv-book-shell {
+            width: min(calc(100% - 24px), 1380px);
+            margin-top: 24px;
+          }
+
+          .gsv-book-page :global(.gsv-footer) {
+            margin-top: 48px;
           }
 
           .gsv-book-hero,

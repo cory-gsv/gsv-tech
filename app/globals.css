@@ -4010,6 +4010,15 @@ header.gsv-header {
   }
 }
 
+/* Book Consult uses the full shared footer outside its content shell. */
+@media (min-width: 1221px) {
+  .gsv-book-page .gsv-footer .gsvsf-grid {
+    width: min(100%, 1240px) !important;
+    grid-template-columns: 220px 120px 285px 285px 160px !important;
+    column-gap: 24px !important;
+  }
+}
+
 /* =========================================================
    Book Consult sticky right booking panel
    Actual wrapper classes from app/book-consult/page.tsx
@@ -4022,14 +4031,14 @@ header.gsv-header {
 
   .gsv-book-sticky-wrap {
     position: sticky !important;
-    top: 24px !important;
+    top: 20px !important;
     align-self: flex-start !important;
     z-index: 5 !important;
   }
 
   .gsv-book-sticky {
-    max-height: calc(100vh - 48px) !important;
-    overflow-y: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 
