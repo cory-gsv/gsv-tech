@@ -251,17 +251,27 @@ export default function SiteFooter() {
 
           <div className="gsvsf-column">
             <h4>Services</h4>
-            <Link href="/managed-it">
+            <a href="/managed-it?service=01">
               Managed IT Services (Monitoring, Patching &amp; Maintenance)
-            </Link>
-            <Link href="/managed-it">
+            </a>
+            <a href="/managed-it?service=01">
               Endpoint Protection &amp; Threat Detection (EDR)
-            </Link>
-            <Link href="/managed-it">Backup &amp; Disaster Recovery</Link>
-            <Link href="/managed-it">HIPAA &amp; PCI Compliance Support</Link>
-            <Link href="/managed-it">Networks &amp; Security Systems</Link>
-            <Link href="/smart-home-automation">Smart Home Automation</Link>
-            <Link href="/smart-home-automation">Audio, Video &amp; Surveillance</Link>
+            </a>
+            <a href="/managed-it?service=03">
+              Backup &amp; Disaster Recovery
+            </a>
+            <a href="/managed-it?service=05">
+              HIPAA &amp; PCI Compliance Support
+            </a>
+            <a href="/managed-it?service=06">
+              Networks &amp; Security Systems
+            </a>
+            <a href="/smart-home-automation?service=03">
+              Smart Home Automation
+            </a>
+            <a href="/smart-home-automation?service=05">
+              Audio, Video &amp; Surveillance
+            </a>
           </div>
 
           <div className="gsvsf-column" id="site-service-areas">

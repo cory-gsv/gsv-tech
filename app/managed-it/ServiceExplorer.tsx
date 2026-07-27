@@ -144,6 +144,49 @@ export default function ServiceExplorer({
     [],
   );
 
+  useEffect(() => {
+    function openLinkedService() {
+      const hashMatch = window.location.hash.match(/^#service-(\d{2})/);
+      const number =
+        new URLSearchParams(window.location.search).get("service") ??
+        hashMatch?.[1];
+
+      if (!number || !services.some((service) => service.number === number)) {
+        return;
+      }
+
+      setAutoRotate(false);
+      setActiveNumber(number);
+
+      if (rotationTimerRef.current !== null) {
+        window.clearTimeout(rotationTimerRef.current);
+        rotationTimerRef.current = null;
+      }
+
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current);
+      }
+
+      scrollTimerRef.current = window.setTimeout(() => {
+        document.getElementById(`service-${number}`)?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+        scrollTimerRef.current = null;
+      }, CARD_EXPANSION_SCROLL_DELAY_MS);
+    }
+
+    openLinkedService();
+    window.addEventListener("hashchange", openLinkedService);
+
+    return () => {
+      window.removeEventListener("hashchange", openLinkedService);
+    };
+  }, [services]);
+
   function pauseAutoRotation() {
     setAutoRotate(false);
     if (rotationTimerRef.current !== null) {
@@ -206,6 +249,7 @@ export default function ServiceExplorer({
               className={`${styles.serviceItem} ${
                 isActive ? styles.serviceItemActive : ""
               }`}
+              id={`service-${service.number}`}
               key={service.title}
             >
               <div className={styles.serviceRow}>
