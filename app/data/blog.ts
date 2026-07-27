@@ -43,7 +43,7 @@ export const blogPosts: BlogPost[] = [
     partnerHref: "https://m5-electric.com",
     partnerLabel: "Visit M5 Electric",
     partnerLogo: "/assets/partners/m5-electric-logo.png",
-    partnerLogoAlt: "M5 Electric",
+    partnerLogoAlt: "M5 Electric logo",
     sections: [
       {
         heading: "Why M5 Electric is a trusted GSV partner",
