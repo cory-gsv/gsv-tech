@@ -68,8 +68,7 @@ const generalChatLimitMessage =
   "You’ve used the six general-answer allowance. I can still answer questions about Golden State Visions, help you book a consult, or have someone call you.";
 const maxGeneralAiResponses = 6;
 const transcriptInactivityMs = 5 * 60 * 1_000;
-const chatAutoOpenDelayMs = 15_000;
-const chatAutoOpenSessionKey = "gsv-chat-auto-opened";
+const chatAutoOpenDelayMs = 20_000;
 const outsideServiceAreaMessage =
   "It looks like you’re outside our U.S. service area. Golden State Visions currently serves customers in the United States, so chat and appointment requests are unavailable from your location.";
 
@@ -99,6 +98,8 @@ export default function SiteChatWidget() {
   const messagesRef = useRef(messages);
   const lastTranscriptSentCountRef = useRef(0);
   const hasVisitorControlledChatRef = useRef(false);
+  const autoOpenElapsedMsRef = useRef(0);
+  const autoOpenStartedAtRef = useRef<number | null>(null);
   const transcriptVisitorInfoRef = useRef<TranscriptVisitorInfo>({
     name: "",
     phone: "",
@@ -139,32 +140,34 @@ export default function SiteChatWidget() {
   }, []);
 
   useEffect(() => {
-    if (isBillingRoute) return;
+    if (isBillingRoute || hasVisitorControlledChatRef.current) return;
 
-    let hasAutoOpened = false;
-
-    try {
-      hasAutoOpened =
-        window.sessionStorage.getItem(chatAutoOpenSessionKey) === "true";
-    } catch {
-      // The timer can still work when browser storage is unavailable.
-    }
-
-    if (hasAutoOpened) return;
+    const remainingDelay = Math.max(
+      0,
+      chatAutoOpenDelayMs - autoOpenElapsedMsRef.current,
+    );
+    autoOpenStartedAtRef.current = Date.now();
 
     const autoOpenTimer = window.setTimeout(() => {
       if (hasVisitorControlledChatRef.current) return;
 
-      try {
-        window.sessionStorage.setItem(chatAutoOpenSessionKey, "true");
-      } catch {
-        // Opening the chat does not depend on browser storage.
-      }
-
+      autoOpenElapsedMsRef.current = chatAutoOpenDelayMs;
+      autoOpenStartedAtRef.current = null;
       setIsOpen(true);
-    }, chatAutoOpenDelayMs);
+    }, remainingDelay);
 
-    return () => window.clearTimeout(autoOpenTimer);
+    return () => {
+      window.clearTimeout(autoOpenTimer);
+
+      if (autoOpenStartedAtRef.current !== null) {
+        autoOpenElapsedMsRef.current = Math.min(
+          chatAutoOpenDelayMs,
+          autoOpenElapsedMsRef.current +
+            (Date.now() - autoOpenStartedAtRef.current),
+        );
+        autoOpenStartedAtRef.current = null;
+      }
+    };
   }, [isBillingRoute]);
 
   const sendTranscript = (reason: string) => {
@@ -274,12 +277,6 @@ export default function SiteChatWidget() {
 
   const markChatAsVisitorControlled = () => {
     hasVisitorControlledChatRef.current = true;
-
-    try {
-      window.sessionStorage.setItem(chatAutoOpenSessionKey, "true");
-    } catch {
-      // Manual chat controls remain available without browser storage.
-    }
   };
 
   const beginCaptureFlow = (mode: LeadMode, userMessage: string) => {
