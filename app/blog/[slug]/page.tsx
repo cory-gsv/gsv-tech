@@ -4,6 +4,7 @@ import SiteHeader from "@/app/components/SiteHeader";
 import { siteUrl } from "@/app/config/site";
 import { blogPosts, getBlogPost } from "@/app/data/blog";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import styles from "../blog.module.css";
@@ -145,6 +146,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       <div className={styles.articleShell}>
         <article className={styles.articleBody}>
+          {post.partnerLogo && post.partnerLogoAlt && post.partnerHref ? (
+            <a
+              href={post.partnerHref}
+              className={styles.partnerProfile}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Image
+                src={post.partnerLogo}
+                alt={post.partnerLogoAlt}
+                width={1200}
+                height={1200}
+                sizes="(max-width: 620px) 120px, 170px"
+              />
+              <span>
+                <small>Trusted partner</small>
+                <strong>M5 Electric</strong>
+                <span>m5-electric.com ↗</span>
+              </span>
+            </a>
+          ) : null}
           {post.sections.map((section) => (
             <section className={styles.articleSection} key={section.heading}>
               <h2>{section.heading}</h2>
