@@ -2,6 +2,11 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/app/config/site";
 import { localCities } from "@/app/data/localSeo";
 
+// Keep these dates aligned with the last substantive update to the shared site
+// content and the local SEO data respectively.
+const siteContentLastModified = "2026-07-26";
+const localSeoContentLastModified = "2026-07-26";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     { route: "", changeFrequency: "weekly" as const, priority: 1 },
@@ -19,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { route: "/sms-terms", changeFrequency: "yearly" as const, priority: 0.2 },
   ].map(({ route, changeFrequency, priority }) => ({
     url: `${siteUrl}${route}`,
+    lastModified: siteContentLastModified,
     changeFrequency,
     priority,
   }));
@@ -29,11 +35,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const cityAudienceRoutes = localCities.flatMap((city) => [
     {
       url: `${siteUrl}/commercial-it-support-${city.slug}`,
+      lastModified: localSeoContentLastModified,
       changeFrequency: "monthly" as const,
       priority: 0.8,
     },
     {
       url: `${siteUrl}/home-network-security-${city.slug}`,
+      lastModified: localSeoContentLastModified,
       changeFrequency: "monthly" as const,
       priority: 0.8,
     },

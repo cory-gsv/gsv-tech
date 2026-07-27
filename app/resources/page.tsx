@@ -12,7 +12,7 @@ import ResourceFaqExplorer from "./ResourceFaqExplorer";
 export const metadata: Metadata = {
   title: "Technology Resources & FAQ | Golden State Visions",
   description:
-    "Practical planning guides and answers about managed IT, cybersecurity, HIPAA and PCI support, business networks, Lutron lighting and shades, smart home automation, audio/video, and surveillance.",
+    "Practical guides and answers about managed IT, cybersecurity, business networks, and smart home planning for Northern California clients.",
   alternates: {
     canonical: "/resources",
   },
