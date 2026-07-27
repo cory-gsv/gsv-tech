@@ -245,14 +245,6 @@
   text-wrap: balance;
 }
 
-.hero h1 span {
-  display: block;
-  margin-top: 0.08em;
-  color: var(--concept-gold);
-  font-style: italic;
-  letter-spacing: -0.078em;
-}
-
 .heroLead {
   max-width: 760px;
   margin: 28px 0 0;

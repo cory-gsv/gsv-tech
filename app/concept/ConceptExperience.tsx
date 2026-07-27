@@ -488,13 +488,11 @@ export default function ConceptExperience() {
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <p className={styles.eyebrow}>Northern California technology partner</p>
-          <h1>
-            Technology that works together.
-            <span>A local team that owns the outcome.</span>
-          </h1>
+          <h1>Technology that works together.</h1>
           <p className={styles.heroLead}>
-            Managed IT and workplace technology for businesses. Thoughtfully
-            integrated networking, lighting, automation, and AV for homes.
+            Local managed IT and workplace technology for Northern California
+            businesses, plus thoughtfully integrated networking, lighting,
+            automation, and AV for homes.
           </p>
           <AudiencePathButtons
             audience={audience}
