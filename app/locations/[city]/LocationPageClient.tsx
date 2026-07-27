@@ -60,7 +60,7 @@ export default function LocationPageClient({ city }: { city: LocalCity }) {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter locationPath={`/locations/${city.slug}`} />
     </main>
   );
 }

@@ -239,7 +239,7 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter locationPath={`/commercial-it-support-${city.slug}`} />
     </main>
   );
 }

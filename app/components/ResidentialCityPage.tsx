@@ -185,7 +185,7 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter locationPath={`/home-network-security-${city.slug}`} />
     </main>
   );
 }

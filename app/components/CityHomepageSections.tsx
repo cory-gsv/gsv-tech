@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TechnologyPartnersSection from "@/app/components/TechnologyPartnersSection";
 import WhyGoldenStateVisionsSection from "@/app/components/WhyGoldenStateVisionsSection";
 import type { LocalCity } from "@/app/data/localSeo";
@@ -394,6 +394,7 @@ export default function CityHomepageSections({
   const [audience, setAudience] = useState<Audience>(defaultAudience);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
+  const linkedScrollTimerRef = useRef<number | null>(null);
   const selectedProfile = serviceProfiles[audience][selectedIndex];
 
   useEffect(() => {
@@ -425,6 +426,45 @@ export default function CityHomepageSections({
     return () =>
       window.removeEventListener("gsv:choose-audience", handleAudienceChoice);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linkedAudience = params.get("audience");
+    const linkedProfile = params.get("profile");
+
+    if (
+      (linkedAudience !== "business" && linkedAudience !== "home") ||
+      !linkedProfile
+    ) {
+      return;
+    }
+
+    const profileIndex = serviceProfiles[linkedAudience].findIndex(
+      (profile) => profile.key === linkedProfile,
+    );
+
+    if (profileIndex < 0) return;
+
+    setAudience(linkedAudience);
+    setSelectedIndex(profileIndex);
+    setAutoRotate(false);
+
+    linkedScrollTimerRef.current = window.setTimeout(() => {
+      document.getElementById("service-paths")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+      linkedScrollTimerRef.current = null;
+    }, 240);
+
+    return () => {
+      if (linkedScrollTimerRef.current !== null) {
+        window.clearTimeout(linkedScrollTimerRef.current);
+      }
+    };
+  }, [serviceProfiles]);
 
   function chooseAudience(nextAudience: Audience) {
     setAudience(nextAudience);

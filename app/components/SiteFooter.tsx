@@ -24,7 +24,20 @@ const footerLocations = [
   ["San Jose, CA", "/locations/san-jose-ca"],
 ];
 
-export default function SiteFooter() {
+export default function SiteFooter({
+  locationPath,
+}: {
+  locationPath?: string;
+} = {}) {
+  const serviceHref = (
+    audience: "business" | "home",
+    profile: string,
+    fallback: string,
+  ) =>
+    locationPath
+      ? `${locationPath}?audience=${audience}&profile=${profile}`
+      : fallback;
+
   return (
     <footer className="gsv-footer">
       <style>{`
@@ -251,25 +264,67 @@ export default function SiteFooter() {
 
           <div className="gsvsf-column">
             <h4>Services</h4>
-            <a href="/managed-it?service=01">
+            <a
+              href={serviceHref(
+                "business",
+                "offices",
+                "/managed-it?service=01",
+              )}
+            >
               Managed IT Services (Monitoring, Patching &amp; Maintenance)
             </a>
-            <a href="/managed-it?service=01">
+            <a
+              href={serviceHref(
+                "business",
+                "offices",
+                "/managed-it?service=01",
+              )}
+            >
               Endpoint Protection &amp; Threat Detection (EDR)
             </a>
-            <a href="/managed-it?service=03">
+            <a
+              href={serviceHref(
+                "business",
+                "offices",
+                "/managed-it?service=03",
+              )}
+            >
               Backup &amp; Disaster Recovery
             </a>
-            <a href="/managed-it?service=05">
+            <a
+              href={serviceHref(
+                "business",
+                "medical",
+                "/managed-it?service=05",
+              )}
+            >
               HIPAA &amp; PCI Compliance Support
             </a>
-            <a href="/managed-it?service=06">
+            <a
+              href={serviceHref(
+                "business",
+                "warehouses",
+                "/managed-it?service=06",
+              )}
+            >
               Networks &amp; Security Systems
             </a>
-            <a href="/smart-home-automation?service=03">
+            <a
+              href={serviceHref(
+                "home",
+                "new-build",
+                "/smart-home-automation?service=03",
+              )}
+            >
               Smart Home Automation
             </a>
-            <a href="/smart-home-automation?service=05">
+            <a
+              href={serviceHref(
+                "home",
+                "av-control",
+                "/smart-home-automation?service=05",
+              )}
+            >
               Audio, Video &amp; Surveillance
             </a>
           </div>
