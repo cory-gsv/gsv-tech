@@ -542,7 +542,8 @@ export default function ConceptExperience() {
         </aside>
       </section>
 
-      <section className={styles.problemSection} id="concept-problems">
+      <div className={styles.mainContent}>
+        <section className={styles.problemSection} id="concept-problems">
         <div
           className={styles.sectionHeading}
           id="concept-problem-heading"
@@ -657,13 +658,13 @@ export default function ConceptExperience() {
             </p>
           </aside>
         </div>
-      </section>
+        </section>
 
-      <WhyGoldenStateVisionsSection />
+        <WhyGoldenStateVisionsSection />
 
-      <TechnologyPartnersSection />
+        <TechnologyPartnersSection />
 
-      <section className={styles.howSection} id="how-we-work">
+        <section className={styles.howSection} id="how-we-work">
         <div className={styles.whyIntro}>
           <p className={styles.eyebrow}>How We Work</p>
           <h2>A clear path from first conversation to long-term support.</h2>
@@ -699,7 +700,8 @@ export default function ConceptExperience() {
             </p>
           </article>
         </div>
-      </section>
+        </section>
+      </div>
 
       <SiteFooter />
     </main>

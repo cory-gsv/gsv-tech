@@ -374,8 +374,24 @@
   scroll-margin-top: 0;
 }
 
+.mainContent {
+  background-color: var(--concept-paper);
+  background-image:
+    linear-gradient(rgba(247, 245, 239, 0.96), rgba(247, 245, 239, 0.96)),
+    url("/assets/partners/circuit-plan-background.png");
+  background-position:
+    center,
+    center top;
+  background-repeat:
+    repeat,
+    repeat-y;
+  background-size:
+    auto,
+    min(1600px, 100%) auto;
+}
+
 .problemSection {
-  background: var(--concept-paper);
+  background: transparent;
 }
 
 .sectionHeading {
@@ -885,7 +901,7 @@
 
 .whySection {
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
-  background: var(--concept-paper);
+  background: transparent;
 }
 
 .whyIntro {
@@ -1123,7 +1139,7 @@
   margin: 0;
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
   color: var(--concept-ink);
-  background: var(--concept-paper);
+  background: transparent;
 }
 
 .page :global(.gsv-redesign-partners-head) {
@@ -1158,7 +1174,7 @@
 
 .howSection {
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
-  background: var(--concept-paper);
+  background: transparent;
 }
 
 .howGrid {
