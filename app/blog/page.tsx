@@ -84,9 +84,8 @@ export default function BlogPage() {
           <p className={styles.eyebrow}>Latest Guidance</p>
           <h2 id="latest-guidance-title">Start with the environment you manage.</h2>
           <p>
-            These articles go deeper than the FAQ: what to check, how systems fit
-            together, where projects go wrong, and what to ask before making an
-            investment.
+            Practical guidance on what to check, how systems fit together, where
+            projects go wrong, and what to ask before making an investment.
           </p>
         </div>
 
