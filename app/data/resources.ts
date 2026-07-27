@@ -175,7 +175,7 @@ export const resourceFaqItems = [
   {
     question: "Can IT support help with HIPAA or PCI requirements?",
     answer:
-      "Technology support can help implement and document safeguards such as access controls, multi-factor authentication, endpoint protection, backups, logging, network segmentation, and secure configuration. HIPAA and PCI obligations depend on the organization, systems, vendors, contracts, and data flows, so technical support should complement—not replace—legal, compliance, or assessor guidance.",
+      "Technology support can help implement and document safeguards such as access controls, multi-factor authentication, endpoint protection, backups, logging, network segmentation, and secure configuration. HIPAA and PCI obligations depend on the organization, systems, vendors, contracts, and data flows. Technical support should complement legal, compliance, or assessor guidance, not replace it.",
   },
   {
     question: "Why should guest Wi-Fi be separated from business devices?",

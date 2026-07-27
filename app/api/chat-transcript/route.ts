@@ -90,8 +90,8 @@ export async function POST(request: Request) {
     const locationLabel = [requestInfo.city, requestInfo.region]
       .filter(Boolean)
       .join(", ");
-    const subject = `Website AI chat transcript — ${
-      locationLabel ? `${locationLabel} — ` : ""
+    const subject = `Website AI chat transcript | ${
+      locationLabel ? `${locationLabel} | ` : ""
     }${reason}`;
     const text = [
       "Golden State Visions website AI chat transcript",

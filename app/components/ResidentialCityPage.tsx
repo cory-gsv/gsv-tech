@@ -150,7 +150,7 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
           <p className={styles.sectionEyebrow}>Designed for the Property</p>
           <h2>Technology that fits how the home is built and used.</h2>
           <p>
-            {city.city} projects are planned around the physical property—not a generic
+            {city.city} projects are planned around the physical property, not a generic
             package or a pile of disconnected products.
           </p>
         </div>

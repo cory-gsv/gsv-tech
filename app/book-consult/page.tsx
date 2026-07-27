@@ -110,7 +110,7 @@ function formatWeekLabelFromDate(dateStr: string) {
   return `${start.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
-  })} – ${end.toLocaleDateString("en-US", {
+  })} to ${end.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",

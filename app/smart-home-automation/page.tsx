@@ -259,7 +259,7 @@ export default function SmartHomeAutomationPage() {
           <p>
             Thoughtful planning, Lutron lighting and shades, whole-home
             control, UniFi infrastructure, audio, video, surveillance, and
-            support—organized around one accountable partner.
+            support, organized around one accountable partner.
           </p>
         </div>
 

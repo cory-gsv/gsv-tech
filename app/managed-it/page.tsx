@@ -266,7 +266,7 @@ export default function ManagedITServicesPage() {
           <p>
             Dependable support, cloud administration, proactive monitoring,
             business infrastructure, surveillance, wireless, and access
-            control—organized around one accountable partner.
+            control, organized around one accountable partner.
           </p>
         </div>
 

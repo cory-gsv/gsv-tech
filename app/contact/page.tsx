@@ -104,7 +104,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <dt>Hours</dt>
-                  <dd>Monday–Friday, 8:00 AM–6:00 PM PT</dd>
+                  <dd>Monday through Friday, 8:00 AM to 6:00 PM PT</dd>
                 </div>
                 <div>
                   <dt>Service area</dt>

@@ -21,7 +21,7 @@ export default function LocationPageClient({ city }: { city: LocalCity }) {
           <h1>Technology support for {city.city} businesses and homes.</h1>
           <p>
             Local planning for workplaces, homes, network coverage, security, lighting,
-            automation, and connected systems—with one accountable team coordinating the
+            automation, and connected systems. One accountable team coordinates the
             environment.
           </p>
           <AudiencePathButtons targetId="service-paths" />

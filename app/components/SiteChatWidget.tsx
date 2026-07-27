@@ -1019,7 +1019,7 @@ export default function SiteChatWidget() {
                   ? "Chat is unavailable outside the United States."
                   : hasReachedGeneralChatLimit && !capture
                   ? "Ask about our services, coverage area, company, or contact options..."
-                  : "Type any question—technology, services, projects, or anything else..."
+                  : "Type any question about technology, services, projects, or anything else..."
               }
               rows={2}
               disabled={isLoading || isOutsideUsServiceArea}
