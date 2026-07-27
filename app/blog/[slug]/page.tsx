@@ -173,6 +173,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <Link href={post.serviceHref} className={styles.asideLink}>
             {post.serviceLabel} <span aria-hidden="true">→</span>
           </Link>
+          {post.partnerHref && post.partnerLabel ? (
+            <a
+              href={post.partnerHref}
+              className={styles.asideLink}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {post.partnerLabel} <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
           <Link href="/book-consult" className={styles.asideLink}>
             Book a consultation <span aria-hidden="true">→</span>
           </Link>

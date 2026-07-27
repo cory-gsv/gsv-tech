@@ -16,10 +16,92 @@ export type BlogPost = {
   readTime: string;
   serviceHref: string;
   serviceLabel: string;
+  partnerHref?: string;
+  partnerLabel?: string;
   sections: BlogSection[];
 };
 
 export const blogPosts: BlogPost[] = [
+  {
+    slug: "trusted-electrical-technology-partners-m5-electric",
+    title: "Why Trusted Electrical and Technology Partners Matter",
+    description:
+      "See why Golden State Visions works closely with M5 Electric, backed by more than 45 years of electrical experience and 35 years of custom home experience.",
+    excerpt:
+      "Reliable projects depend on more than good products. Electrical, cabling, network, lighting, and automation scopes need teams that plan together and take ownership.",
+    category: "Networks & Security",
+    audience:
+      "Business owners, homeowners, builders, general contractors, architects, and designers",
+    published: "2026-07-27",
+    updated: "2026-07-27",
+    readTime: "8 min read",
+    serviceHref: "/managed-it?service=06",
+    serviceLabel: "Explore network and infrastructure planning",
+    partnerHref: "https://m5-electric.com",
+    partnerLabel: "Visit M5 Electric",
+    sections: [
+      {
+        heading: "Technology projects cross trade boundaries",
+        paragraphs: [
+          "A modern business or custom home depends on power, pathways, structured cabling, networks, lighting, cameras, audio, automation, and connected equipment. These systems may be installed by different specialists, but they do not operate independently. A decision made by one trade can affect every team that follows.",
+          "The equipment rack needs the right power and ventilation. Wireless access points and cameras need cable routes and suitable mounting locations. Lighting controls need compatible loads and thoughtful keypad locations. Motorized shades, door stations, displays, and outdoor systems may need power, control wiring, conduit, or all three. Coordinating these details early is what turns a collection of products into a reliable system.",
+        ],
+      },
+      {
+        heading: "Electrical and low voltage planning belong together",
+        paragraphs: [
+          "Electrical and low voltage systems have different requirements, but the plans must agree. Power locations, panel capacity, grounding, equipment rooms, conduit, exterior penetrations, ceiling layouts, cabinetry, and construction sequencing all affect the technology scope.",
+          "When the electrical and technology teams communicate before installation, they can resolve conflicts on a drawing or during a site walk. When they work in isolation, the same conflict may not appear until a wall is closed, a cabinet is installed, or equipment arrives on site.",
+        ],
+        bullets: [
+          "Confirm power, dedicated circuits, backup power, and equipment locations.",
+          "Coordinate conduit, sleeves, cable pathways, and service access.",
+          "Keep electrical and communications cabling properly separated.",
+          "Align lighting, wireless access points, speakers, cameras, and ceiling devices.",
+          "Plan exterior power and data for gates, cameras, access control, and outdoor living areas.",
+          "Document changes so every trade works from the same current information.",
+        ],
+      },
+      {
+        heading: "Structured cabling is permanent infrastructure",
+        paragraphs: [
+          "Network electronics will change over the life of a building. Well planned cabling and pathways can support several generations of equipment. Poorly placed or undocumented cable can limit coverage, make service difficult, and force expensive construction work later.",
+          "A good structured cabling plan starts with how the space will be used. Offices, checkout stations, conference rooms, televisions, wireless access points, cameras, doors, equipment racks, work areas, and future expansion all need to be considered. Every cable should be labeled, tested, documented, and terminated where it can be serviced.",
+        ],
+      },
+      {
+        heading: "Trusted partners catch problems before they become rework",
+        paragraphs: [
+          "Plans change during real construction. Walls move, millwork is revised, equipment selections change, and site conditions reveal constraints that were not visible on the original drawings. A trusted partner does more than complete an assigned task. They communicate changes, raise concerns early, and help the larger team find a practical solution.",
+          "That working relationship matters most when a problem falls between scopes. Instead of debating whose responsibility it is, trusted partners identify what the finished system needs and coordinate the right people to deliver it.",
+        ],
+      },
+      {
+        heading: "Why Golden State Visions works closely with M5 Electric",
+        paragraphs: [
+          "Golden State Visions works closely with M5 Electric because reliable electrical and technology systems require close coordination. Their team brings more than 45 years of electrical experience and more than 35 years of experience working on custom homes. That practical knowledge matters when architectural details, electrical requirements, lighting, equipment, and technology all need to come together cleanly.",
+          "M5 Electric brings the electrical perspective, while our team focuses on structured cabling, networks, Wi-Fi, surveillance, audio, video, automation, documentation, and ongoing technology support.",
+          "Working together helps us address power, pathways, equipment locations, grounding, conduit, lighting integration, construction timing, and handoff before those details become field problems. It also gives the client a more connected team with a shared understanding of the project.",
+          "The value is not simply having two contractors on the same job. It is having partners who communicate, respect each other’s work, and stay focused on the finished result.",
+        ],
+      },
+      {
+        heading: "Clear ownership creates a better handoff",
+        paragraphs: [
+          "A successful project should end with more than functioning equipment. The owner should receive labeled infrastructure, test results, system drawings, device records, configuration backups, warranty information, and a clear support path.",
+          "Good coordination also defines where one scope ends and another begins. If a device loses power, a cable fails, a network setting changes, or an automation stops responding, the support team can diagnose the complete path instead of sending the client between disconnected vendors.",
+        ],
+      },
+      {
+        heading: "Bring the partners together early",
+        paragraphs: [
+          "The best time to coordinate electrical and technology work is during planning, before rough installation begins. For an existing building, a joint site review can reveal panel, pathway, coverage, equipment room, and access constraints before pricing and scheduling are finalized.",
+          "For new construction or a major renovation, involve the electrical and technology teams while architectural, electrical, lighting, reflected ceiling, cabinetry, and landscape plans can still be adjusted. Early coordination protects the design, reduces change orders, and makes the finished system easier to operate and support.",
+          "Golden State Visions can help define the technology scope and coordinate it with M5 Electric and the rest of the project team. The goal is straightforward: a well planned installation, clear responsibility, and systems that continue working after the project is complete.",
+        ],
+      },
+    ],
+  },
   {
     slug: "restaurant-network-security-checklist",
     title: "A Practical Network Security Checklist for Restaurants",
