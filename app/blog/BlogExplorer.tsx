@@ -70,15 +70,19 @@ export default function BlogExplorer({ posts }: { posts: BlogPost[] }) {
 
       {visiblePosts.length > 0 ? (
         <div className={styles.postGrid}>
-          {visiblePosts.map((post) => (
+          {visiblePosts.map((post, index) => (
             <Link href={`/blog/${post.slug}`} className={styles.postCard} key={post.slug}>
-              <div className={styles.cardMeta}>
-                <span>{post.category}</span>
-                <span>{post.readTime}</span>
-              </div>
+              <span className={styles.cardNumber}>
+                {String(index + 1).padStart(2, "0")}
+              </span>
               <h2>{post.title}</h2>
-              <p>{post.excerpt}</p>
-              <span className={styles.cardLink}>Read the article</span>
+              <div className={styles.cardSummary}>
+                <p>{post.excerpt}</p>
+                <span>{post.category} · {post.readTime}</span>
+              </div>
+              <span className={styles.cardLink} aria-hidden="true">
+                <span />
+              </span>
             </Link>
           ))}
         </div>

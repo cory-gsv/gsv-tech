@@ -60,20 +60,40 @@ export default function BlogPage() {
   };
 
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.blogLanding}`}>
       <JsonLd data={blogSchema} />
       <SiteHeader />
 
+      <section className={styles.hero} aria-labelledby="blog-title">
+        <div className={styles.heroInner}>
+          <div className={styles.heroIntro}>
+            <p className={styles.eyebrow}>GSV Field Notes</p>
+            <h1 id="blog-title">
+              Better systems start with <em>better thinking.</em>
+            </h1>
+          </div>
+
+          <div className={styles.heroNote}>
+            <span>Insights for connected spaces</span>
+            <p>
+              Practical perspectives on managed IT, secure networks, smart
+              homes, and the infrastructure behind them.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.content} aria-labelledby="latest-guidance-title">
         <div className={styles.sectionHead}>
-          <p className={styles.eyebrow}>Technology Insights</p>
+          <div>
+            <p className={styles.eyebrow}>Explore the journal</p>
+            <span className={styles.issueCount}>
+              {String(blogPosts.length).padStart(2, "0")} articles
+            </span>
+          </div>
           <h2 id="latest-guidance-title">
-            Helpful articles for better technology decisions.
+            Ideas, answers &amp; field notes.
           </h2>
-          <p>
-            Explore advice, comparisons, checklists, and planning guides for
-            business IT, networks, security, smart homes, and connected systems.
-          </p>
         </div>
 
         <BlogExplorer posts={blogPosts} />
