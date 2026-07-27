@@ -66,11 +66,13 @@ export default function BlogPage() {
 
       <section className={styles.content} aria-labelledby="latest-guidance-title">
         <div className={styles.sectionHead}>
-          <p className={styles.eyebrow}>Latest Guidance</p>
-          <h2 id="latest-guidance-title">Start with the environment you manage.</h2>
+          <p className={styles.eyebrow}>Technology Insights</p>
+          <h2 id="latest-guidance-title">
+            Helpful articles for better technology decisions.
+          </h2>
           <p>
-            Practical guidance on what to check, how systems fit together, where
-            projects go wrong, and what to ask before making an investment.
+            Explore advice, comparisons, checklists, and planning guides for
+            business IT, networks, security, smart homes, and connected systems.
           </p>
         </div>
 
