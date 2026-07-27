@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./managed-it.module.css";
 
 const SERVICE_ROTATION_INTERVAL_MS = 10_000;
+const CARD_EXPANSION_SCROLL_DELAY_MS = 240;
+const MOBILE_CARD_SCROLL_MEDIA_QUERY = "(max-width: 680px)";
 
 export type ServiceExplorerItem = {
   number: string;
@@ -104,6 +106,7 @@ export default function ServiceExplorer({
   );
   const [autoRotate, setAutoRotate] = useState(true);
   const rotationTimerRef = useRef<number | null>(null);
+  const scrollTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!autoRotate || services.length < 2) return;
@@ -132,6 +135,15 @@ export default function ServiceExplorer({
     };
   }, [activeNumber, autoRotate, services]);
 
+  useEffect(
+    () => () => {
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current);
+      }
+    },
+    [],
+  );
+
   function pauseAutoRotation() {
     setAutoRotate(false);
     if (rotationTimerRef.current !== null) {
@@ -140,11 +152,37 @@ export default function ServiceExplorer({
     }
   }
 
-  function selectService(number: string) {
+  function selectService(
+    number: string,
+    card: HTMLElement | null,
+  ) {
     pauseAutoRotation();
-    setActiveNumber((currentNumber) =>
-      currentNumber === number ? null : number,
-    );
+    const isOpening = activeNumber !== number;
+
+    setActiveNumber(isOpening ? number : null);
+
+    if (
+      !isOpening ||
+      !card ||
+      !window.matchMedia(MOBILE_CARD_SCROLL_MEDIA_QUERY).matches
+    ) {
+      return;
+    }
+
+    if (scrollTimerRef.current !== null) {
+      window.clearTimeout(scrollTimerRef.current);
+    }
+
+    scrollTimerRef.current = window.setTimeout(() => {
+      const behavior = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
+        ? "auto"
+        : "smooth";
+
+      card.scrollIntoView({ behavior, block: "start" });
+      scrollTimerRef.current = null;
+    }, CARD_EXPANSION_SCROLL_DELAY_MS);
   }
 
   return (
@@ -179,7 +217,12 @@ export default function ServiceExplorer({
                   aria-label={`${
                     isActive ? "Hide" : "View"
                   } details for ${service.title}`}
-                  onClick={() => selectService(service.number)}
+                  onClick={(event) =>
+                    selectService(
+                      service.number,
+                      event.currentTarget.closest("article"),
+                    )
+                  }
                 />
 
                 <span className={styles.cardNumber}>{service.number}</span>

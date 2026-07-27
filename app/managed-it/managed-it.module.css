@@ -766,6 +766,10 @@
 }
 
 @media (max-width: 680px) {
+  .serviceItem {
+    scroll-margin-top: 12px;
+  }
+
   .finalActions {
     align-items: stretch;
     flex-direction: column;

@@ -6,6 +6,8 @@ import detailStyles from "../managed-it/managed-it.module.css";
 import styles from "./resources.module.css";
 
 const FAQ_ROTATION_INTERVAL_MS = 10_000;
+const CARD_EXPANSION_SCROLL_DELAY_MS = 240;
+const MOBILE_CARD_SCROLL_MEDIA_QUERY = "(max-width: 680px)";
 
 type ResourceFaqItem = {
   question: string;
@@ -22,6 +24,7 @@ export default function ResourceFaqExplorer({
   );
   const [autoRotate, setAutoRotate] = useState(true);
   const rotationTimerRef = useRef<number | null>(null);
+  const scrollTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!autoRotate || items.length < 2) return;
@@ -45,6 +48,15 @@ export default function ResourceFaqExplorer({
     };
   }, [activeIndex, autoRotate, items.length]);
 
+  useEffect(
+    () => () => {
+      if (scrollTimerRef.current !== null) {
+        window.clearTimeout(scrollTimerRef.current);
+      }
+    },
+    [],
+  );
+
   function pauseAutoRotation() {
     setAutoRotate(false);
 
@@ -54,9 +66,34 @@ export default function ResourceFaqExplorer({
     }
   }
 
-  function selectItem(index: number) {
+  function selectItem(index: number, card: HTMLElement | null) {
     pauseAutoRotation();
-    setActiveIndex((currentIndex) => (currentIndex === index ? null : index));
+    const isOpening = activeIndex !== index;
+
+    setActiveIndex(isOpening ? index : null);
+
+    if (
+      !isOpening ||
+      !card ||
+      !window.matchMedia(MOBILE_CARD_SCROLL_MEDIA_QUERY).matches
+    ) {
+      return;
+    }
+
+    if (scrollTimerRef.current !== null) {
+      window.clearTimeout(scrollTimerRef.current);
+    }
+
+    scrollTimerRef.current = window.setTimeout(() => {
+      const behavior = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches
+        ? "auto"
+        : "smooth";
+
+      card.scrollIntoView({ behavior, block: "start" });
+      scrollTimerRef.current = null;
+    }, CARD_EXPANSION_SCROLL_DELAY_MS);
   }
 
   return (
@@ -93,7 +130,12 @@ export default function ResourceFaqExplorer({
                   aria-label={`${
                     isActive ? "Hide" : "View"
                   } answer for ${item.question}`}
-                  onClick={() => selectItem(index)}
+                  onClick={(event) =>
+                    selectItem(
+                      index,
+                      event.currentTarget.closest("article"),
+                    )
+                  }
                 />
 
                 <span className={detailStyles.cardNumber}>{number}</span>
