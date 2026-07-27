@@ -64,21 +64,6 @@ export default function BlogPage() {
       <JsonLd data={blogSchema} />
       <SiteHeader />
 
-      <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <p className={styles.eyebrow}>Technology Planning Blog</p>
-          <h1>
-            Useful guidance.
-            <span>Better technology decisions.</span>
-          </h1>
-          <p className={styles.heroLead}>
-            Clear, field-tested articles for businesses, homeowners, builders,
-            and operators planning IT, networks, security, automation, lighting,
-            audio, video, and surveillance.
-          </p>
-        </div>
-      </section>
-
       <section className={styles.content} aria-labelledby="latest-guidance-title">
         <div className={styles.sectionHead}>
           <p className={styles.eyebrow}>Latest Guidance</p>
