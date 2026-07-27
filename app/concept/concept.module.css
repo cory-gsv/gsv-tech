@@ -205,23 +205,6 @@
     linear-gradient(180deg, #1e1b17, #26221d);
 }
 
-.hero::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  pointer-events: none;
-  background: url("/assets/partners/circuit-plan-background.jpg") center / cover
-    no-repeat;
-  opacity: 0.025;
-  mix-blend-mode: screen;
-}
-
-.hero > * {
-  position: relative;
-  z-index: 1;
-}
-
 .heroContent {
   max-width: 920px;
 }

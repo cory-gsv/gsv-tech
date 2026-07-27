@@ -7760,6 +7760,41 @@ header.gsv-header {
   outline-offset: 4px;
 }
 
+.gsv-unified-header + section,
+.gsv-unified-header + header,
+.gsv-book-section-head,
+.gsv-confirm-hero,
+.gsv-privacy-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.gsv-unified-header + section::before,
+.gsv-unified-header + header::before,
+.gsv-book-section-head::before,
+.gsv-confirm-hero::before,
+.gsv-privacy-hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background: url("/assets/partners/circuit-plan-background.jpg") center / cover
+    no-repeat;
+  opacity: 0.025;
+  mix-blend-mode: screen;
+}
+
+.gsv-unified-header + section > *,
+.gsv-unified-header + header > *,
+.gsv-book-section-head > *,
+.gsv-confirm-hero > *,
+.gsv-privacy-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 .gsv-unified-services-trigger:focus-visible {
   outline: 2px solid #f7c744;
   outline-offset: 4px;
