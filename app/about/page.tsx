@@ -128,7 +128,10 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className={conceptStyles.whySection} id="why-us">
+        <section
+          className={`${conceptStyles.whySection} ${styles.whySection}`}
+          id="why-us"
+        >
           <div className={conceptStyles.whyIntro}>
             <p className={conceptStyles.eyebrow}>Why Golden State Visions</p>
             <h2>
