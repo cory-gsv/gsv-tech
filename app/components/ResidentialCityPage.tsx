@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import AudiencePathButtons from "@/app/components/AudiencePathButtons";
+import CityHeroTitle from "@/app/components/CityHeroTitle";
 import JsonLd from "@/app/components/JsonLd";
 import CityHomepageSections from "@/app/components/CityHomepageSections";
 import SiteHeader from "@/app/components/SiteHeader";
@@ -60,7 +61,7 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
           <p className={styles.darkEyebrow}>
             Home Technology · {city.city}, {city.state}
           </p>
-          <h1>{city.residential.h1}</h1>
+          <CityHeroTitle title={city.residential.h1} />
           <p>{city.residential.intro}</p>
           <AudiencePathButtons
             defaultAudience="home"

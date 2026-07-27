@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import AudiencePathButtons from "@/app/components/AudiencePathButtons";
+import CityHeroTitle from "@/app/components/CityHeroTitle";
 import JsonLd from "@/app/components/JsonLd";
 import CityHomepageSections from "@/app/components/CityHomepageSections";
 import SiteHeader from "@/app/components/SiteHeader";
@@ -114,7 +115,7 @@ export default function BusinessCityPage({ city }: { city: LocalCity }) {
           <p className={styles.darkEyebrow}>
             Managed IT Services · {city.city}, {city.state}
           </p>
-          <h1>{city.commercial.h1}</h1>
+          <CityHeroTitle title={city.commercial.h1} />
           <p>{city.commercial.intro}</p>
           <AudiencePathButtons
             defaultAudience="business"

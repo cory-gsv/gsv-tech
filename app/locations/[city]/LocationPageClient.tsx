@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AudiencePathButtons from "@/app/components/AudiencePathButtons";
+import CityHeroTitle from "@/app/components/CityHeroTitle";
 import CityHomepageSections from "@/app/components/CityHomepageSections";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
@@ -18,7 +19,9 @@ export default function LocationPageClient({ city }: { city: LocalCity }) {
           <p className={styles.darkEyebrow}>
             {city.city}, {city.state} · {city.region}
           </p>
-          <h1>Technology support for {city.city} businesses and homes.</h1>
+          <CityHeroTitle
+            title={`Technology support for ${city.city} businesses and homes.`}
+          />
           <p>
             Local planning for workplaces, homes, network coverage, security, lighting,
             automation, and connected systems. One accountable team coordinates the
