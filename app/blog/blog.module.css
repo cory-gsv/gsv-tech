@@ -269,20 +269,26 @@
 
 .postCard {
   min-width: 0;
-  min-height: 360px;
+  min-height: 390px;
   padding: clamp(28px, 4vw, 52px);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
   color: inherit;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 30px;
   text-decoration: none;
-  transition: transform 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .postCard:hover {
-  background: #e8e5dc;
+  background: #f2efe7;
+  border-color: rgba(117, 104, 34, 0.46);
+  box-shadow: 0 20px 45px rgba(23, 21, 16, 0.08);
   transform: translateY(-3px);
 }
 
@@ -300,7 +306,7 @@
 
 .postCard h2 {
   max-width: 680px;
-  margin: auto 0 18px;
+  margin: clamp(42px, 5vw, 68px) 0 18px;
   font-size: clamp(29px, 3vw, 48px);
   font-weight: 400;
   letter-spacing: -0.055em;
@@ -316,10 +322,32 @@
 }
 
 .cardLink {
-  margin-top: 26px;
+  margin-top: 30px;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
   color: var(--ink);
   font-size: 14px;
   font-weight: 800;
+}
+
+.cardLink::after {
+  content: "→";
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: var(--gold);
+  border-radius: 50%;
+  font-size: 18px;
+  transition: transform 180ms ease;
+}
+
+.postCard:hover .cardLink::after {
+  transform: translateX(3px);
 }
 
 .articleHero {
@@ -567,7 +595,7 @@
   }
 
   .postCard {
-    min-height: 310px;
+    min-height: 350px;
   }
 
   .articleAside {
@@ -597,7 +625,7 @@
   }
 
   .postCard {
-    min-height: 290px;
+    min-height: 340px;
     padding: 26px;
     border-radius: 24px;
   }

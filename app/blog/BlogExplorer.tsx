@@ -78,7 +78,7 @@ export default function BlogExplorer({ posts }: { posts: BlogPost[] }) {
               </div>
               <h2>{post.title}</h2>
               <p>{post.excerpt}</p>
-              <span className={styles.cardLink}>Read the article →</span>
+              <span className={styles.cardLink}>Read the article</span>
             </Link>
           ))}
         </div>
