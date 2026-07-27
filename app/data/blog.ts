@@ -369,6 +369,108 @@ export const blogPosts: BlogPost[] = [
     ],
   },
   {
+    slug: "microsoft-365-vs-google-workspace-small-business",
+    title: "Microsoft 365 vs. Google Workspace: Which Fits Your Business?",
+    description:
+      "Compare Microsoft 365, formerly called Office 365, with Google Workspace for business email, documents, collaboration, storage, security, administration, and migration.",
+    excerpt:
+      "Both platforms can run a modern business. The better choice depends on how your team works, which files and applications matter, and how much control your administrators need.",
+    category: "Business IT",
+    audience: "Small business owners, managers, and technology decision makers",
+    published: "2026-07-27",
+    updated: "2026-07-27",
+    readTime: "11 min read",
+    serviceHref: "/managed-it?service=01",
+    serviceLabel: "Explore managed IT and Microsoft 365 support",
+    sections: [
+      {
+        heading: "Start with how the business already works",
+        paragraphs: [
+          "Microsoft 365 and Google Workspace both provide business email, calendars, document creation, file storage, meetings, chat, and administrative controls. A feature checklist alone rarely produces a useful answer because most businesses can complete basic work in either platform.",
+          "The better starting point is the team itself. Look at the files people exchange, desktop applications they depend on, outside organizations they collaborate with, devices they use, regulatory obligations they face, and the amount of administrative control the business needs.",
+        ],
+        bullets: [
+          "Which document formats are exchanged with customers, vendors, and accountants?",
+          "Does the team depend on desktop Word, Excel, PowerPoint, Outlook, or Access?",
+          "Do employees prefer browser based work in Gmail, Drive, Docs, and Sheets?",
+          "How are shared files organized, owned, retained, and recovered?",
+          "What security, device management, legal retention, or audit requirements apply?",
+        ],
+      },
+      {
+        heading: "Where Microsoft 365 is usually strongest",
+        paragraphs: [
+          "Microsoft 365 is often the natural fit for organizations that already rely on Windows and Microsoft Office files. Exchange Online supports business email, OneDrive stores individual work, SharePoint provides team sites and shared content, and Teams combines meetings, chat, calling options, and collaboration.",
+          "The desktop versions of Word, Excel, PowerPoint, and Outlook remain important for teams that work with complex formatting, large spreadsheets, advanced formulas, macros, specialized add ins, or customer files that must retain exact Office behavior.",
+        ],
+        bullets: [
+          "Strong compatibility with Microsoft Office documents and Windows workflows",
+          "Desktop applications for detailed or offline work on supported plans",
+          "Exchange, Outlook, Teams, OneDrive, and SharePoint within one identity system",
+          "Broad integration with business software and professional services",
+          "Advanced identity, device, and security options through appropriate licenses",
+        ],
+      },
+      {
+        heading: "Where Google Workspace is usually strongest",
+        paragraphs: [
+          "Google Workspace is often a good fit for teams that prefer simple browser based collaboration. Gmail, Calendar, Drive, Docs, Sheets, Slides, Meet, and Chat are designed around working in the browser and editing together in real time.",
+          "Shared drives can keep team files owned by the organization instead of an individual employee. That structure is valuable when people change roles or leave. Google Workspace can also open and edit many Microsoft Office files, although complex documents and spreadsheets should be tested before a business assumes full compatibility.",
+        ],
+        bullets: [
+          "Straightforward browser based access from many devices",
+          "Strong real time editing and commenting",
+          "Familiar Gmail and Google Calendar experience",
+          "Shared drives that keep team content owned by the organization",
+          "A simpler experience for teams that do not need advanced desktop Office features",
+        ],
+      },
+      {
+        heading: "Email is only one part of the decision",
+        paragraphs: [
+          "Some businesses compare only Outlook with Gmail. Email preference matters, but changing platforms also affects calendars, contacts, meeting links, shared mailboxes or groups, mobile devices, file locations, document formats, login behavior, third party applications, and employee habits.",
+          "Microsoft uses Exchange concepts such as shared mailboxes, distribution groups, and delegated access. Google uses groups, aliases, delegation, and collaborative inbox options. Similar outcomes may be possible, but administration and user experience are not identical.",
+        ],
+      },
+      {
+        heading: "File ownership and structure need deliberate planning",
+        paragraphs: [
+          "Personal storage should not become the permanent home for company records. In Microsoft 365, OneDrive is associated with an individual user while SharePoint is generally the better location for shared organizational files. In Google Workspace, My Drive belongs to an individual while shared drives are designed for team ownership.",
+          "Whichever platform you select, define where departments and projects store information, who can share externally, how access is reviewed, what happens when an employee leaves, how long records are retained, and how accidental deletion or ransomware recovery is handled.",
+        ],
+      },
+      {
+        heading: "Security depends on licensing and configuration",
+        paragraphs: [
+          "Both platforms provide security and administrative controls, but the available features vary by subscription. Multifactor authentication, administrator role separation, login policies, audit data, retention, data protection, mobile device controls, endpoint management, and threat protection should be compared against the exact plan under consideration.",
+          "Microsoft 365 Business Premium can combine Office applications with Microsoft Intune, Defender for Business, identity controls, and additional protection for email and files. Google Workspace editions offer different levels of endpoint management, security reporting, retention, data protection, and administrative control. A lower priced plan may not include the controls a regulated or risk conscious business expects.",
+        ],
+      },
+      {
+        heading: "Do not choose based on the monthly license alone",
+        paragraphs: [
+          "The subscription price is only one part of the operating cost. Consider migration labor, employee training, file cleanup, software compatibility, backup, security configuration, device management, support, and the productivity lost when a familiar workflow no longer behaves as expected.",
+          "Licenses also change over time. Compare current plan details directly and document which features the business is buying. Avoid assuming that a familiar product name automatically includes desktop applications, advanced security, archiving, telephone service, or unlimited storage.",
+        ],
+      },
+      {
+        heading: "Migration deserves its own project plan",
+        paragraphs: [
+          "Moving between Microsoft 365 and Google Workspace affects more than mailboxes. A migration may include calendars, contacts, shared email resources, personal files, shared folders, permissions, document conversions, application integrations, mobile devices, and account sign in.",
+          "A good plan inventories the existing environment, tests representative users and files, defines what will not migrate cleanly, communicates the change, schedules the final transition, and keeps the old environment available long enough to validate the result. It also assigns ownership for records that belong to former employees or shared functions.",
+        ],
+      },
+      {
+        heading: "A practical recommendation",
+        paragraphs: [
+          "Microsoft 365 is often the stronger choice when a business depends on desktop Office applications, Windows management, Microsoft identity, complex spreadsheets, or established Exchange and Teams workflows. Google Workspace is often the stronger choice when the team works primarily in a browser, values simple real time collaboration, and has fewer dependencies on advanced Office behavior.",
+          "Some organizations use both, but that can split identity, files, meetings, administration, and security across two environments. A mixed approach should solve a specific requirement rather than grow from unmanaged personal accounts or isolated team preferences.",
+          "Golden State Visions evaluates the current environment, business applications, security requirements, document workflows, licensing, and migration effort before recommending a platform. The objective is a supported system with clear ownership, not a brand victory.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "small-business-managed-it-cost-guide",
     title: "What Does Managed IT Cost for a Small Business?",
     description:
