@@ -7536,7 +7536,7 @@ header.gsv-header {
 }
 
 .gsv-unified-header-inner {
-  width: min(calc(100% - clamp(44px, 10vw, 152px)), 1920px);
+  width: min(calc(100% - clamp(44px, 10vw, 152px)), 1600px);
   min-height: 94px;
   margin: 0 auto;
   padding: 18px 0;
@@ -7778,7 +7778,7 @@ header.gsv-header {
 
 @media (max-width: 900px) {
   .gsv-unified-header-inner {
-    width: min(calc(100% - 36px), 1920px);
+    width: min(calc(100% - 36px), 1600px);
   }
 
   .gsv-unified-brand {
@@ -7833,7 +7833,7 @@ header.gsv-header {
 
 @media (max-width: 440px) {
   .gsv-unified-header-inner {
-    width: min(calc(100% - 24px), 1920px);
+    width: min(calc(100% - 24px), 1600px);
   }
 
   .gsv-unified-brand {
