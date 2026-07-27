@@ -489,7 +489,7 @@ export default function ConceptExperience() {
         <div className={styles.heroContent}>
           <p className={styles.eyebrow}>Northern California technology partner</p>
           <h1>
-            Technology that
+            Managed IT and smart home technology that
             <span>works together.</span>
           </h1>
           <p className={styles.heroLead}>
