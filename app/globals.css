@@ -7582,7 +7582,7 @@ header.gsv-header {
 
 .gsv-unified-brand-logo {
   display: block;
-  width: 116px;
+  width: 140px;
   height: auto;
   object-fit: contain;
 }
@@ -7839,7 +7839,7 @@ header.gsv-header {
   }
 
   .gsv-unified-brand-logo {
-    width: 94px;
+    width: 112px;
   }
 
   .gsv-unified-nav {
@@ -7859,7 +7859,7 @@ header.gsv-header {
   }
 
   .gsv-unified-brand-logo {
-    width: 76px;
+    width: 88px;
   }
 
   .gsv-unified-brand-phone {
@@ -7893,7 +7893,7 @@ header.gsv-header {
   }
 
   .gsv-unified-brand-logo {
-    width: 64px;
+    width: 72px;
   }
 
   .gsv-unified-nav .gsv-unified-help-trigger {
