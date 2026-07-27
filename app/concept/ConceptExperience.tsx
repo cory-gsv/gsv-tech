@@ -61,7 +61,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "12 min", label: "Avg. first response" },
       ],
       href: "/managed-it",
-      cta: "See Managed IT Services Details",
+      cta: "Explore Managed IT Services",
       foot:
         "Example snapshot for a professional office, shown for planning context.",
     },
@@ -85,7 +85,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "15 min", label: "Avg. first response" },
       ],
       href: "/managed-it",
-      cta: "See Managed IT Services Details",
+      cta: "Explore Managed IT Services",
       foot:
         "Example snapshot for a warehouse and fulfillment environment, shown for planning context.",
     },
@@ -109,7 +109,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "9 min", label: "Avg. first response" },
       ],
       href: "/managed-it",
-      cta: "See Managed IT Services Details",
+      cta: "Explore Managed IT Services",
       foot:
         "Example snapshot for a medical office, shown for planning context. Compliance requirements vary by practice and system ownership.",
     },
@@ -133,7 +133,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "8 min", label: "Avg. first response" },
       ],
       href: "/managed-it",
-      cta: "See Managed IT Services Details",
+      cta: "Explore Managed IT Services",
       foot:
         "Example snapshot for a restaurant or cafe environment, shown for planning context.",
     },
@@ -157,7 +157,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "10 min", label: "Avg. first response" },
       ],
       href: "/managed-it",
-      cta: "See Managed IT Services Details",
+      cta: "Explore Managed IT Services",
       foot:
         "Example snapshot for a retail or storefront environment, shown for planning context.",
     },
@@ -183,7 +183,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "1", label: "Accountable partner" },
       ],
       href: "/smart-home-automation",
-      cta: "See Home Planning",
+      cta: "Explore Smart Home Services",
       foot:
         "Example planning snapshot for a Lutron HomeWorks new build or remodel.",
     },
@@ -207,7 +207,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "1", label: "Upgrade roadmap" },
       ],
       href: "/smart-home-automation",
-      cta: "See Home Planning",
+      cta: "Explore Smart Home Services",
       foot:
         "Example assessment snapshot for an existing connected-home system.",
     },
@@ -231,7 +231,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "30d", label: "Camera retention target" },
       ],
       href: "/smart-home-automation",
-      cta: "See Home Planning",
+      cta: "Explore Smart Home Services",
       foot:
         "Example planning snapshot for a UniFi whole-home network and camera system.",
     },
@@ -255,7 +255,7 @@ const serviceProfiles: Record<Audience, ServiceProfile[]> = {
         { value: "1", label: "Simple interface" },
       ],
       href: "/smart-home-automation",
-      cta: "See Home Planning",
+      cta: "Explore Smart Home Services",
       foot:
         "Example snapshot for an integrated whole-home audio, video, and control system.",
     },
