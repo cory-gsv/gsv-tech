@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import JsonLd from "./components/JsonLd";
 import MenuAutoClose from "./components/MenuAutoClose";
@@ -6,14 +6,14 @@ import SiteChatWidget from "./components/SiteChatWidget";
 import { siteUrl } from "./config/site";
 import { globalStructuredData } from "./data/structuredData";
 
-const socialImage = "/assets/images/portfolio/network-services-infographic-even.png";
+const socialImage = "/images/gsv-logo.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "Golden State Visions",
-  title: "Managed IT Services & Smart Home Automation | Golden State Visions",
+  title: "Managed IT & Smart Home Services | Golden State Visions",
   description:
-    "Golden State Visions delivers managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for businesses and homes in Northern California.",
+    "Managed IT, secure business networks, smart home automation, audio/video, and surveillance solutions for Northern California businesses and homeowners.",
   alternates: {
     canonical: "/",
   },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     shortcut: ["/favicon.ico"],
   },
   openGraph: {
-    title: "Managed IT Services & Smart Home Automation | Golden State Visions",
+    title: "Managed IT & Smart Home Services | Golden State Visions",
     description:
       "Comprehensive IT support, enterprise-grade network deployments, premium smart home integration, audio video systems, and surveillance solutions built for long-term reliability.",
     url: "/",
@@ -36,19 +36,26 @@ export const metadata: Metadata = {
     images: [
       {
         url: socialImage,
-        width: 1200,
-        height: 1600,
-        alt: "Structured network cabling and rack infrastructure by Golden State Visions",
+        width: 1798,
+        height: 877,
+        alt: "Golden State Visions managed IT, network, smart home, and audio video services",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Managed IT Services & Smart Home Automation | Golden State Visions",
+    creator: "@techgsvisions",
+    title: "Managed IT & Smart Home Services | Golden State Visions",
     description:
       "Managed IT support, secure business networks, smart home automation, audio video systems, and surveillance solutions for Northern California.",
     images: [socialImage],
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

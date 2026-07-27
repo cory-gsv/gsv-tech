@@ -58,9 +58,22 @@ const baseLocalCities = [
   { slug: "roseville-ca", city: "Roseville", state: "CA", region: "Placer County" },
   { slug: "granite-bay-ca", city: "Granite Bay", state: "CA", region: "Placer County" },
   { slug: "folsom-ca", city: "Folsom", state: "CA", region: "Sacramento County" },
+  {
+    slug: "el-dorado-hills-ca",
+    city: "El Dorado Hills",
+    state: "CA",
+    region: "El Dorado County",
+  },
+  { slug: "sacramento-ca", city: "Sacramento", state: "CA", region: "Sacramento County" },
   { slug: "auburn-ca", city: "Auburn", state: "CA", region: "Placer County" },
   { slug: "truckee-ca", city: "Truckee", state: "CA", region: "Northern California" },
-  { slug: "tahoe-ca", city: "Tahoe", state: "CA", region: "Northern California" },
+  { slug: "tahoe-ca", city: "North Lake Tahoe", state: "CA", region: "Northern California" },
+  {
+    slug: "south-lake-tahoe-ca",
+    city: "South Lake Tahoe",
+    state: "CA",
+    region: "El Dorado County",
+  },
   { slug: "sugar-bowl-ca", city: "Sugar Bowl", state: "CA", region: "Northern California" },
   { slug: "sunnyvale-ca", city: "Sunnyvale", state: "CA", region: "Silicon Valley" },
   { slug: "mountain-view-ca", city: "Mountain View", state: "CA", region: "Silicon Valley" },
@@ -190,6 +203,52 @@ const localCityProfiles: Record<
         "Folsom homes often need coverage across multiple floors, patios, offices, and connected devices, so we design the network before layering cameras, lighting, and automation on top.",
     },
   },
+  "el-dorado-hills-ca": {
+    commercial: {
+      h1: "Managed IT services for El Dorado Hills businesses and professional teams.",
+      intro:
+        "Golden State Visions supports El Dorado Hills businesses near Town Center, Latrobe Road, Silva Valley Parkway, and nearby professional corridors. We manage users, cloud platforms, secure Wi-Fi, cameras, and onsite technology for organizations that want one local team accountable for the full environment.",
+      businessTypes:
+        "Professional offices, medical and dental practices, restaurants, retail teams, service businesses, and multi-site operators",
+      servicesIntro:
+        "El Dorado Hills businesses often combine client-facing spaces, cloud-first workflows, cameras, and building technology, so support works best when every layer is planned and documented together.",
+      industriesIntro:
+        "For El Dorado Hills, we emphasize professional offices, medical suites, restaurants, and retail businesses where secure access, dependable Wi-Fi, and responsive support shape the client experience.",
+      industryOrder: ["professional", "medical", "restaurants", "retail", "multiSite", "warehouse"],
+    },
+    residential: {
+      h1: "Home networking and smart-home systems for El Dorado Hills properties.",
+      intro:
+        "Golden State Visions designs whole-home Wi-Fi, security cameras, Lutron lighting, smart-home control, and AV infrastructure for El Dorado Hills homes, gated properties, remodels, home offices, and outdoor living spaces.",
+      propertyTypes:
+        "Larger homes, gated properties, remodels, home offices, outdoor living areas, media rooms, and camera systems",
+      servicesIntro:
+        "El Dorado Hills properties often span multiple floors and outdoor zones, so we design coverage, lighting, cameras, and control systems around the whole property rather than isolated rooms.",
+    },
+  },
+  "sacramento-ca": {
+    commercial: {
+      h1: "Managed IT and network support for Sacramento businesses.",
+      intro:
+        "Golden State Visions supports Sacramento offices, clinics, restaurants, retail teams, warehouses, and multi-site organizations across Downtown, Midtown, Natomas, East Sacramento, and surrounding business corridors. We manage users, cloud platforms, cybersecurity, Wi-Fi, cameras, and physical network infrastructure under one accountable relationship.",
+      businessTypes:
+        "Professional offices, medical practices, restaurants, retail spaces, warehouse teams, nonprofits, and multi-site organizations",
+      servicesIntro:
+        "Sacramento organizations often operate across very different building types and vendor environments, so we keep support, security, networking, cameras, and documentation connected from the user to the physical site.",
+      industriesIntro:
+        "For Sacramento, we emphasize professional offices, medical teams, restaurants, retail operations, and warehouses that need both dependable day-to-day support and clean onsite infrastructure.",
+      industryOrder: ["professional", "medical", "restaurants", "retail", "warehouse", "multiSite"],
+    },
+    residential: {
+      h1: "Home Wi-Fi, security cameras, and automation for Sacramento homes.",
+      intro:
+        "Golden State Visions designs home networking, camera systems, Lutron lighting, smart-home control, and AV infrastructure for Sacramento homes, remodels, home offices, outdoor spaces, and multi-level properties.",
+      propertyTypes:
+        "Established homes, remodels, home offices, multi-level properties, outdoor living areas, cameras, and media rooms",
+      servicesIntro:
+        "Sacramento homes vary widely in age and construction, so we plan wireless coverage, cabling, cameras, lighting, and controls around the actual structure and the way the household uses it.",
+    },
+  },
   "auburn-ca": {
     commercial: {
       h1: "IT and network support for Auburn businesses with real onsite needs.",
@@ -257,6 +316,29 @@ const localCityProfiles: Record<
         "Vacation homes, lake-area residences, cabins, rental properties, outdoor areas, driveways, garages, and cameras",
       servicesIntro:
         "Tahoe properties often need remote visibility and simple guest-friendly controls, so we design networks, cameras, and automation around ownership from both on-site and away.",
+    },
+  },
+  "south-lake-tahoe-ca": {
+    commercial: {
+      h1: "Managed IT, Wi-Fi, and camera support for South Lake Tahoe businesses.",
+      intro:
+        "Golden State Visions supports South Lake Tahoe hospitality teams, restaurants, retail spaces, property managers, professional offices, and service operators that rely on guest Wi-Fi, cameras, cloud tools, payment systems, and remote visibility through seasonal demand.",
+      businessTypes:
+        "Hospitality teams, restaurants, retail shops, property managers, professional offices, service businesses, and multi-location operators",
+      servicesIntro:
+        "South Lake Tahoe businesses need technology that can handle guests, seasonal staffing, remote management, weather, and fluctuating internet conditions without mixing public traffic with critical systems.",
+      industriesIntro:
+        "For South Lake Tahoe, we emphasize hospitality, restaurants, retail, property operations, and multi-site teams where resilient connectivity and remote support are essential.",
+      industryOrder: ["restaurants", "retail", "multiSite", "professional", "warehouse", "medical"],
+    },
+    residential: {
+      h1: "Home networking and remote property systems for South Lake Tahoe.",
+      intro:
+        "Golden State Visions designs Wi-Fi, security cameras, smart-home controls, Lutron lighting, and remote access for South Lake Tahoe homes, vacation properties, cabins, rental-ready residences, and outdoor spaces.",
+      propertyTypes:
+        "Vacation homes, cabins, rental properties, home offices, driveways, garages, outdoor cameras, and remote access systems",
+      servicesIntro:
+        "South Lake Tahoe properties often need reliable systems for owners, guests, and property managers, so we prioritize secure remote visibility, simple controls, and networks that remain supportable year-round.",
     },
   },
   "sugar-bowl-ca": {
@@ -563,7 +645,7 @@ export const localServices: LocalService[] = [
         body: "High-end environmental management control designed to enhance ambiance, emphasize architecture, maximize natural daylight, and reduce visual clutter.",
         items: [
           "Lutron HomeWorks systems designed for absolute reliability and enterprise-grade architectural control",
-          "Lutron Palladiux hardware tailored for modern, responsive, and ultra-quiet smart lighting",
+          "Lutron Palladiom hardware tailored for modern, responsive, and ultra-quiet smart lighting",
           "Motorized shades, drapes, and blind tracking synchronized with natural daylight cycles",
           "Custom keypads and flush-mounted panels tailored to match your interior architectural design",
         ],

@@ -1,0 +1,27 @@
+.faqPanelContent {
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.65fr);
+}
+
+.faqAnswer h4,
+.faqAside h4 {
+  margin: 0 0 12px;
+  color: #8b7118;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.faqAnswer p,
+.faqAside p {
+  margin: 0;
+  color: var(--detail-muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 940px) {
+  .faqPanelContent {
+    grid-template-columns: 1fr;
+  }
+}

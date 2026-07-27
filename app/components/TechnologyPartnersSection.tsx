@@ -1,6 +1,11 @@
 "use client";
 
-import { type PointerEvent, useEffect, useRef } from "react";
+import {
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 type TechnologyPartner = {
   name: string;
@@ -34,7 +39,7 @@ const businessTechnologyPartners: TechnologyPartner[] = [
   {
     name: "Yealink",
     description: "Desk phones, conference phones, and room devices",
-    logo: "/assets/images/vendor-logos/yealink.png",
+    logo: "/assets/images/vendor-logos/yealink-192.webp",
     wideLogo: true,
   },
   {
@@ -103,7 +108,7 @@ const homeTechnologyPartners: TechnologyPartner[] = [
   {
     name: "Crestron",
     description: "AV control, conference rooms, automation, and user interfaces",
-    logo: "/assets/images/vendor-logos/crestron.png",
+    logo: "/assets/images/vendor-logos/crestron-96.webp",
   },
   {
     name: "Savant",
@@ -142,17 +147,27 @@ const homeTechnologyPartners: TechnologyPartner[] = [
   },
 ];
 
-const partnerLoopCopies = [0, 1, 2];
+const partnerLoopCopies = [0, 1];
 
-function TechnologyPartnerCard({ partner }: { partner: TechnologyPartner }) {
+function TechnologyPartnerCard({
+  partner,
+  ariaHidden,
+}: {
+  partner: TechnologyPartner;
+  ariaHidden?: boolean;
+}) {
   return (
-    <div className="gsv-redesign-partner-card">
+    <div
+      className="gsv-redesign-partner-card"
+      aria-hidden={ariaHidden ? "true" : undefined}
+    >
       <strong>{partner.name}</strong>
       <span>{partner.description}</span>
       <img
         src={partner.logo}
         alt=""
         aria-hidden="true"
+        draggable={false}
         className={`gsv-redesign-partner-logo${partner.wideLogo ? " is-wide" : ""}`}
       />
     </div>
@@ -168,131 +183,119 @@ function TechnologyPartnerRow({
   partners: TechnologyPartner[];
   reverse?: boolean;
 }) {
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const loopWidthRef = useRef(0);
-  const dragStateRef = useRef({
-    pointerId: -1,
-    lastX: 0,
-    isDragging: false,
-  });
+  const beltRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startTime: number;
+  } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const animationDuration = partners.length * 4.4;
 
-  useEffect(() => {
-    const marquee = marqueeRef.current;
-    if (!marquee) return;
+  const getBeltAnimation = () => beltRef.current?.getAnimations()[0];
 
-    const measureAndCenter = () => {
-      const firstTrack = marquee.querySelector<HTMLElement>(".gsv-redesign-partner-track");
-      if (!firstTrack) return;
-
-      const gap = parseFloat(window.getComputedStyle(marquee).columnGap || "0");
-      const nextLoopWidth = firstTrack.scrollWidth + gap;
-      loopWidthRef.current = nextLoopWidth;
-
-      if (nextLoopWidth > 0 && marquee.scrollLeft < 1) {
-        marquee.scrollLeft = nextLoopWidth;
-      }
-    };
-
-    const wrapScroll = () => {
-      const loopWidth = loopWidthRef.current;
-      if (!loopWidth) return;
-
-      if (marquee.scrollLeft < loopWidth * 0.5) {
-        marquee.scrollLeft += loopWidth;
-      } else if (marquee.scrollLeft > loopWidth * 1.5) {
-        marquee.scrollLeft -= loopWidth;
-      }
-    };
-
-    measureAndCenter();
-
-    const resizeObserver = new ResizeObserver(measureAndCenter);
-    resizeObserver.observe(marquee);
-    marquee.addEventListener("scroll", wrapScroll, { passive: true });
-
-    return () => {
-      resizeObserver.disconnect();
-      marquee.removeEventListener("scroll", wrapScroll);
-    };
-  }, [partners.length]);
-
-  const wrapDraggedScroll = (marquee: HTMLDivElement) => {
-    const loopWidth = loopWidthRef.current;
-    if (!loopWidth) return;
-
-    if (marquee.scrollLeft < loopWidth * 0.5) {
-      marquee.scrollLeft += loopWidth;
-    } else if (marquee.scrollLeft > loopWidth * 1.5) {
-      marquee.scrollLeft -= loopWidth;
-    }
-  };
-
-  const stopDragging = () => {
-    const marquee = marqueeRef.current;
-    if (marquee) {
-      marquee.classList.remove("is-dragging");
-    }
-    dragStateRef.current.isDragging = false;
-    dragStateRef.current.pointerId = -1;
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
 
-    const marquee = event.currentTarget;
-    dragStateRef.current = {
+    const animation = getBeltAnimation();
+    if (!animation) return;
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    animation.pause();
+    dragRef.current = {
       pointerId: event.pointerId,
-      lastX: event.clientX,
-      isDragging: true,
+      startX: event.clientX,
+      startTime: Number(animation.currentTime ?? 0),
     };
-    marquee.classList.add("is-dragging");
-    marquee.setPointerCapture(event.pointerId);
+    setIsDragging(true);
   };
 
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const dragState = dragStateRef.current;
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return;
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const belt = beltRef.current;
+    const animation = getBeltAnimation();
 
-    event.preventDefault();
-    event.currentTarget.scrollLeft -= event.clientX - dragState.lastX;
-    dragState.lastX = event.clientX;
-    wrapDraggedScroll(event.currentTarget);
+    if (!drag || drag.pointerId !== event.pointerId || !belt || !animation) return;
+
+    const loopDistance = belt.scrollWidth / 2;
+    if (loopDistance <= 0) return;
+
+    const durationMs = animationDuration * 1000;
+    const millisecondsPerPixel = durationMs / loopDistance;
+    const dragDirection = reverse ? 1 : -1;
+    const nextTime =
+      drag.startTime +
+      (event.clientX - drag.startX) * millisecondsPerPixel * dragDirection;
+
+    animation.currentTime = ((nextTime % durationMs) + durationMs) % durationMs;
   };
 
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragStateRef.current.pointerId === event.pointerId) {
-      stopDragging();
+  const finishDragging = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
+
+    dragRef.current = null;
+    setIsDragging(false);
+    getBeltAnimation()?.play();
   };
 
   return (
     <div className={`gsv-redesign-partner-row${reverse ? " is-reverse" : ""}`}>
       <div className="gsv-redesign-partner-row-label">{label}</div>
       <div
-        ref={marqueeRef}
-        className="gsv-redesign-partner-marquee"
+        className={`gsv-redesign-partner-marquee${isDragging ? " is-dragging" : ""}`}
         aria-label={`${label} platforms`}
+        tabIndex={0}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={stopDragging}
-        onPointerLeave={stopDragging}
+        onPointerUp={finishDragging}
+        onPointerCancel={finishDragging}
       >
-        {partnerLoopCopies.map((copyIndex) => (
-          <div
-            key={copyIndex}
-            className="gsv-redesign-partner-track"
-            aria-hidden={copyIndex === 0 ? undefined : "true"}
-          >
-            {partners.map((partner) => (
+        <div
+          ref={beltRef}
+          className="gsv-redesign-partner-belt"
+          style={{ animationDuration: `${animationDuration}s` }}
+        >
+          {partnerLoopCopies.map((copyIndex) =>
+            partners.map((partner) => (
               <TechnologyPartnerCard
                 key={`${partner.name}-${copyIndex}`}
                 partner={partner}
+                ariaHidden={copyIndex !== 0}
               />
-            ))}
-          </div>
-        ))}
+            )),
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function TechnologyPartnerRows() {
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsRunning(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div
+      className={`gsv-redesign-partner-rows${isRunning ? " is-running" : ""}`}
+    >
+      <TechnologyPartnerRow
+        label="Business IT & Security"
+        partners={businessTechnologyPartners}
+      />
+      <TechnologyPartnerRow
+        label="Home Automation & AV"
+        partners={homeTechnologyPartners}
+        reverse
+      />
     </div>
   );
 }
@@ -312,17 +315,7 @@ export default function TechnologyPartnersSection() {
         </p>
       </div>
 
-      <div className="gsv-redesign-partner-rows">
-        <TechnologyPartnerRow
-          label="Business IT & Security"
-          partners={businessTechnologyPartners}
-        />
-        <TechnologyPartnerRow
-          label="Home Automation & AV"
-          partners={homeTechnologyPartners}
-          reverse
-        />
-      </div>
+      <TechnologyPartnerRows />
     </section>
   );
 }

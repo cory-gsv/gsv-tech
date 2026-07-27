@@ -28,7 +28,7 @@ function billingAuthConfig(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { tenantId, clientId, redirectUri } = billingAuthConfig(request)
   if (!tenantId || !clientId) {
-    return NextResponse.redirect(new URL("/billing?error=msmissing", request.url))
+    return NextResponse.redirect(new URL("/portal?error=msmissing", request.url))
   }
 
   const state = crypto.randomUUID()

@@ -2,6 +2,8 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import SiteFooter from "@/app/components/SiteFooter";
+import SiteHeader from "@/app/components/SiteHeader";
 import "./confirmed.css";
 
 function clean(v?: string | null) {
@@ -86,11 +88,13 @@ function Content() {
 export default function Page() {
   return (
     <main className="gsv-confirm-page">
+      <SiteHeader />
       <div className="gsv-confirm-shell">
         <Suspense fallback={<div>Loading...</div>}>
           <Content />
         </Suspense>
       </div>
+      <SiteFooter />
     </main>
   );
 }

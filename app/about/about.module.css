@@ -1,0 +1,75 @@
+.page :global(.gsv-shell) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.page :global(.gsv-footer) {
+  width: 100vw !important;
+  max-width: none !important;
+  margin: 40px 0 0 calc(50% - 50vw) !important;
+  border-radius: 0 !important;
+}
+
+.intro {
+  padding-right: clamp(22px, 5vw, 76px);
+  padding-left: clamp(22px, 5vw, 76px);
+  padding-top: clamp(42px, 5vw, 72px);
+  padding-bottom: clamp(28px, 3vw, 42px);
+}
+
+.intro :global(.gsv-section-head) {
+  margin-bottom: clamp(26px, 3vw, 38px);
+}
+
+.expectationGrid,
+.trustGrid {
+  align-items: stretch;
+}
+
+.expectationGrid :global(.gsv-card),
+.trustGrid :global(.gsv-card) {
+  height: 100%;
+}
+
+.howWeWork {
+  padding-right: clamp(22px, 5vw, 76px);
+  padding-left: clamp(22px, 5vw, 76px);
+  padding-top: clamp(34px, 4vw, 50px);
+  padding-bottom: clamp(42px, 5vw, 64px);
+}
+
+.howWeWork :global(.gsv-section-head) {
+  margin-bottom: clamp(26px, 3vw, 38px);
+}
+
+.trustGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nextStep {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+@media (max-width: 1100px) {
+  .trustGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .intro {
+    padding-top: 34px;
+    padding-bottom: 24px;
+  }
+
+  .howWeWork {
+    padding-top: 32px;
+    padding-bottom: 42px;
+  }
+
+  .trustGrid {
+    grid-template-columns: 1fr;
+  }
+}

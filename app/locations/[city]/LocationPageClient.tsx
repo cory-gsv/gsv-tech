@@ -1,54 +1,66 @@
 import Link from "next/link";
+import AudiencePathButtons from "@/app/components/AudiencePathButtons";
+import CityHomepageSections from "@/app/components/CityHomepageSections";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
+import type { LocalCity } from "@/app/data/localSeo";
+import styles from "@/app/components/city-page.module.css";
 
-type City = { slug: string; city: string; state: string; region: string };
+export default function LocationPageClient({ city }: { city: LocalCity }) {
+  const servingLine = `Serving ${city.city}, ${city.state} and the greater ${city.region} area`;
 
-export default function LocationPageClient({ city }: { city: City }) {
   return (
-    <main id="top" className="gsv-page">
-      <div className="gsv-shell">
-        <SiteHeader />
+    <main id="top" className={`gsv-redesign-page ${styles.page}`}>
+      <SiteHeader />
 
-        <section className="gsv-hero">
-          <div className="gsv-hero-copy">
-            <div className="gsv-eyebrow">
-              {city.city}, {city.state} • {city.region}
-            </div>
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <p className={styles.darkEyebrow}>
+            {city.city}, {city.state} · {city.region}
+          </p>
+          <h1>Technology support for {city.city} businesses and homes.</h1>
+          <p>
+            Local planning for workplaces, homes, network coverage, security, lighting,
+            automation, and connected systems—with one accountable team coordinating the
+            environment.
+          </p>
+          <AudiencePathButtons targetId="service-paths" />
+        </div>
 
-            <h1>Golden State Visions in {city.city}, {city.state}</h1>
+        <aside className={styles.heroPanel}>
+          <p className={styles.heroPanelLabel}>Local technology profile</p>
+          <h2>Planning informed by how {city.city} properties actually operate.</h2>
+          <ul>
+            <li>Managed IT, cloud, endpoints, and business support</li>
+            <li>Networks, Wi-Fi, cameras, cabling, and access control</li>
+            <li>Smart-home lighting, automation, shades, and AV</li>
+            <li>{servingLine}</li>
+          </ul>
+        </aside>
+      </section>
 
-            <p>
-              We support both businesses and homeowners in {city.city} and the greater{" "}
-              {city.region} area. Choose the option below that matches what you need.
-            </p>
-          </div>
-        </section>
+      <CityHomepageSections city={city} />
 
-        <section className="gsv-section">
-          <div className="gsv-card-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
-            <Link href={`/commercial-it-support-${city.slug}`} className="gsv-card">
-              <div className="gsv-eyebrow">For Your Business</div>
-              <h3>Commercial IT Support & Networks</h3>
-              <p>
-                Managed IT, network infrastructure, and security camera systems for
-                restaurants, retail, medical, and professional offices in {city.city}.
-              </p>
-            </Link>
+      <section className={styles.finalCta}>
+        <div>
+          <p className={styles.sectionEyebrow}>Next Step</p>
+          <h2>Plan a technology consultation for your {city.city} property.</h2>
+          <p>
+            We’ll review the site, current systems, coverage requirements, project goals,
+            and whether remote or scheduled onsite service is the right fit.
+          </p>
+        </div>
+        <div className={styles.finalActions}>
+          <Link href="/book-consult" className={styles.primaryButton}>
+            Book a Consultation →
+          </Link>
+          <a href="tel:+19169090500" className={styles.secondaryButton}>
+            (916) 909-0500
+          </a>
+        </div>
+      </section>
 
-            <Link href={`/home-network-security-${city.slug}`} className="gsv-card">
-              <div className="gsv-eyebrow">For Your Home</div>
-              <h3>Home Networking & Smart Home Systems</h3>
-              <p>
-                Home networking, security cameras, and Lutron smart home integration for
-                homeowners in {city.city}.
-              </p>
-            </Link>
-          </div>
-        </section>
-
-        <SiteFooter />
-      </div>
+      <SiteFooter />
     </main>
   );
 }

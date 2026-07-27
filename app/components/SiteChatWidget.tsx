@@ -44,10 +44,16 @@ type ConfirmationPayload = {
   calendarHtmlLink?: string | null;
 };
 
+type TranscriptVisitorInfo = {
+  name: string;
+  phone: string;
+  email: string;
+};
+
 const starterMessage: ChatMessage = {
   role: "assistant",
   content:
-    "Hi! I can help with managed IT, networks, smart home automation, or booking a consult.",
+    "Hi! Ask me anything. I can answer technology questions, help troubleshoot an issue, explain our services, plan a project, or book a consult.",
 };
 
 const quickPrompts = [
@@ -58,8 +64,16 @@ const quickPrompts = [
 
 const nextStepPrompt =
   "Do you want to book a consult or have us give you a call?";
+const generalChatLimitMessage =
+  "You’ve used the six general-answer allowance. I can still answer questions about Golden State Visions, help you book a consult, or have someone call you.";
+const maxGeneralAiResponses = 6;
+const transcriptInactivityMs = 5 * 60 * 1_000;
+const chatAutoOpenDelayMs = 15_000;
+const chatAutoOpenSessionKey = "gsv-chat-auto-opened";
+const outsideServiceAreaMessage =
+  "It looks like you’re outside our U.S. service area. Golden State Visions currently serves customers in the United States, so chat and appointment requests are unavailable from your location.";
 
-const companyPhoneNumber = "(916) 432-3373";
+const companyPhoneNumber = "(916) 909-0500";
 const companyEmailAddress = "info@gsvisions.com";
 const phoneCandidatePattern = /(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/;
 const smsConsentText =
@@ -68,14 +82,28 @@ const smsConsentText =
 export default function SiteChatWidget() {
   const pathname = usePathname();
   const currentPathname = pathname || "";
+  const isBillingRoute =
+    currentPathname.startsWith("/billing") ||
+    currentPathname.startsWith("/portal");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([starterMessage]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [capture, setCapture] = useState<ChatCapture | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [generalAiResponseCount, setGeneralAiResponseCount] = useState(0);
+  const [isOutsideUsServiceArea, setIsOutsideUsServiceArea] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const transcriptSessionIdRef = useRef("");
+  const messagesRef = useRef(messages);
+  const lastTranscriptSentCountRef = useRef(0);
+  const hasVisitorControlledChatRef = useRef(false);
+  const transcriptVisitorInfoRef = useRef<TranscriptVisitorInfo>({
+    name: "",
+    phone: "",
+    email: "",
+  });
 
   const visibleMessages = useMemo(
     () => messages.filter((message) => message.content.trim()),
@@ -85,15 +113,122 @@ export default function SiteChatWidget() {
   const lastAssistantMessage = [...visibleMessages]
     .reverse()
     .find((message) => message.role === "assistant");
+  const hasReachedGeneralChatLimit =
+    generalAiResponseCount >= maxGeneralAiResponses;
 
   const showNextStepActions =
+    !isOutsideUsServiceArea &&
     !capture &&
     !isLoading &&
-    Boolean(lastAssistantMessage && hasNextStepPrompt(lastAssistantMessage.content));
+    (hasReachedGeneralChatLimit ||
+      Boolean(lastAssistantMessage && hasNextStepPrompt(lastAssistantMessage.content)));
 
   const showConsultSlotActions =
+    !isOutsideUsServiceArea &&
     Boolean(capture?.mode === "consult" && capture.step === "slot" && capture.slots.length > 0) &&
     !isLoading;
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    transcriptSessionIdRef.current =
+      window.crypto?.randomUUID?.() ||
+      `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }, []);
+
+  useEffect(() => {
+    if (isBillingRoute) return;
+
+    let hasAutoOpened = false;
+
+    try {
+      hasAutoOpened =
+        window.sessionStorage.getItem(chatAutoOpenSessionKey) === "true";
+    } catch {
+      // The timer can still work when browser storage is unavailable.
+    }
+
+    if (hasAutoOpened) return;
+
+    const autoOpenTimer = window.setTimeout(() => {
+      if (hasVisitorControlledChatRef.current) return;
+
+      try {
+        window.sessionStorage.setItem(chatAutoOpenSessionKey, "true");
+      } catch {
+        // Opening the chat does not depend on browser storage.
+      }
+
+      setIsOpen(true);
+    }, chatAutoOpenDelayMs);
+
+    return () => window.clearTimeout(autoOpenTimer);
+  }, [isBillingRoute]);
+
+  const sendTranscript = (reason: string) => {
+    const transcriptMessages = messagesRef.current.filter((message) =>
+      message.content.trim(),
+    );
+    const hasVisitorMessage = transcriptMessages.some(
+      (message) => message.role === "user",
+    );
+
+    if (
+      !hasVisitorMessage ||
+      transcriptMessages.length <= lastTranscriptSentCountRef.current ||
+      !transcriptSessionIdRef.current
+    ) {
+      return;
+    }
+
+    lastTranscriptSentCountRef.current = transcriptMessages.length;
+    void fetch("/api/chat-transcript", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId: transcriptSessionIdRef.current,
+        page: currentPathname || "/",
+        reason,
+        messages: transcriptMessages,
+        visitorInfo: transcriptVisitorInfoRef.current,
+        clientInfo: {
+          referrer: document.referrer || "Direct visit",
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+          screen:
+            typeof window.screen?.width === "number"
+              ? `${window.screen.width} × ${window.screen.height}`
+              : "",
+        },
+      }),
+      keepalive: true,
+    }).catch(() => {
+      lastTranscriptSentCountRef.current = 0;
+    });
+  };
+
+  useEffect(() => {
+    const hasVisitorMessage = messages.some(
+      (message) => message.role === "user",
+    );
+    if (!hasVisitorMessage || isLoading) return;
+
+    const inactivityTimer = window.setTimeout(() => {
+      sendTranscript("Five minutes of inactivity");
+    }, transcriptInactivityMs);
+
+    return () => window.clearTimeout(inactivityTimer);
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    const handlePageHide = () => sendTranscript("Visitor left the page");
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  });
 
   useEffect(() => {
     logRef.current?.scrollTo({
@@ -102,7 +237,50 @@ export default function SiteChatWidget() {
     });
   }, [visibleMessages.length, isLoading, showNextStepActions, showConsultSlotActions]);
 
-  if (currentPathname.startsWith("/billing")) return null;
+  useEffect(() => {
+    let isActive = true;
+
+    fetch("/api/site-chat", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (isActive && typeof data?.responseCount === "number") {
+          setGeneralAiResponseCount(
+            Math.min(data.responseCount, maxGeneralAiResponses),
+          );
+        }
+        if (isActive && data?.serviceAreaBlocked === true) {
+          setIsOutsideUsServiceArea(true);
+          setHasInteracted(true);
+          setCapture(null);
+          setInput("");
+          setMessages([
+            {
+              role: "assistant",
+              content: outsideServiceAreaMessage,
+            },
+          ]);
+        }
+      })
+      .catch(() => {
+        // The chat can still operate if the allowance status check fails.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  if (isBillingRoute) return null;
+
+  const markChatAsVisitorControlled = () => {
+    hasVisitorControlledChatRef.current = true;
+
+    try {
+      window.sessionStorage.setItem(chatAutoOpenSessionKey, "true");
+    } catch {
+      // Manual chat controls remain available without browser storage.
+    }
+  };
 
   const beginCaptureFlow = (mode: LeadMode, userMessage: string) => {
     setHasInteracted(true);
@@ -249,6 +427,7 @@ export default function SiteChatWidget() {
           content: `Thanks, ${getFirstName(nextCapture.name)}. I sent your callback request to Golden State Visions. We will call ${nextCapture.phone}.`,
         },
       ]);
+      window.setTimeout(() => sendTranscript("Callback requested"), 0);
     } catch (error) {
       setCapture({ ...nextCapture, step: "phone" });
       setMessages((current) => [
@@ -421,6 +600,7 @@ export default function SiteChatWidget() {
           links: confirmationLinks,
         },
       ]);
+      window.setTimeout(() => sendTranscript("Consultation booked"), 0);
     } catch (error) {
       setCapture({ ...nextCapture, step: "email" });
       setMessages((current) => [
@@ -464,6 +644,11 @@ export default function SiteChatWidget() {
         phone: phone || capture.phone,
         step: phone ? "submitting" : "phone",
       };
+      transcriptVisitorInfoRef.current = {
+        ...transcriptVisitorInfoRef.current,
+        name,
+        phone: phone || transcriptVisitorInfoRef.current.phone,
+      };
 
       if (phone && capture.mode === "call") {
         await submitCallbackRequest(nextCapture, userMessage);
@@ -506,6 +691,10 @@ export default function SiteChatWidget() {
 
       const nextCapture: ChatCapture = {
         ...capture,
+        phone: phone.trim(),
+      };
+      transcriptVisitorInfoRef.current = {
+        ...transcriptVisitorInfoRef.current,
         phone: phone.trim(),
       };
 
@@ -555,6 +744,10 @@ export default function SiteChatWidget() {
         return true;
       }
 
+      transcriptVisitorInfoRef.current = {
+        ...transcriptVisitorInfoRef.current,
+        email,
+      };
       await bookConsultFromChat({ ...capture, email }, userMessage);
       return true;
     }
@@ -564,7 +757,7 @@ export default function SiteChatWidget() {
 
   const sendMessage = async (messageText: string) => {
     const cleanText = messageText.trim();
-    if (!cleanText || isLoading) return;
+    if (!cleanText || isLoading || isOutsideUsServiceArea) return;
 
     setHasInteracted(true);
 
@@ -623,6 +816,22 @@ export default function SiteChatWidget() {
       return;
     }
 
+    if (hasReachedGeneralChatLimit) {
+      const companyReply = getLimitedCompanyReply(cleanText);
+      setMessages((current) => [
+        ...current,
+        { role: "user", content: cleanText },
+        {
+          role: "assistant",
+          content:
+            companyReply ||
+            `${generalChatLimitMessage} Please ask about our services, coverage area, company, or contact options. ${nextStepPrompt}`,
+        },
+      ]);
+      setInput("");
+      return;
+    }
+
     const nextMessages: ChatMessage[] = [
       ...messages,
       { role: "user", content: cleanText },
@@ -641,10 +850,19 @@ export default function SiteChatWidget() {
         body: JSON.stringify({
           page: currentPathname,
           messages: nextMessages.slice(1),
+          responseCount: generalAiResponseCount,
         }),
       });
 
       const data = await response.json().catch(() => ({}));
+      const nextResponseCount =
+        data?.limitReached === true
+          ? maxGeneralAiResponses
+          : typeof data?.responseCount === "number"
+          ? Math.min(data.responseCount, maxGeneralAiResponses)
+          : Math.min(generalAiResponseCount + (data?.reply ? 1 : 0), maxGeneralAiResponses);
+
+      setGeneralAiResponseCount(nextResponseCount);
 
       setMessages((current) => [
         ...current,
@@ -655,7 +873,18 @@ export default function SiteChatWidget() {
             data?.error ||
             "I could not reach the AI chat right now. You can still book a consult and Golden State Visions can review the details directly.",
         },
+        ...(nextResponseCount >= maxGeneralAiResponses
+          ? [
+              {
+                role: "assistant" as const,
+                content: `${generalChatLimitMessage} ${nextStepPrompt}`,
+              },
+            ]
+          : []),
       ]);
+      if (nextResponseCount >= maxGeneralAiResponses) {
+        window.setTimeout(() => sendTranscript("Six-answer limit reached"), 0);
+      }
     } catch {
       setMessages((current) => [
         ...current,
@@ -693,7 +922,11 @@ export default function SiteChatWidget() {
               type="button"
               className="gsv-chat-close"
               aria-label="Close chat"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                markChatAsVisitorControlled();
+                sendTranscript("Visitor closed the chat");
+                setIsOpen(false);
+              }}
             >
               x
             </button>
@@ -769,17 +1002,36 @@ export default function SiteChatWidget() {
           </div>
 
           <form className="gsv-chat-form" onSubmit={handleChatSubmit}>
-            <label htmlFor="gsv-chat-input">ASK A QUESTION</label>
+            <label htmlFor="gsv-chat-input">
+              {isOutsideUsServiceArea
+                ? "OUTSIDE SERVICE AREA"
+                : hasReachedGeneralChatLimit && !capture
+                ? "ASK ABOUT GOLDEN STATE VISIONS"
+                : "ASK A QUESTION"}
+            </label>
             <textarea
               ref={inputRef}
               id="gsv-chat-input"
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask about services, coverage areas, or getting started..."
+              placeholder={
+                isOutsideUsServiceArea
+                  ? "Chat is unavailable outside the United States."
+                  : hasReachedGeneralChatLimit && !capture
+                  ? "Ask about our services, coverage area, company, or contact options..."
+                  : "Type any question—technology, services, projects, or anything else..."
+              }
               rows={2}
-              disabled={isLoading}
+              disabled={isLoading || isOutsideUsServiceArea}
             />
-            <button type="submit" disabled={isLoading || !input.trim()}>
+            <button
+              type="submit"
+              disabled={
+                isLoading ||
+                !input.trim() ||
+                isOutsideUsServiceArea
+              }
+            >
               Send
             </button>
           </form>
@@ -793,19 +1045,17 @@ export default function SiteChatWidget() {
         aria-expanded={isOpen}
         aria-controls="gsv-chat-panel"
         onClick={() => {
-          setIsOpen((open) => !open);
+          markChatAsVisitorControlled();
+          setIsOpen((open) => {
+            if (open) sendTranscript("Visitor closed the chat");
+            return !open;
+          });
           window.setTimeout(() => inputRef.current?.focus(), 0);
         }}
       >
         <span className="gsv-chat-launcher-icon" aria-hidden="true">
           ?
         </span>
-        <strong>
-          <small>AI Assistant</small>
-          <div className="gsv-chat-launcher-label">
-            Ask Golden State <mark>Visions</mark>
-          </div>
-        </strong>
       </button>
     </div>
   );
@@ -816,6 +1066,52 @@ function hasNextStepPrompt(content: string) {
     content.includes(nextStepPrompt) ||
     content.includes("Choose the next step that works best for you.")
   );
+}
+
+function getLimitedCompanyReply(value: string) {
+  const text = value.toLowerCase();
+
+  if (/\b(hours|open|closing|weekend)\b/.test(text)) {
+    return "Golden State Visions is available Monday through Friday, 8:00 AM to 6:00 PM Pacific.";
+  }
+
+  if (/\b(where|location|located|service area|coverage|serve|travel)\b/.test(text)) {
+    return "Golden State Visions is based in Lincoln and serves Placer County, Greater Sacramento, Tahoe communities, selected Bay Area cities, and surrounding Northern California markets.";
+  }
+
+  if (/\b(price|pricing|cost|quote|estimate|rate)\b/.test(text)) {
+    return `Pricing depends on the environment, equipment, and project scope. ${nextStepPrompt}`;
+  }
+
+  if (/\b(managed it|it support|computer support|help desk|microsoft 365|google workspace)\b/.test(text)) {
+    return "Managed IT services include monitoring, patching, endpoint protection, user and device support, Microsoft 365 or Google Workspace administration, backup planning, documentation, procurement, and ongoing technology planning.";
+  }
+
+  if (/\b(network|wi-?fi|firewall|cybersecurity|security|switch|vlan|cabling)\b/.test(text)) {
+    return "Golden State Visions designs and supports business and residential networks, Wi-Fi, switching, firewalls, segmentation, structured-cabling coordination, and security-system planning.";
+  }
+
+  if (/\b(smart home|automation|lighting|shade|thermostat|control system)\b/.test(text)) {
+    return "Smart home services include reliable home networking, lighting and climate control, touchscreens, cameras, shades, and integrated systems designed for long-term serviceability.";
+  }
+
+  if (/\b(audio|video|speaker|television|tv|projector|surveillance|camera)\b/.test(text)) {
+    return "Golden State Visions provides audio, video, and surveillance planning for homes and businesses, including displays, speakers, projectors, distributed audio, cameras, and integrated control.";
+  }
+
+  if (/\b(experience|background|why (you|golden state visions)|company|about)\b/.test(text)) {
+    return "Golden State Visions is built on more than 18 years of hands-on IT and infrastructure experience, including over a decade supporting one of the world’s top 10 technology companies and opening hundreds of operational locations.";
+  }
+
+  if (/\b(portal|invoice|billing|account)\b/.test(text)) {
+    return "Existing clients can use the Portal button for billing and account access. For account-specific help, contact Golden State Visions directly.";
+  }
+
+  if (/\b(service|offer|do you do|help with|support)\b/.test(text)) {
+    return "Golden State Visions provides managed IT, networks and security systems, smart home automation, audio/video and surveillance, cloud-platform administration, technology procurement, and project planning.";
+  }
+
+  return "";
 }
 
 function getNextStepDecision(value: string): LeadMode | "choose" | null {

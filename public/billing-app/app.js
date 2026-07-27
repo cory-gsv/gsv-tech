@@ -1461,7 +1461,7 @@ function editorFields(mode, item) {
           <img class="invoice-edit-logo" src="assets/gsv-logo.png" alt="Golden State Visions">
           <div class="invoice-edit-contact">
             <p>${contactEmail}</p>
-            <p>(916) 432-3373</p>
+            <p>(916) 909-0500</p>
           </div>
         </div>
         <div class="invoice-edit-meta">
@@ -2590,7 +2590,7 @@ function renderDocument(type, doc, client) {
           <img class="doc-logo" src="assets/gsv-logo.png" alt="Golden State Visions">
           <div class="doc-contact">
             <p>${contactEmail}</p>
-            <p>(916) 432-3373</p>
+            <p>(916) 909-0500</p>
           </div>
         </div>
         <div class="doc-title">

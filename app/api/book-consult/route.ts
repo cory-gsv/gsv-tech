@@ -4,7 +4,7 @@ const FUNCTION_NAME = "gcal-sync";
 const BOOKING_SERVICE_UNAVAILABLE_MESSAGE =
   "Booking availability is temporarily unavailable. Please contact Golden State Visions directly and we’ll help schedule your consultation.";
 const BOOKING_COULD_NOT_COMPLETE_MESSAGE =
-  "Booking could not be completed right now. Please call Golden State Visions at (916) 432-3373 and we’ll help schedule your consultation.";
+  "Booking could not be completed right now. Please call Golden State Visions at (916) 909-0500 and we’ll help schedule your consultation.";
 const CONSULT_BOOKING_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 
 type SupabaseFunctionResult = {

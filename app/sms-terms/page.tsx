@@ -8,7 +8,7 @@ const socialImage = "/images/gsv-logo.png";
 export const metadata: Metadata = {
   title: "SMS Terms & Conditions | Golden State Visions",
   description:
-    "SMS Terms & Conditions for Golden State Visions text message communications, including message types, frequency, opt-out, help, and privacy information.",
+    "Review Golden State Visions SMS terms, including message types, frequency, consent, opt-out instructions, help, privacy, and supported communications.",
   alternates: {
     canonical: "/sms-terms",
   },
@@ -102,7 +102,7 @@ const sections = [
           directly:
         </p>
         <p>
-          Phone: <a href="tel:+19164323373">(916) 432-3373</a>
+          Phone: <a href="tel:+19169090500">(916) 909-0500</a>
           <br />
           Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
         </p>
@@ -303,7 +303,7 @@ export default function SmsTermsPage() {
               <p>
                 Golden State Visions
                 <br />
-                Phone: <a href="tel:+19164323373">(916) 432-3373</a>
+                Phone: <a href="tel:+19169090500">(916) 909-0500</a>
                 <br />
                 Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
                 <br />

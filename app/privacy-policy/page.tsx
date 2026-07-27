@@ -7,7 +7,7 @@ const socialImage = "/images/gsv-logo.png";
 export const metadata: Metadata = {
   title: "Privacy Policy | Golden State Visions",
   description:
-    "Privacy Policy for Golden State Visions, including website, contact, booking, service request, email, phone, and SMS/text message communications.",
+    "Read how Golden State Visions collects, uses, shares, and protects information from website, service, booking, email, phone, and SMS communications.",
   alternates: {
     canonical: "/privacy-policy",
   },
@@ -53,6 +53,11 @@ const sections = [
           <li>Company name, when applicable</li>
           <li>Appointment or project details</li>
           <li>Messages or support requests you send to us</li>
+          <li>Website AI chat messages and any contact details you provide in chat</li>
+          <li>
+            Technical information such as IP address, approximate city or region,
+            browser and device information, referring page, language, and time zone
+          </li>
           <li>
             Information needed to provide managed IT, networking, smart home,
             audio/video, or related services
@@ -305,7 +310,7 @@ export default function PrivacyPolicyPage() {
 
       <div className="gsv-privacy-shell">
         <section className="gsv-privacy-hero">
-          <div className="gsv-privacy-date">Effective Date: June 2, 2026</div>
+          <div className="gsv-privacy-date">Effective Date: July 25, 2026</div>
           <h1>Privacy Policy</h1>
           <p>
             Golden State Visions respects your privacy. This Privacy Policy explains
@@ -333,7 +338,7 @@ export default function PrivacyPolicyPage() {
               <p>
                 Golden State Visions
                 <br />
-                Phone: <a href="tel:+19164323373">(916) 432-3373</a>
+                Phone: <a href="tel:+19169090500">(916) 909-0500</a>
                 <br />
                 Email: <a href="mailto:support@gsvisions.com">support@gsvisions.com</a>
                 <br />

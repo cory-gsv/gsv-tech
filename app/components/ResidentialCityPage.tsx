@@ -1,17 +1,20 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import AudiencePathButtons from "@/app/components/AudiencePathButtons";
 import JsonLd from "@/app/components/JsonLd";
+import CityHomepageSections from "@/app/components/CityHomepageSections";
 import SiteHeader from "@/app/components/SiteHeader";
 import SiteFooter from "@/app/components/SiteFooter";
 import type { LocalCity } from "@/app/data/localSeo";
 import { residentialCityStructuredData } from "@/app/data/structuredData";
+import styles from "./city-page.module.css";
 
 const residentialCitySocialImage =
   "/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png";
 
 export function residentialCityMeta(city: LocalCity): Metadata {
-  const title = `Home Networking & Security Camera Systems | ${city.city}, ${city.state}`;
-  const description = city.residential.intro;
+  const title = `Home Wi-Fi & Security Cameras | ${city.city}, ${city.state}`;
+  const description = `Home Wi-Fi, security cameras, smart home automation, lighting, and audio/video systems for homes and properties in ${city.city}, ${city.state} by Golden State Visions.`;
   const path = `/home-network-security-${city.slug}`;
 
   return {
@@ -48,143 +51,141 @@ export default function ResidentialCityPage({ city }: { city: LocalCity }) {
   const servingLine = `Serving ${city.city}, ${city.state} and the greater ${city.region} area`;
 
   return (
-    <main id="top" className="gsv-page">
+    <main id="top" className={`gsv-redesign-page ${styles.page}`}>
       <JsonLd data={residentialCityStructuredData(city)} />
-      <div className="gsv-shell">
-        <SiteHeader />
+      <SiteHeader />
 
-        <section className="gsv-hero">
-          <div className="gsv-hero-copy">
-            <div className="gsv-eyebrow">Home Networking • Security Cameras • Smart Systems</div>
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <p className={styles.darkEyebrow}>
+            Home Technology · {city.city}, {city.state}
+          </p>
+          <h1>{city.residential.h1}</h1>
+          <p>{city.residential.intro}</p>
+          <AudiencePathButtons
+            defaultAudience="home"
+            targetId="service-paths"
+          />
+        </div>
 
-            <h1>{city.residential.h1}</h1>
+        <aside className={styles.heroPanel}>
+          <p className={styles.heroPanelLabel}>One coordinated home technology team</p>
+          <h2>Systems planned around the whole {city.city} property.</h2>
+          <ul>
+            <li>Whole-home and outdoor Wi-Fi coverage</li>
+            <li>UniFi networking, cameras, and remote visibility</li>
+            <li>Lutron HomeWorks, RadioRA 3, lighting, and shades</li>
+            <li>Control4, audio/video, and long-term system support</li>
+          </ul>
+        </aside>
+      </section>
 
-            <p>{city.residential.intro}</p>
+      <CityHomepageSections city={city} defaultAudience="home" pageContext="home" />
 
-            <div className="gsv-hero-actions">
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
-                Book a Consult
-              </Link>
+      <section id="home-services" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <p className={styles.sectionEyebrow}>Residential Technology Services</p>
+          <h2>Coverage, security, lighting, and control designed together.</h2>
+          <p>{city.residential.servicesIntro}</p>
+        </div>
 
-              <a className="gsv-btn gsv-btn-secondary" href="#home-services">
-                View Services
-              </a>
-            </div>
-          </div>
+        <div className={styles.cardGrid}>
+          <article className={styles.serviceCard}>
+            <span className={styles.cardNumber}>01</span>
+            <h3>Home Networking &amp; Wi-Fi</h3>
+            <p>
+              Reliable network design for large homes, multi-floor layouts, outdoor areas,
+              offices, media rooms, and connected devices.
+            </p>
+            <ul>
+              <li><strong>Whole-home Wi-Fi</strong> coverage planning and access point placement</li>
+              <li><strong>UniFi gateways and switches</strong> sized for the property</li>
+              <li><strong>Outdoor coverage</strong> for patios, shops, gates, and detached spaces</li>
+              <li><strong>Network segmentation</strong> for smart home, guest, cameras, and work devices</li>
+            </ul>
+          </article>
 
-          <div className="gsv-hero-panel gsv-hero-capabilities">
-            <div className="gsv-status-card gsv-capability-lead">
-              <div className="gsv-status-label">Residential Technology</div>
-              <div className="gsv-status-value">WiFi, Cameras, Smart Home, and Network Design</div>
-              <p>{city.residential.servicesIntro}</p>
-            </div>
+          <article className={styles.serviceCard}>
+            <span className={styles.cardNumber}>02</span>
+            <h3>Home Security Camera Systems</h3>
+            <p>
+              Camera planning and network infrastructure for entrances, driveways, gates,
+              yards, garages, shops, and detached buildings.
+            </p>
+            <ul>
+              <li><strong>Camera placement</strong> for useful coverage, not wasted angles</li>
+              <li><strong>PoE switching</strong> and power planning for reliable installs</li>
+              <li><strong>Local recording</strong>, remote viewing, and user permissions</li>
+              <li><strong>UniFi Protect</strong> coordination with the property network</li>
+            </ul>
+          </article>
 
-            <div className="gsv-status-grid gsv-capability-grid">
-              <div className="gsv-mini-stat gsv-capability-card">
-                <span>Networking</span>
-                <strong>{city.residential.propertyTypes}</strong>
-              </div>
+          <article className={styles.serviceCard}>
+            <span className={styles.cardNumber}>03</span>
+            <h3>Lighting, Automation &amp; AV</h3>
+            <p>
+              Connected home systems designed around real usability, long-term support,
+              and clean coordination between technologies.
+            </p>
+            <ul>
+              <li><strong>Lutron HomeWorks and RadioRA 3</strong> design and integration</li>
+              <li><strong>Lutron shades</strong>, scenes, keypads, and lighting control</li>
+              <li><strong>Control4 and audio/video</strong> coordination across the home</li>
+              <li><strong>Upgrade planning</strong> for existing homes, remodels, and new builds</li>
+            </ul>
+          </article>
+        </div>
 
-              <div className="gsv-mini-stat gsv-capability-card">
-                <span>Security</span>
-                <strong>Home camera systems, remote access, and monitoring design</strong>
-              </div>
+        <div className={styles.localBand}>
+          <p>
+            <strong>Local availability:</strong> {servingLine}. Projects are scoped around the
+            home, existing infrastructure, ownership goals, and onsite requirements.
+          </p>
+          <Link href={`/locations/${city.slug}`}>View the {city.city} service overview →</Link>
+        </div>
+      </section>
 
-              <div className="gsv-mini-stat gsv-capability-card">
-                <span>Smart Home</span>
-                <strong>Lutron HomeWorks, lighting control, and connected systems</strong>
-              </div>
-
-              <div className="gsv-mini-stat gsv-capability-card">
-                <span>Support</span>
-                <strong>Long-term support, upgrades, troubleshooting, and planning</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="home-services" className="gsv-section">
-          <div className="gsv-section-head">
-            <div className="gsv-eyebrow">Residential Services</div>
-            <h2>Home technology systems designed for coverage, security, and simplicity.</h2>
+      <section className={styles.sectionAlt}>
+        <div className={styles.sectionHead}>
+          <p className={styles.sectionEyebrow}>Designed for the Property</p>
+          <h2>Technology that fits how the home is built and used.</h2>
+          <p>
+            {city.city} projects are planned around the physical property—not a generic
+            package or a pile of disconnected products.
+          </p>
+        </div>
+        <div className={styles.profileGrid}>
+          <article className={styles.featureCard}>
+            <h3>Property profile</h3>
+            <p>{city.residential.propertyTypes}.</p>
+          </article>
+          <article className={styles.featureCard}>
+            <h3>Planning priorities</h3>
             <p>{city.residential.servicesIntro}</p>
-          </div>
+          </article>
+        </div>
+      </section>
 
-          <div className="gsv-card-grid">
-            <div className="gsv-card">
-              <div className="gsv-eyebrow">01</div>
-              <h3>Home Networking & WiFi</h3>
-              <p>
-                Reliable network design for large homes, multi-floor layouts, outdoor areas,
-                offices, media rooms, and connected devices.
-              </p>
-              <ul>
-                <li><strong>Whole-home WiFi</strong> coverage planning and access point placement</li>
-                <li><strong>Network gateways and switches</strong> sized for performance</li>
-                <li><strong>Outdoor coverage</strong> for patios, shops, gates, and detached spaces</li>
-                <li><strong>Device segmentation</strong> for smart home, guest, cameras, and work devices</li>
-              </ul>
-            </div>
+      <section className={styles.finalCta}>
+        <div>
+          <p className={styles.sectionEyebrow}>Next Step</p>
+          <h2>Planning a home technology project in {city.city}?</h2>
+          <p>
+            Start with a consultation. We’ll review the layout, coverage requirements,
+            current equipment, supported platforms, and the practical path forward.
+          </p>
+        </div>
+        <div className={styles.finalActions}>
+          <Link href="/book-consult" className={styles.primaryButton}>
+            Book a Consultation →
+          </Link>
+          <a href="tel:+19169090500" className={styles.secondaryButton}>
+            (916) 909-0500
+          </a>
+        </div>
+      </section>
 
-            <div className="gsv-card">
-              <div className="gsv-eyebrow">02</div>
-              <h3>Home Security Camera Systems</h3>
-              <p>
-                Camera planning and network infrastructure for entrances, driveways,
-                gates, yards, garages, shops, and detached buildings.
-              </p>
-              <ul>
-                <li><strong>Camera placement</strong> for useful coverage, not wasted angles</li>
-                <li><strong>PoE switching</strong> and power planning for reliable installs</li>
-                <li><strong>Remote viewing</strong> and user access planning</li>
-                <li><strong>Network video systems</strong> designed around your home layout</li>
-              </ul>
-            </div>
-
-            <div className="gsv-card">
-              <div className="gsv-eyebrow">03</div>
-              <h3>Smart Home Integration</h3>
-              <p>
-                Connected home systems that are designed around real usability, long-term
-                support, and clean coordination between technologies.
-              </p>
-              <ul>
-                <li><strong>Lutron HomeWorks</strong> system design and integration</li>
-                <li><strong>Lighting control</strong>, scenes, and keypad planning</li>
-                <li><strong>Smart home coordination</strong> with networks, cameras, and connected systems</li>
-                <li><strong>Upgrade planning</strong> for existing homes and new projects</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="gsv-section">
-          <div className="gsv-contact">
-            <div className="gsv-contact-copy">
-              <div className="gsv-eyebrow">Start Here</div>
-              <h2>Need better home WiFi, cameras, or smart home planning?</h2>
-              <p>
-                Schedule a consultation and we’ll help review your layout, coverage needs,
-                current equipment, and the right path forward.
-              </p>
-
-              <div className="gsv-contact-meta">
-                <span>📍 {servingLine}</span>
-                <span>☎️ (916) 432-3373</span>
-                <span>🕒 Mon – Fri: 8:00 AM – 6:00 PM</span>
-              </div>
-            </div>
-
-            <div>
-              <Link href="/book-consult" className="gsv-btn gsv-btn-primary">
-                Book a Consult
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <SiteFooter />
-      </div>
+      <SiteFooter />
     </main>
   );
 }

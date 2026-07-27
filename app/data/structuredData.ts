@@ -1,5 +1,6 @@
 import { siteUrl } from "@/app/config/site";
-import type { LocalCity } from "@/app/data/localSeo";
+import { socialProfileUrls } from "@/app/config/socialProfiles";
+import { localCities, type LocalCity } from "@/app/data/localSeo";
 import { resourceFaqItems } from "@/app/data/resources";
 
 type SchemaNode = Record<string, unknown>;
@@ -12,7 +13,7 @@ type ServiceSummary = {
 };
 
 const companyName = "Golden State Visions";
-const companyPhone = "+19164323373";
+const companyPhone = "+19169090500";
 const companyEmail = "info@gsvisions.com";
 const logoPath = "/assets/images/gsv-bridge-mark.png";
 const defaultImagePath =
@@ -22,52 +23,19 @@ const websiteId = `${siteUrl}/#website`;
 
 const coreServices: ServiceSummary[] = [
   {
-    name: "Managed IT Services",
+    name: "Managed IT, Networks & Security",
     description:
-      "Managed IT support, cybersecurity, cloud administration, endpoint protection, backup, and compliance support for small and medium-sized businesses.",
-    path: "/services/managed-it",
-    serviceType: "Managed IT Services",
+      "Managed IT support, cybersecurity, cloud administration, endpoint protection, backup, compliance, network infrastructure, Wi-Fi, cameras, and access control.",
+    path: "/managed-it",
+    serviceType: "Managed IT, Network Infrastructure, and Security Systems",
   },
   {
-    name: "Networks & Security Systems",
+    name: "Smart Home Automation, Lighting & AV",
     description:
-      "Secure network infrastructure, Wi-Fi, switching, VLANs, firewalls, failover internet, cameras, and physical security systems.",
-    path: "/services/networks-security-systems",
-    serviceType: "Network Infrastructure and Security Systems",
+      "Residential smart-home automation, Lutron lighting and shades, home networking, whole-home control, audio, video, cameras, and long-term support.",
+    path: "/smart-home-automation",
+    serviceType: "Smart Home Automation, Lighting, and Audio Video Systems",
   },
-  {
-    name: "Smart Home Automation",
-    description:
-      "Residential smart-home automation, home networking, Lutron lighting control, touchscreens, cameras, and long-term system support.",
-    path: "/services/smart-home-automation",
-    serviceType: "Smart Home Automation",
-  },
-  {
-    name: "Audio, Video & Surveillance",
-    description:
-      "Audio, video, home theater, distributed audio, commercial AV, camera, and surveillance systems for homes and businesses.",
-    path: "/services/audio-video-surveillance",
-    serviceType: "Audio Video and Surveillance Systems",
-  },
-];
-
-const serviceAreaCities = [
-  "Lincoln",
-  "Rocklin",
-  "Roseville",
-  "Granite Bay",
-  "Folsom",
-  "Auburn",
-  "Truckee",
-  "Tahoe",
-  "Sugar Bowl",
-  "Sunnyvale",
-  "Mountain View",
-  "Palo Alto",
-  "Santa Clara",
-  "Cupertino",
-  "Los Altos",
-  "San Jose",
 ];
 
 function absoluteUrl(path: string) {
@@ -82,9 +50,9 @@ function graph(nodes: SchemaNode[]) {
 }
 
 function areaServed() {
-  return serviceAreaCities.map((city) => ({
+  return localCities.map((city) => ({
     "@type": "City",
-    name: `${city}, CA`,
+    name: `${city.city}, ${city.state}`,
   }));
 }
 
@@ -126,7 +94,16 @@ function organizationNode(): SchemaNode {
     image: absoluteUrl(defaultImagePath),
     logo: absoluteUrl(logoPath),
     address: postalAddress(),
+    sameAs: socialProfileUrls,
     areaServed: areaServed(),
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "08:00",
+        closes: "18:00",
+      },
+    ],
     priceRange: "$$",
     hasOfferCatalog: offerCatalog("Golden State Visions services", coreServices),
   };
@@ -273,7 +250,6 @@ function pageServiceSchema({
     }),
     breadcrumbNode([
       { name: "Home", path: "/" },
-      { name: "Services", path: "/services" },
       { name: title.replace(" | Golden State Visions", ""), path },
     ]),
   ]);
@@ -305,30 +281,6 @@ export function homePageStructuredData() {
   ]);
 }
 
-export function servicesPageStructuredData() {
-  const path = "/services";
-  const title = "Services | Golden State Visions";
-  const description =
-    "Explore managed IT, cybersecurity, network infrastructure, smart home automation, and audio/video services from Golden State Visions.";
-  const serviceId = `${absoluteUrl(path)}#service-catalog`;
-
-  return graph([
-    webpageNode({ path, title, description, aboutId: serviceId }),
-    serviceNode({
-      id: serviceId,
-      name: "Golden State Visions Services",
-      description,
-      path,
-      serviceType: "Managed IT, Networking, Smart Home Automation, and Audio Video Services",
-      services: coreServices,
-    }),
-    breadcrumbNode([
-      { name: "Home", path: "/" },
-      { name: "Services", path },
-    ]),
-  ]);
-}
-
 export function aboutPageStructuredData() {
   const path = "/about";
   const title = "About Golden State Visions | Local IT & Smart Home Technology Team";
@@ -350,11 +302,32 @@ export function aboutPageStructuredData() {
   ]);
 }
 
+export function contactPageStructuredData() {
+  const path = "/contact";
+  const title = "Contact Golden State Visions | IT & Technology Support";
+  const description =
+    "Contact Golden State Visions for managed IT, secure networks, smart home automation, audio/video, surveillance, or general technology questions.";
+
+  return graph([
+    webpageNode({
+      path,
+      title,
+      description,
+      aboutId: organizationId,
+      imagePath: logoPath,
+    }),
+    breadcrumbNode([
+      { name: "Home", path: "/" },
+      { name: "Contact", path },
+    ]),
+  ]);
+}
+
 export function resourcesPageStructuredData() {
   const path = "/resources";
-  const title = "Resources & FAQ | Golden State Visions";
+  const title = "Technology Resources & FAQ | Golden State Visions";
   const description =
-    "Answers about managed IT, cybersecurity, business networks, smart home automation, audio/video, cameras, service areas, and getting started with Golden State Visions.";
+    "Practical planning guides and answers about managed IT, cybersecurity, HIPAA and PCI support, business networks, Lutron lighting and shades, smart home automation, audio/video, and surveillance.";
 
   return graph([
     webpageNode({
@@ -368,7 +341,7 @@ export function resourcesPageStructuredData() {
       "@type": "FAQPage",
       "@id": `${absoluteUrl(path)}#faq`,
       url: absoluteUrl(path),
-      name: "Golden State Visions Resources & FAQ",
+      name: "Golden State Visions Technology Resources & FAQ",
       isPartOf: {
         "@id": websiteId,
       },
@@ -393,7 +366,7 @@ export function resourcesPageStructuredData() {
 
 export function managedItStructuredData() {
   return pageServiceSchema({
-    path: "/services/managed-it",
+    path: "/managed-it",
     title: "Managed IT Services & Workspace Support | Golden State Visions",
     description:
       "Managed IT support, secure cloud workspaces, endpoint protection, backup, compliance support, and business infrastructure support for Northern California organizations.",
@@ -404,25 +377,25 @@ export function managedItStructuredData() {
       {
         name: "Managed IT Services",
         description: "Remote and onsite support, monitoring, maintenance, and vendor coordination.",
-        path: "/services/managed-it",
+        path: "/managed-it",
         serviceType: "Managed IT Services",
       },
       {
         name: "Endpoint Protection & Threat Detection",
         description: "Endpoint security controls, EDR planning, and threat detection support.",
-        path: "/services/managed-it",
+        path: "/managed-it",
         serviceType: "Endpoint Security",
       },
       {
         name: "Backup & Disaster Recovery",
         description: "Backup planning, recovery support, and business continuity infrastructure.",
-        path: "/services/managed-it",
+        path: "/managed-it",
         serviceType: "Backup and Disaster Recovery",
       },
       {
         name: "HIPAA & PCI Compliance Support",
         description: "Network segmentation, documentation, and support planning for regulated environments.",
-        path: "/services/managed-it",
+        path: "/managed-it",
         serviceType: "Compliance Support",
       },
     ],
@@ -431,7 +404,7 @@ export function managedItStructuredData() {
 
 export function networksSecurityStructuredData() {
   return pageServiceSchema({
-    path: "/services/networks-security-systems",
+    path: "/managed-it",
     title: "Networks & Security Systems | Golden State Visions",
     description:
       "Structured cabling, secure business networks, Wi-Fi, firewalls, IP surveillance, failover internet, and access control systems for Northern California properties.",
@@ -441,25 +414,25 @@ export function networksSecurityStructuredData() {
       {
         name: "Switching and VLAN Design",
         description: "Switching, VLAN, PoE, rack, and port documentation planning.",
-        path: "/services/networks-security-systems",
+        path: "/managed-it",
         serviceType: "Network Switching",
       },
       {
         name: "Business Wi-Fi",
         description: "Wi-Fi coverage planning, access point placement, and performance optimization.",
-        path: "/services/networks-security-systems",
+        path: "/managed-it",
         serviceType: "Wireless Networking",
       },
       {
         name: "Security Systems",
         description: "Camera planning, recorder setup, remote access, and surveillance network segmentation.",
-        path: "/services/networks-security-systems",
+        path: "/managed-it",
         serviceType: "Security Systems",
       },
       {
         name: "Failover Internet",
         description: "Failover connectivity planning for critical business systems.",
-        path: "/services/networks-security-systems",
+        path: "/managed-it",
         serviceType: "Failover Internet",
       },
     ],
@@ -468,36 +441,54 @@ export function networksSecurityStructuredData() {
 
 export function smartHomeStructuredData() {
   return pageServiceSchema({
-    path: "/services/smart-home-automation",
-    title: "Smart Home Automation, Lighting & AV Systems | Golden State Visions",
+    path: "/smart-home-automation",
+    title: "Smart Home Automation, Lighting & AV | Golden State Visions",
     description:
-      "Smart home automation, Lutron lighting control, whole-home networking, touchscreens, cameras, and residential technology support across Northern California.",
+      "Smart home planning, Lutron lighting and shades, whole-home control, UniFi networking, audio, video, surveillance, and residential technology support across Northern California.",
     serviceType: "Smart Home Automation",
     imagePath: "/assets/images/portfolio/smart-home-automation-ffc72c-transparent-v2.png",
     services: [
       {
-        name: "Home Networking",
-        description: "Whole-home Wi-Fi, wired network design, device segmentation, and support readiness.",
-        path: "/services/smart-home-automation",
-        serviceType: "Home Networking",
+        name: "New Build and Remodel Technology Planning",
+        description:
+          "Coordinated lighting, shade, networking, control, audio, video, and surveillance planning before walls close.",
+        path: "/smart-home-automation",
+        serviceType: "Residential Technology Planning",
       },
       {
-        name: "Lighting Control",
-        description: "Lutron HomeWorks lighting design, scene planning, keypad labeling, and programming.",
-        path: "/services/smart-home-automation",
-        serviceType: "Lighting Control",
+        name: "Lighting Control and Motorized Shades",
+        description:
+          "Lutron HomeWorks, RadioRA 3, Palladiom keypad, scene, motorized shade, and daylight planning.",
+        path: "/smart-home-automation",
+        serviceType: "Lighting and Shading Control",
       },
       {
-        name: "Touchscreens",
-        description: "Wall-mounted control interfaces, mobile access, and clean user handoff.",
-        path: "/services/smart-home-automation",
-        serviceType: "Control Interfaces",
+        name: "Whole-Home Control and Automation",
+        description:
+          "Control4, Savant, Crestron, Home Assistant, touchscreen, mobile, keypad, and voice-control integration.",
+        path: "/smart-home-automation",
+        serviceType: "Home Automation",
       },
       {
-        name: "Home Cameras",
-        description: "Residential camera coverage, recorder planning, secure access, and support.",
-        path: "/services/smart-home-automation",
-        serviceType: "Home Security Cameras",
+        name: "Whole-Home Networking and Surveillance",
+        description:
+          "UniFi wired and wireless networking, segmentation, cameras, local recording, access, and remote support.",
+        path: "/smart-home-automation",
+        serviceType: "Home Networking and Surveillance",
+      },
+      {
+        name: "Whole-Home Audio, Video and Media Rooms",
+        description:
+          "Distributed audio, home theater, displays, source equipment, architectural speakers, and coordinated control.",
+        path: "/smart-home-automation",
+        serviceType: "Residential Audio Video",
+      },
+      {
+        name: "Existing Smart Home Assessment and Support",
+        description:
+          "Assessment, troubleshooting, documentation, repair, reprogramming, and phased upgrades for existing connected-home systems.",
+        path: "/smart-home-automation",
+        serviceType: "Smart Home Support",
       },
     ],
   });
@@ -505,7 +496,7 @@ export function smartHomeStructuredData() {
 
 export function audioVideoStructuredData() {
   return pageServiceSchema({
-    path: "/services/audio-video-surveillance",
+    path: "/smart-home-automation",
     title: "Audio, Video & Surveillance Systems | Golden State Visions",
     description:
       "Whole-home audio, media rooms, home theater systems, commercial AV, surveillance, local NVR recording, and secure AV infrastructure across Northern California.",
@@ -515,25 +506,25 @@ export function audioVideoStructuredData() {
       {
         name: "Home Theater",
         description: "Home theater design, media rooms, projector systems, displays, and controls.",
-        path: "/services/audio-video-surveillance",
+        path: "/smart-home-automation",
         serviceType: "Home Theater",
       },
       {
         name: "Distributed Audio",
         description: "Whole-home audio, outdoor audio, music zones, and everyday music control.",
-        path: "/services/audio-video-surveillance",
+        path: "/smart-home-automation",
         serviceType: "Distributed Audio",
       },
       {
         name: "Commercial AV",
         description: "Conference room AV, displays, microphones, speakers, and room controls.",
-        path: "/services/audio-video-surveillance",
+        path: "/smart-home-automation",
         serviceType: "Commercial AV",
       },
       {
         name: "Surveillance",
         description: "Camera systems, storage, remote access, and surveillance network planning.",
-        path: "/services/audio-video-surveillance",
+        path: "/smart-home-automation",
         serviceType: "Surveillance Systems",
       },
     ],
@@ -560,7 +551,7 @@ export function locationHubStructuredData(city: LocalCity) {
         {
           "@type": "ListItem",
           position: 1,
-          name: `Commercial IT Support in ${city.city}, ${city.state}`,
+          name: `Managed IT Services in ${city.city}, ${city.state}`,
           url: absoluteUrl(`/commercial-it-support-${city.slug}`),
         },
         {
@@ -580,7 +571,7 @@ export function locationHubStructuredData(city: LocalCity) {
 
 export function commercialCityStructuredData(city: LocalCity) {
   const path = `/commercial-it-support-${city.slug}`;
-  const title = `Commercial IT Support & Network Infrastructure | ${city.city}, ${city.state}`;
+  const title = `Managed IT Services in ${city.city}, ${city.state} | Golden State Visions`;
   const description = city.commercial.intro;
   const serviceId = `${absoluteUrl(path)}#service`;
 
@@ -595,7 +586,7 @@ export function commercialCityStructuredData(city: LocalCity) {
     }),
     serviceNode({
       id: serviceId,
-      name: `Commercial IT Support in ${city.city}, ${city.state}`,
+      name: `Managed IT Services in ${city.city}, ${city.state}`,
       description,
       path,
       serviceType: "Commercial IT Support and Network Infrastructure",
@@ -627,7 +618,7 @@ export function commercialCityStructuredData(city: LocalCity) {
     breadcrumbNode([
       { name: "Home", path: "/" },
       { name: "Locations", path: `/locations/${city.slug}` },
-      { name: `Commercial IT Support in ${city.city}`, path },
+      { name: `Managed IT Services in ${city.city}`, path },
     ]),
   ]);
 }

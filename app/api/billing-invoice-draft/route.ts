@@ -351,7 +351,7 @@ function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayload, docu
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
     content += drawLogo(margin, pageY(674), 170);
     content += drawText(contactEmail, margin, pageY(650), 10);
-    content += drawText("(916) 432-3373", margin, pageY(634), 10);
+    content += drawText("(916) 909-0500", margin, pageY(634), 10);
 
     content += drawText(isQuote ? "QUOTE" : "INVOICE", 452, pageY(704), 23, ink, "F2");
     const metaX = 350;
@@ -571,14 +571,14 @@ export async function POST(request: Request) {
           `<p>Hi ${client.name || ""},</p>`,
           `<p>Quote <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
           `<p>Total: <strong>${total}</strong></p>`,
-          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
+          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 909-0500</p>`,
         ].join("")
       : [
           `<p>Hi ${client.name || ""},</p>`,
           `<p>Invoice <strong>${invoice.number || ""}</strong> is attached as a PDF.</p>`,
           `<p>Total due: <strong>${total}</strong><br>Due date: ${invoice.dueDate || ""}</p>`,
           `<p>Please remit payment by check.</p><p>Golden State Visions<br>757 Caber Drive<br>Lincoln, CA 95648</p>`,
-          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 432-3373</p>`,
+          `<p>Thank you,<br>${senderName}<br>${fromMailbox}<br>(916) 909-0500</p>`,
         ].join("");
 
     const response = await fetch(`${GRAPH_ROOT}/users/${encodeURIComponent(fromMailbox)}/messages`, {

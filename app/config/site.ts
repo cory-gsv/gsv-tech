@@ -1,9 +1,6 @@
-const fallbackSiteUrl = "https://gsvisions.com";
-
-function normalizeSiteUrl(url: string) {
-  return url.replace(/\/+$/, "");
-}
-
-export const siteUrl = normalizeSiteUrl(
-  process.env.NEXT_PUBLIC_APP_URL || fallbackSiteUrl,
-);
+/*
+ * Search canonicals, sitemap entries, and structured data must always point to
+ * the public brand domain. NEXT_PUBLIC_APP_URL may be a preview or application
+ * origin and must not be allowed to change the site's SEO identity.
+ */
+export const siteUrl = "https://gsvisions.com";

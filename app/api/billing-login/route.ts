@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   if (!validPasswords.length) {
     return NextResponse.redirect(
-      new URL("/billing?error=missing", request.url),
+      new URL("/portal?error=missing", request.url),
       {
         status: 303,
       }
@@ -34,12 +34,12 @@ export async function POST(request: NextRequest) {
   }
 
   if ((validUsername && username !== validUsername) || !validPasswords.includes(password)) {
-    return NextResponse.redirect(new URL("/billing?error=wrong", request.url), {
+    return NextResponse.redirect(new URL("/portal?error=wrong", request.url), {
       status: 303,
     })
   }
 
-  const response = NextResponse.redirect(new URL("/billing", request.url), {
+  const response = NextResponse.redirect(new URL("/portal", request.url), {
     status: 303,
   })
   response.cookies.set("gsv_billing_session", await createBillingSession(), {

@@ -6,7 +6,7 @@ import SiteHeader from "@/app/components/SiteHeader";
 import { homePageStructuredData } from "@/app/data/structuredData";
 import Image from "next/image";
 import Link from "next/link";
-import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ServiceKey = "managed" | "network" | "smartHome" | "audioVideo";
 
@@ -101,7 +101,7 @@ const servicePanels: Record<ServiceKey, ServicePanel> = {
     ],
     foot:
       "Example snapshot for a professional office, shown for planning context.",
-    href: "/services/managed-it",
+    href: "/managed-it",
     detailsLabel: "See full IT services details",
     image: "/assets/images/service-icons/managed-it-services.png",
     imageAlt: "Workstation headset beside a stack of managed business servers",
@@ -129,7 +129,7 @@ const servicePanels: Record<ServiceKey, ServicePanel> = {
     ],
     foot:
       "Example snapshot for a multi-zone storefront network, shown for planning context.",
-    href: "/services/networks-security-systems",
+    href: "/managed-it",
     detailsLabel: "See network and security details",
     image: "/assets/images/service-icons/networks-security-systems.png",
     imageAlt: "Network switches with a security shield",
@@ -157,7 +157,7 @@ const servicePanels: Record<ServiceKey, ServicePanel> = {
     ],
     foot:
       "Example snapshot for a smart-home deployment, shown for planning context.",
-    href: "/services/smart-home-automation",
+    href: "/smart-home-automation",
     detailsLabel: "See smart home details",
     image: "/assets/images/service-icons/smart-home-automation.png",
     imageAlt: "Wall touchscreen controlling smart home lighting and climate",
@@ -185,7 +185,7 @@ const servicePanels: Record<ServiceKey, ServicePanel> = {
     ],
     foot:
       "Example snapshot for a mixed AV and camera deployment, shown for planning context.",
-    href: "/services/audio-video-surveillance",
+    href: "/smart-home-automation",
     detailsLabel: "See audio and video details",
     image: "/assets/images/service-icons/audio-and-video.png",
     imageAlt: "Display, speakers, projector, and wireless audio video equipment",
@@ -214,7 +214,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a professional office, shown for planning context.",
-      href: "/services/managed-it",
+      href: "/managed-it",
       detailsLabel: "See Managed IT Services Details",
       icon: "office",
     },
@@ -238,7 +238,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a warehouse and fulfillment environment, shown for planning context.",
-      href: "/services/managed-it",
+      href: "/managed-it",
       detailsLabel: "See Managed IT Services Details",
       icon: "warehouse",
     },
@@ -262,7 +262,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a medical office, shown for planning context. Compliance requirements vary by practice and system ownership.",
-      href: "/services/managed-it",
+      href: "/managed-it",
       detailsLabel: "See Managed IT Services Details",
       icon: "medical",
     },
@@ -286,7 +286,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a restaurant or cafe environment, shown for planning context.",
-      href: "/services/networks-security-systems",
+      href: "/managed-it",
       detailsLabel: "See Managed IT Services Details",
       icon: "restaurant",
     },
@@ -310,7 +310,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a retail or storefront environment, shown for planning context.",
-      href: "/services/audio-video-surveillance",
+      href: "/managed-it",
       detailsLabel: "See Managed IT Services Details",
       icon: "retail",
     },
@@ -336,7 +336,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a multi-switch network deployment, shown for planning context.",
-      href: "/services/networks-security-systems",
+      href: "/managed-it",
       detailsLabel: "See switching details",
       icon: "switch",
     },
@@ -360,7 +360,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a high-traffic business Wi-Fi deployment, shown for planning context.",
-      href: "/services/networks-security-systems",
+      href: "/managed-it",
       detailsLabel: "See Wi-Fi details",
       icon: "wifi",
     },
@@ -384,7 +384,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a commercial camera and network security deployment, shown for planning context.",
-      href: "/services/networks-security-systems",
+      href: "/managed-it",
       detailsLabel: "See security details",
       icon: "camera",
     },
@@ -408,7 +408,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a failover-enabled network, shown for planning context.",
-      href: "/services/networks-security-systems",
+      href: "/managed-it",
       detailsLabel: "See failover details",
       icon: "shield",
     },
@@ -434,7 +434,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a connected home network, shown for planning context.",
-      href: "/services/smart-home-automation",
+      href: "/smart-home-automation",
       detailsLabel: "See home network details",
       icon: "wifi",
     },
@@ -458,7 +458,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a whole-home lighting deployment, shown for planning context.",
-      href: "/services/smart-home-automation",
+      href: "/smart-home-automation",
       detailsLabel: "See lighting details",
       icon: "lighting",
     },
@@ -482,7 +482,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a touchscreen and control interface deployment, shown for planning context.",
-      href: "/services/smart-home-automation",
+      href: "/smart-home-automation",
       detailsLabel: "See control details",
       icon: "touchscreen",
     },
@@ -506,7 +506,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a residential camera system, shown for planning context.",
-      href: "/services/smart-home-automation",
+      href: "/smart-home-automation",
       detailsLabel: "See camera details",
       icon: "camera",
     },
@@ -532,7 +532,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a theater room and control system deployment, shown for planning context.",
-      href: "/services/audio-video-surveillance",
+      href: "/smart-home-automation",
       detailsLabel: "See theater details",
       icon: "display",
     },
@@ -556,7 +556,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a distributed audio deployment, shown for planning context.",
-      href: "/services/audio-video-surveillance",
+      href: "/smart-home-automation",
       detailsLabel: "See audio details",
       icon: "speaker",
     },
@@ -580,7 +580,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for a commercial AV deployment across shared spaces, shown for planning context.",
-      href: "/services/audio-video-surveillance",
+      href: "/smart-home-automation",
       detailsLabel: "See commercial AV details",
       icon: "display",
     },
@@ -604,7 +604,7 @@ const serviceSubPanels: Record<ServiceKey, SubPanel[]> = {
       ],
       foot:
         "Example snapshot for an AV and surveillance deployment, shown for planning context.",
-      href: "/services/audio-video-surveillance",
+      href: "/smart-home-automation",
       detailsLabel: "See surveillance details",
       icon: "camera",
     },
@@ -659,7 +659,8 @@ function TickerStatValue({ value }: { value: string }) {
   }, [value]);
 
   return (
-    <span className="gsv-redesign-stat-ticker" aria-label={value}>
+    <span className="gsv-redesign-stat-ticker">
+      <span className="gsv-visually-hidden">{value}</span>
       {chars.map((char, index) => (
         <span
           key={`${value}-${index}`}
@@ -844,7 +845,7 @@ const businessTechnologyPartners: TechnologyPartner[] = [
   {
     name: "Yealink",
     description: "Desk phones, conference phones, and room devices",
-    logo: "/assets/images/vendor-logos/yealink.png",
+    logo: "/assets/images/vendor-logos/yealink-192.webp",
     wideLogo: true,
   },
   {
@@ -913,7 +914,7 @@ const homeTechnologyPartners: TechnologyPartner[] = [
   {
     name: "Crestron",
     description: "AV control, conference rooms, automation, and user interfaces",
-    logo: "/assets/images/vendor-logos/crestron.png",
+    logo: "/assets/images/vendor-logos/crestron-96.webp",
   },
   {
     name: "Savant",
@@ -952,11 +953,20 @@ const homeTechnologyPartners: TechnologyPartner[] = [
   },
 ];
 
-const partnerLoopCopies = [0, 1, 2];
+const partnerLoopCopies = [0, 1];
 
-function TechnologyPartnerCard({ partner }: { partner: TechnologyPartner }) {
+function TechnologyPartnerCard({
+  partner,
+  ariaHidden,
+}: {
+  partner: TechnologyPartner;
+  ariaHidden?: boolean;
+}) {
   return (
-    <div className="gsv-redesign-partner-card">
+    <div
+      className="gsv-redesign-partner-card"
+      aria-hidden={ariaHidden ? "true" : undefined}
+    >
       <strong>{partner.name}</strong>
       <span>{partner.description}</span>
       <img
@@ -978,131 +988,53 @@ function TechnologyPartnerRow({
   partners: TechnologyPartner[];
   reverse?: boolean;
 }) {
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  const loopWidthRef = useRef(0);
-  const dragStateRef = useRef({
-    pointerId: -1,
-    lastX: 0,
-    isDragging: false,
-  });
-
-  useEffect(() => {
-    const marquee = marqueeRef.current;
-    if (!marquee) return;
-
-    const measureAndCenter = () => {
-      const firstTrack = marquee.querySelector<HTMLElement>(".gsv-redesign-partner-track");
-      if (!firstTrack) return;
-
-      const gap = parseFloat(window.getComputedStyle(marquee).columnGap || "0");
-      const nextLoopWidth = firstTrack.scrollWidth + gap;
-      loopWidthRef.current = nextLoopWidth;
-
-      if (nextLoopWidth > 0 && marquee.scrollLeft < 1) {
-        marquee.scrollLeft = nextLoopWidth;
-      }
-    };
-
-    const wrapScroll = () => {
-      const loopWidth = loopWidthRef.current;
-      if (!loopWidth) return;
-
-      if (marquee.scrollLeft < loopWidth * 0.5) {
-        marquee.scrollLeft += loopWidth;
-      } else if (marquee.scrollLeft > loopWidth * 1.5) {
-        marquee.scrollLeft -= loopWidth;
-      }
-    };
-
-    measureAndCenter();
-
-    const resizeObserver = new ResizeObserver(measureAndCenter);
-    resizeObserver.observe(marquee);
-    marquee.addEventListener("scroll", wrapScroll, { passive: true });
-
-    return () => {
-      resizeObserver.disconnect();
-      marquee.removeEventListener("scroll", wrapScroll);
-    };
-  }, [partners.length]);
-
-  const wrapDraggedScroll = (marquee: HTMLDivElement) => {
-    const loopWidth = loopWidthRef.current;
-    if (!loopWidth) return;
-
-    if (marquee.scrollLeft < loopWidth * 0.5) {
-      marquee.scrollLeft += loopWidth;
-    } else if (marquee.scrollLeft > loopWidth * 1.5) {
-      marquee.scrollLeft -= loopWidth;
-    }
-  };
-
-  const stopDragging = () => {
-    const marquee = marqueeRef.current;
-    if (marquee) {
-      marquee.classList.remove("is-dragging");
-    }
-    dragStateRef.current.isDragging = false;
-    dragStateRef.current.pointerId = -1;
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-
-    const marquee = event.currentTarget;
-    dragStateRef.current = {
-      pointerId: event.pointerId,
-      lastX: event.clientX,
-      isDragging: true,
-    };
-    marquee.classList.add("is-dragging");
-    marquee.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const dragState = dragStateRef.current;
-    if (!dragState.isDragging || dragState.pointerId !== event.pointerId) return;
-
-    event.preventDefault();
-    event.currentTarget.scrollLeft -= event.clientX - dragState.lastX;
-    dragState.lastX = event.clientX;
-    wrapDraggedScroll(event.currentTarget);
-  };
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragStateRef.current.pointerId === event.pointerId) {
-      stopDragging();
-    }
-  };
-
   return (
     <div className={`gsv-redesign-partner-row${reverse ? " is-reverse" : ""}`}>
       <div className="gsv-redesign-partner-row-label">{label}</div>
       <div
-        ref={marqueeRef}
         className="gsv-redesign-partner-marquee"
         aria-label={`${label} platforms`}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={stopDragging}
-        onPointerLeave={stopDragging}
       >
-        {partnerLoopCopies.map((copyIndex) => (
-          <div
-            key={copyIndex}
-            className="gsv-redesign-partner-track"
-            aria-hidden={copyIndex === 0 ? undefined : "true"}
-          >
-            {partners.map((partner) => (
+        <div
+          className="gsv-redesign-partner-belt"
+          style={{ animationDuration: `${partners.length * 4.4}s` }}
+        >
+          {partnerLoopCopies.map((copyIndex) =>
+            partners.map((partner) => (
               <TechnologyPartnerCard
                 key={`${partner.name}-${copyIndex}`}
                 partner={partner}
+                ariaHidden={copyIndex !== 0}
               />
-            ))}
-          </div>
-        ))}
+            )),
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function TechnologyPartnerRows() {
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsRunning(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div
+      className={`gsv-redesign-partner-rows${isRunning ? " is-running" : ""}`}
+    >
+      <TechnologyPartnerRow
+        label="Business IT & Security"
+        partners={businessTechnologyPartners}
+      />
+      <TechnologyPartnerRow
+        label="Home Automation & AV"
+        partners={homeTechnologyPartners}
+        reverse
+      />
     </div>
   );
 }
@@ -1113,14 +1045,26 @@ export default function HomePage() {
   const [isSubTabRowHovered, setIsSubTabRowHovered] = useState(false);
   const [isSubTabRowFocused, setIsSubTabRowFocused] = useState(false);
   const [isSubAutoPaused, setIsSubAutoPaused] = useState(false);
+  const [isMobileSubTabs, setIsMobileSubTabs] = useState(false);
   const activePanel = servicePanels[activeServiceKey];
   const activeSubPanels = serviceSubPanels[activeServiceKey];
-  const shouldPauseSubAutoAdvance = isSubTabRowHovered || isSubTabRowFocused || isSubAutoPaused;
+  const shouldPauseSubAutoAdvance =
+    isMobileSubTabs || isSubTabRowHovered || isSubTabRowFocused || isSubAutoPaused;
   const activeSubIndex = useMemo(
     () => Math.max(0, activeSubPanels.findIndex((panel) => panel.key === activeSubKey)),
     [activeSubKey, activeSubPanels],
   );
   const activeSubPanel = activeSubPanels[activeSubIndex] ?? activeSubPanels[0];
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 720px)");
+    const syncMobileSubTabs = () => setIsMobileSubTabs(media.matches);
+
+    syncMobileSubTabs();
+    media.addEventListener("change", syncMobileSubTabs);
+
+    return () => media.removeEventListener("change", syncMobileSubTabs);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1183,6 +1127,7 @@ export default function HomePage() {
       </section>
 
       <section className="gsv-redesign-tabs-wrap" aria-label={`${activePanel.label} examples`}>
+        <div className="gsv-redesign-tabs-label">Choose a focus</div>
         <div
           className={`gsv-redesign-tabs${shouldPauseSubAutoAdvance ? " is-auto-paused" : ""}`}
           role="tablist"
@@ -1263,72 +1208,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="how-we-work" className="gsv-redesign-live-section gsv-section gsv-section-alt">
-        <div className="gsv-section-head">
-          <div className="gsv-eyebrow">How We Work</div>
-          <h2>A single technology partner across business and residential environments.</h2>
-          <p>
-            We combine support, infrastructure, and automation into one cohesive
-            service experience, reducing handoffs and giving clients a cleaner,
-            more reliable path forward.
-          </p>
-        </div>
-
-        <div className="gsv-feature-grid">
-          <div className="gsv-feature">
-            <h3>Consult &amp; plan</h3>
-            <p>
-              We start with the <strong>environment, goals, and future needs</strong>{" "}
-              so the solution is sized correctly from day one.
-            </p>
-          </div>
-          <div className="gsv-feature">
-            <h3>Build &amp; deploy</h3>
-            <p>
-              We <strong>implement cleanly and document clearly</strong>, focusing
-              on dependable performance over flashy complexity.
-            </p>
-          </div>
-          <div className="gsv-feature">
-            <h3>Support &amp; evolve</h3>
-            <p>
-              As systems grow, we <strong>support, refine, and expand</strong> them
-              with a long term service mindset.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="gsv-redesign-partners gsv-section gsv-section-alt" aria-labelledby="technology-partners-heading">
-        <div className="gsv-section-head gsv-redesign-partners-head">
-          <div className="gsv-eyebrow">Technology Partners</div>
-          <h2 id="technology-partners-heading">
-            Platforms we design, deploy, and support.
-          </h2>
-          <p>
-            Golden State Visions works across business IT, cybersecurity,
-            networking, automation, lighting, control, and audio platforms so
-            clients have one team coordinating the full environment.
-          </p>
-        </div>
-
-        <div className="gsv-redesign-partner-rows">
-          <TechnologyPartnerRow
-            label="Business IT & Security"
-            partners={businessTechnologyPartners}
-          />
-          <TechnologyPartnerRow
-            label="Home Automation & AV"
-            partners={homeTechnologyPartners}
-            reverse
-          />
-        </div>
-      </section>
-
       <section id="why-us" className="gsv-redesign-live-section gsv-section gsv-section-alt">
         <div className="gsv-section-head">
           <div className="gsv-eyebrow">Why Golden State Visions</div>
           <h2>One partner for support, infrastructure, automation, and technology procurement.</h2>
+          <p>
+            Golden State Visions is built on more than 18 years of hands-on IT
+            and infrastructure experience, including over a decade supporting
+            one of the world&apos;s top 10 technology companies. That experience
+            includes leading infrastructure operations and delivering the
+            technology required to open hundreds of service centers, showrooms,
+            warehouses, and major manufacturing facilities worldwide. Today,
+            Golden State Visions brings that same level of planning,
+            documentation, security, and operational discipline to local
+            businesses and residential technology projects.
+          </p>
         </div>
 
         <div className="gsv-feature-grid">
@@ -1380,6 +1274,58 @@ export default function HomePage() {
               Help with <strong>product selection</strong>,{" "}
               <strong>implementation planning</strong>, renewals, upgrades,
               lifecycle management, and vendor coordination.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="gsv-redesign-partners gsv-section gsv-section-alt" aria-labelledby="technology-partners-heading">
+        <div className="gsv-section-head gsv-redesign-partners-head">
+          <div className="gsv-eyebrow">Technology Partners</div>
+          <h2 id="technology-partners-heading">
+            Platforms we design, deploy, and support.
+          </h2>
+          <p>
+            Golden State Visions works across business IT, cybersecurity,
+            networking, automation, lighting, control, and audio platforms so
+            clients have one team coordinating the full environment.
+          </p>
+        </div>
+
+        <TechnologyPartnerRows />
+      </section>
+
+      <section id="how-we-work" className="gsv-redesign-live-section gsv-section gsv-section-alt">
+        <div className="gsv-section-head">
+          <div className="gsv-eyebrow">How We Work</div>
+          <h2>A single technology partner across business and residential environments.</h2>
+          <p>
+            We combine support, infrastructure, and automation into one cohesive
+            service experience, reducing handoffs and giving clients a cleaner,
+            more reliable path forward.
+          </p>
+        </div>
+
+        <div className="gsv-feature-grid">
+          <div className="gsv-feature">
+            <h3>Consult &amp; plan</h3>
+            <p>
+              We start with the <strong>environment, goals, and future needs</strong>{" "}
+              so the solution is sized correctly from day one.
+            </p>
+          </div>
+          <div className="gsv-feature">
+            <h3>Build &amp; deploy</h3>
+            <p>
+              We <strong>implement cleanly and document clearly</strong>, focusing
+              on dependable performance over flashy complexity.
+            </p>
+          </div>
+          <div className="gsv-feature">
+            <h3>Support &amp; evolve</h3>
+            <p>
+              As systems grow, we <strong>support, refine, and expand</strong> them
+              with a long term service mindset.
             </p>
           </div>
         </div>

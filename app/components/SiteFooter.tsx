@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { socialProfiles } from "@/app/config/socialProfiles";
 
 const footerLocations = [
   ["Lincoln, CA", "/locations/lincoln-ca"],
@@ -7,6 +8,8 @@ const footerLocations = [
   ["Sugar Bowl, CA", "/locations/sugar-bowl-ca"],
   ["Santa Clara, CA", "/locations/santa-clara-ca"],
   ["Folsom, CA", "/locations/folsom-ca"],
+  ["El Dorado Hills, CA", "/locations/el-dorado-hills-ca"],
+  ["Sacramento, CA", "/locations/sacramento-ca"],
   ["Truckee, CA", "/locations/truckee-ca"],
   ["Sunnyvale, CA", "/locations/sunnyvale-ca"],
   ["Cupertino, CA", "/locations/cupertino-ca"],
@@ -15,7 +18,8 @@ const footerLocations = [
   ["Mountain View, CA", "/locations/mountain-view-ca"],
   ["Los Altos, CA", "/locations/los-altos-ca"],
   ["Auburn, CA", "/locations/auburn-ca"],
-  ["Tahoe, CA", "/locations/tahoe-ca"],
+  ["North Lake Tahoe, CA", "/locations/tahoe-ca"],
+  ["South Lake Tahoe, CA", "/locations/south-lake-tahoe-ca"],
   ["Palo Alto, CA", "/locations/palo-alto-ca"],
   ["San Jose, CA", "/locations/san-jose-ca"],
 ];
@@ -32,10 +36,19 @@ export default function SiteFooter() {
 
         .gsvsf-grid {
           display: grid;
-          grid-template-columns: 250px 330px 310px 230px;
-          column-gap: 36px;
+          grid-template-columns: 220px 120px 285px 285px 160px;
+          column-gap: 24px;
           align-items: start;
           width: 100%;
+        }
+
+        .gsvsf-brand {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          text-align: center;
         }
 
         .gsvsf-logo {
@@ -60,6 +73,24 @@ export default function SiteFooter() {
         .gsvsf-brand-text {
           max-width: 250px;
           margin: 0;
+          text-align: center;
+        }
+
+        .gsvsf-social-links {
+          display: grid;
+          gap: 13px;
+        }
+
+        .gsvsf-social-links a {
+          color: rgba(255, 255, 255, 0.66);
+          font-size: 12px;
+          line-height: 1.3;
+          font-weight: 650;
+          text-decoration: none;
+        }
+
+        .gsvsf-social-links a:hover {
+          color: #ffffff;
         }
 
         .gsvsf-column h4 {
@@ -85,10 +116,10 @@ export default function SiteFooter() {
 
         .gsvsf-city-grid {
           display: grid;
-          grid-template-columns: 150px 150px;
-          column-gap: 28px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          column-gap: 12px;
           row-gap: 8px;
-          width: 328px;
+          width: 100%;
         }
 
         .gsvsf-city-grid a {
@@ -96,33 +127,9 @@ export default function SiteFooter() {
           white-space: nowrap;
         }
 
-        .gsvsf-next p {
-          max-width: 230px;
-          margin: 0 0 24px;
-        }
-
-        .gsvsf-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 180px;
-          min-height: 48px;
-          padding: 0 24px;
-          border-radius: 999px;
-          background: #ffc72c;
-          color: #111111 !important;
-          font-size: 13px;
-          line-height: 1;
-          font-weight: 900;
-          text-decoration: none;
-          white-space: nowrap;
-          box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
-        }
-
         .gsvsf-next-links {
           display: grid;
-          gap: 10px;
-          margin-top: 20px;
+          gap: 13px;
         }
 
         .gsvsf-next-links a {
@@ -140,22 +147,31 @@ export default function SiteFooter() {
         .gsvsf-bottom {
           width: 100%;
           max-width: 1240px;
-          margin: 52px auto 0;
+          margin: 18px auto 0;
         }
 
         @media (max-width: 1220px) {
           .gsvsf-grid {
-            grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr);
-            column-gap: 56px;
-            row-gap: 46px;
+            grid-template-columns:
+              minmax(165px, 1fr)
+              minmax(85px, 0.5fr)
+              minmax(205px, 1.25fr)
+              minmax(225px, 1.35fr)
+              minmax(125px, 0.75fr);
+            column-gap: 16px;
           }
 
           .gsvsf-brand-text {
             max-width: 320px;
           }
 
-          .gsvsf-next p {
-            max-width: 320px;
+        }
+
+        @media (max-width: 900px) {
+          .gsvsf-grid {
+            grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr);
+            column-gap: 44px;
+            row-gap: 40px;
           }
         }
 
@@ -170,7 +186,7 @@ export default function SiteFooter() {
           }
 
           .gsvsf-brand-text,
-          .gsvsf-next p {
+          .gsvsf-column p {
             max-width: none;
           }
 
@@ -181,7 +197,7 @@ export default function SiteFooter() {
           }
 
           .gsvsf-bottom {
-            margin-top: 42px;
+            margin-top: 24px;
           }
         }
 
@@ -217,22 +233,38 @@ export default function SiteFooter() {
             </p>
           </div>
 
-          <div className="gsvsf-column">
-            <h4>Services</h4>
-            <Link href="/services/managed-it">
-              Managed IT Services (Monitoring, Patching &amp; Maintenance)
-            </Link>
-            <Link href="/services/managed-it">
-              Endpoint Protection &amp; Threat Detection (EDR)
-            </Link>
-            <Link href="/services/managed-it">Backup &amp; Disaster Recovery</Link>
-            <Link href="/services/managed-it">HIPAA &amp; PCI Compliance Support</Link>
-            <Link href="/services/networks-security-systems">Networks &amp; Security Systems</Link>
-            <Link href="/services/smart-home-automation">Smart Home Automation</Link>
-            <Link href="/services/audio-video-surveillance">Audio, Video &amp; Surveillance</Link>
+          <div className="gsvsf-column gsvsf-follow">
+            <h4>Follow</h4>
+            <div className="gsvsf-social-links" aria-label="Golden State Visions social media">
+              {socialProfiles.map((profile) => (
+                <a
+                  key={profile.url}
+                  href={profile.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {profile.label}
+                </a>
+              ))}
+            </div>
           </div>
 
           <div className="gsvsf-column">
+            <h4>Services</h4>
+            <Link href="/managed-it">
+              Managed IT Services (Monitoring, Patching &amp; Maintenance)
+            </Link>
+            <Link href="/managed-it">
+              Endpoint Protection &amp; Threat Detection (EDR)
+            </Link>
+            <Link href="/managed-it">Backup &amp; Disaster Recovery</Link>
+            <Link href="/managed-it">HIPAA &amp; PCI Compliance Support</Link>
+            <Link href="/managed-it">Networks &amp; Security Systems</Link>
+            <Link href="/smart-home-automation">Smart Home Automation</Link>
+            <Link href="/smart-home-automation">Audio, Video &amp; Surveillance</Link>
+          </div>
+
+          <div className="gsvsf-column" id="site-service-areas">
             <h4>Areas We Serve</h4>
 
             <div className="gsvsf-city-grid">
@@ -245,23 +277,27 @@ export default function SiteFooter() {
           </div>
 
           <div className="gsvsf-column gsvsf-next">
-            <h4>Next Step</h4>
-            <p>Ready to review your systems or plan a new project?</p>
-            <Link href="/book-consult" className="gsvsf-button">
-              Book a Consult
-            </Link>
+            <h4>Quick Links</h4>
             <div className="gsvsf-next-links" aria-label="Company links">
+              <Link href="/book-consult">Book a Consult</Link>
+              <Link href="/managed-it">Managed IT, Networks &amp; Security</Link>
+              <Link href="/smart-home-automation">
+                Smart Home Automation, Lighting &amp; AV
+              </Link>
+              <Link href="/portal">Portal</Link>
               <Link href="/about">About Golden State Visions</Link>
               <Link href="/resources">Resources &amp; FAQ</Link>
+              <Link href="/contact">Contact</Link>
             </div>
           </div>
+
         </div>
 
         <div className="gsv-footer-bottom gsvsf-bottom">
           <span>© {new Date().getFullYear()} Golden State Visions. All rights reserved.</span>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <Link href="/sms-terms">SMS Terms</Link>
-          <a href="#top">Back to top</a>
+          <a href="#site-top">Back to top</a>
         </div>
       </div>
     </footer>

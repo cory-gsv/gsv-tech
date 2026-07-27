@@ -25,14 +25,18 @@ export async function generateMetadata({
 
   if (!city) return {};
 
-  const title = `Managed IT, Networks, Smart Home & AV Services | ${city.city}, ${city.state}`;
-  const description = `Golden State Visions provides managed IT, network infrastructure, smart home automation, audio/video, and surveillance services in ${city.city}, ${city.state} and the surrounding ${city.region} area.`;
+  const title = `IT, Network & Smart Home Services | ${city.city}, ${city.state}`;
+  const description = `Managed IT, secure networks, smart home automation, audio/video, and surveillance for ${city.city}, ${city.state} businesses and homes, with local design and support.`;
   const imageUrl = "/assets/images/portfolio/network-services-infographic-even.png";
   const imageAlt = `Structured network cabling and rack infrastructure for ${city.city}, ${city.state} technology projects by Golden State Visions`;
 
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: true,
+    },
     alternates: {
       canonical: `/locations/${city.slug}`,
     },

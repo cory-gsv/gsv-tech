@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Client Portal | Golden State Visions",
   description: "Golden State Visions client portal login for billing and account access.",
   alternates: {
-    canonical: "/billing",
+    canonical: "/portal",
   },
   robots: {
     index: false,
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Client Portal | Golden State Visions",
     description: "Golden State Visions client portal login for billing and account access.",
-    url: "/billing",
+    url: "/portal",
     siteName: "Golden State Visions",
     type: "website",
   },
