@@ -352,6 +352,7 @@ export default function SiteFooter({
               <Link href="/portal">Portal</Link>
               <Link href="/about">About Golden State Visions</Link>
               <Link href="/resources">Resources &amp; FAQ</Link>
+              <Link href="/blog">Technology Planning Blog</Link>
               <Link href="/contact">Contact</Link>
             </div>
           </div>

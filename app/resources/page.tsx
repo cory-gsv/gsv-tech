@@ -117,6 +117,12 @@ export default function ResourcesPage() {
           >
             Book a Consultation <span aria-hidden="true">→</span>
           </Link>
+          <Link
+            href="/blog"
+            className={detailStyles.secondaryButton}
+          >
+            Read the Blog <span aria-hidden="true">→</span>
+          </Link>
           <a
             href="tel:+19169090500"
             className={detailStyles.secondaryButton}

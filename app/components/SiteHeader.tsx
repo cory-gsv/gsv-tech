@@ -57,6 +57,7 @@ export default function SiteHeader() {
             </div>
           </div>
 
+          <Link href="/blog">Blog</Link>
           <Link href="/portal">Portal</Link>
 
           <div className="gsv-unified-help-menu">

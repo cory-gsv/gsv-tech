@@ -7597,8 +7597,8 @@ header.gsv-header {
   justify-self: center;
   width: fit-content;
   color: rgba(248, 245, 236, 0.64);
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 13.5px;
+  font-weight: 750;
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -7812,7 +7812,7 @@ header.gsv-header {
   }
 
   .gsv-unified-brand-phone {
-    font-size: 9px;
+    font-size: 10.5px;
     letter-spacing: 0.04em;
   }
 

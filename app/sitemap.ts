@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/app/config/site";
+import { blogPosts } from "@/app/data/blog";
 import { localCities } from "@/app/data/localSeo";
 
 // Keep these dates aligned with the last substantive update to the shared site
@@ -17,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     { route: "/resources", changeFrequency: "monthly" as const, priority: 0.7 },
+    { route: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
     { route: "/about", changeFrequency: "monthly" as const, priority: 0.7 },
     { route: "/contact", changeFrequency: "monthly" as const, priority: 0.7 },
     { route: "/book-consult", changeFrequency: "monthly" as const, priority: 0.6 },
@@ -47,5 +49,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]);
 
-  return [...staticRoutes, ...cityAudienceRoutes];
+  const blogRoutes = blogPosts.map((post) => ({
+    url: `${siteUrl}/blog/${post.slug}`,
+    lastModified: post.updated,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...cityAudienceRoutes];
 }
