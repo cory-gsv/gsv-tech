@@ -6,6 +6,10 @@
   --concept-gold-deep: #dca51d;
   --concept-muted: #6e6a61;
   --concept-line: rgba(23, 21, 16, 0.14);
+  --concept-page-gutter: max(
+    clamp(22px, 5vw, 76px),
+    calc((100vw - 1600px) / 2)
+  );
   min-height: 100vh;
   color: var(--concept-ink);
   background: var(--concept-paper);
@@ -20,7 +24,7 @@
 
 .header {
   min-height: 94px;
-  padding: 18px clamp(22px, 5vw, 76px);
+  padding: 18px var(--concept-page-gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -185,7 +189,7 @@
   position: relative;
   isolation: isolate;
   min-height: 610px;
-  padding: clamp(70px, 9vw, 126px) clamp(22px, 5vw, 76px);
+  padding: clamp(70px, 9vw, 126px) var(--concept-page-gutter);
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.7fr);
   gap: clamp(50px, 8vw, 120px);
@@ -366,7 +370,7 @@
 
 .problemSection,
 .processSection {
-  padding: clamp(70px, 8vw, 110px) clamp(22px, 5vw, 76px);
+  padding: clamp(70px, 8vw, 110px) var(--concept-page-gutter);
   scroll-margin-top: 0;
 }
 
@@ -880,7 +884,7 @@
 }
 
 .whySection {
-  padding: clamp(58px, 5vw, 76px) clamp(22px, 5vw, 76px);
+  padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
   background: var(--concept-paper);
 }
 
@@ -1117,7 +1121,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: clamp(58px, 5vw, 76px) clamp(22px, 5vw, 76px);
+  padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
   color: var(--concept-ink);
   background: var(--concept-paper);
 }
@@ -1153,7 +1157,7 @@
 }
 
 .howSection {
-  padding: clamp(58px, 5vw, 76px) clamp(22px, 5vw, 76px);
+  padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
   background: var(--concept-paper);
 }
 
@@ -1196,7 +1200,7 @@
 }
 
 .partnerStrip {
-  padding: 24px clamp(22px, 5vw, 76px);
+  padding: 24px var(--concept-page-gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1254,7 +1258,7 @@
 }
 
 .finalCta {
-  padding: clamp(60px, 8vw, 106px) clamp(22px, 5vw, 76px);
+  padding: clamp(60px, 8vw, 106px) var(--concept-page-gutter);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 40px;
