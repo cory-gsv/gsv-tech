@@ -26,9 +26,10 @@ export type BlogPost = {
 export const blogPosts: BlogPost[] = [
   {
     slug: "trusted-electrical-technology-partners-m5-electric",
-    title: "M5 Electric: A Trusted Partner for Electrical and Technology Projects",
+    title:
+      "M5 Electric: A Trusted Partner for Electrical and Structured Cabling Projects",
     description:
-      "Meet M5 Electric, a trusted Golden State Visions partner with more than 45 years of electrical experience and 35 years working on custom homes.",
+      "Meet M5 Electric, GSV’s trusted partner for electrical and structured cabling projects, with 45+ years of electrical experience and 35+ years in custom homes.",
     excerpt:
       "M5 Electric brings deep electrical and custom home experience to projects where power, lighting, structured cabling, networks, and automation must work as one plan.",
     category: "Networks & Security",
