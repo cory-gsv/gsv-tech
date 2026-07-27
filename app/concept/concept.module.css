@@ -205,6 +205,23 @@
     linear-gradient(180deg, #1e1b17, #26221d);
 }
 
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background: url("/assets/partners/circuit-plan-background.jpg") center / cover
+    no-repeat;
+  opacity: 0.025;
+  mix-blend-mode: screen;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 .heroContent {
   max-width: 920px;
 }
@@ -374,24 +391,8 @@
   scroll-margin-top: 0;
 }
 
-.mainContent {
-  background-color: var(--concept-paper);
-  background-image:
-    linear-gradient(rgba(247, 245, 239, 0.96), rgba(247, 245, 239, 0.96)),
-    url("/assets/partners/circuit-plan-background.png");
-  background-position:
-    center,
-    center top;
-  background-repeat:
-    repeat,
-    repeat-y;
-  background-size:
-    auto,
-    min(1600px, 100%) auto;
-}
-
 .problemSection {
-  background: transparent;
+  background: var(--concept-paper);
 }
 
 .sectionHeading {
@@ -901,7 +902,7 @@
 
 .whySection {
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
-  background: transparent;
+  background: var(--concept-paper);
 }
 
 .whyIntro {
@@ -1139,7 +1140,7 @@
   margin: 0;
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
   color: var(--concept-ink);
-  background: transparent;
+  background: var(--concept-paper);
 }
 
 .page :global(.gsv-redesign-partners-head) {
@@ -1174,7 +1175,7 @@
 
 .howSection {
   padding: clamp(58px, 5vw, 76px) var(--concept-page-gutter);
-  background: transparent;
+  background: var(--concept-paper);
 }
 
 .howGrid {
