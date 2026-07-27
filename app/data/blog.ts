@@ -238,6 +238,86 @@ export const blogPosts: BlogPost[] = [
     ],
   },
   {
+    slug: "why-we-use-unifi-small-business-custom-homes",
+    title: "Why We Use UniFi for Small Businesses and Custom Homes",
+    description:
+      "Learn why Golden State Visions often recommends Ubiquiti UniFi networks for small businesses and custom homes, including management, Wi-Fi, switching, cameras, cost, and limitations.",
+    excerpt:
+      "UniFi gives us one practical platform for gateways, switches, Wi-Fi, cameras, and site visibility. The real value comes from thoughtful design, documentation, and support.",
+    category: "Networks & Security",
+    audience: "Small business owners, homeowners, builders, and property managers",
+    published: "2026-07-27",
+    updated: "2026-07-27",
+    readTime: "10 min read",
+    serviceHref: "/managed-it?service=06",
+    serviceLabel: "Explore network and security system design",
+    sections: [
+      {
+        heading: "Why UniFi fits the environments we support",
+        paragraphs: [
+          "Small businesses and custom homes often need more than a basic wireless router, but they do not always need the cost or complexity of a large enterprise network. UniFi occupies a useful middle ground. It provides capable gateways, managed switches, wireless access points, cameras, door access, and centralized management in a platform that can scale from one property to multiple sites.",
+          "We like UniFi because it lets us design the network as a complete system. Internet service, routing, network separation, switching, Power over Ethernet, Wi-Fi, cameras, and remote visibility can be planned together. That makes the finished environment easier to understand and support.",
+        ],
+      },
+      {
+        heading: "One view of the network is genuinely useful",
+        paragraphs: [
+          "A unified management interface gives our team a current view of gateways, switches, access points, connected devices, software versions, network usage, and many common faults. When a user reports that the internet is slow or a device is offline, we can often narrow the problem before scheduling an onsite visit.",
+          "The same visibility helps with routine work. We can identify which switch port serves an access point or camera, see whether a cable negotiated at the expected speed, review wireless client behavior, confirm available Power over Ethernet capacity, and maintain configuration backups.",
+        ],
+        bullets: [
+          "Central visibility for gateways, switches, access points, and connected clients",
+          "Remote diagnostics for many common connectivity problems",
+          "Consistent configuration and software management",
+          "Useful topology, port, traffic, and device information",
+          "Support for multiple properties or business locations from one management system",
+        ],
+      },
+      {
+        heading: "Why we use wired access points instead of mesh by default",
+        paragraphs: [
+          "UniFi offers many access point models, but the product alone does not create good Wi-Fi. We start with the floor plan, construction materials, device count, outdoor areas, and critical applications. We then place wired access points where coverage and capacity require them.",
+          "A wired connection gives each access point a dependable path back to the network. Wireless mesh can be helpful where cabling is impossible, but it consumes radio capacity and adds another variable to performance. In new construction and accessible existing buildings, proper cabling is usually the better long term investment.",
+        ],
+      },
+      {
+        heading: "Network separation without unnecessary complexity",
+        paragraphs: [
+          "A small business may need separate networks for employees, guests, payment systems, cameras, phones, building controls, and vendor equipment. A custom home may need separate access for family devices, guests, cameras, automation, audio and video equipment, and service providers.",
+          "UniFi supports this separation through virtual networks, wireless network assignments, firewall policy, and administrative controls. We use those tools to limit unnecessary communication between device groups while keeping the setup understandable enough to document and support.",
+        ],
+      },
+      {
+        heading: "Switching, power, and cameras can share the same plan",
+        paragraphs: [
+          "Many network devices receive power through their Ethernet cable. Access points, cameras, phones, and door stations may all depend on the switch for both data and power. UniFi switches make it practical to see power usage, port status, connection speed, and device assignments in the same environment as the wireless network.",
+          "For properties using UniFi Protect, cameras and recording can also be integrated into the design. We still plan camera views, lighting, storage, retention, network capacity, privacy, and backup power separately. A convenient ecosystem does not replace careful surveillance design.",
+        ],
+      },
+      {
+        heading: "The ownership model works well for many clients",
+        paragraphs: [
+          "UniFi generally avoids a required recurring license for the core management of purchased network hardware. That can make costs easier to understand for a small business or homeowner. The client owns the equipment, while our support agreement covers design, monitoring, maintenance, documentation, configuration, and help when something changes.",
+          "No license fee does not mean no operating cost. Networks still need software updates, configuration backups, security review, equipment replacement, internet service, and someone accountable for support. We make those responsibilities explicit rather than treating the hardware purchase as the end of the project.",
+        ],
+      },
+      {
+        heading: "Where UniFi may not be the right choice",
+        paragraphs: [
+          "We do not recommend UniFi for every environment. A large enterprise with specialized routing, advanced identity controls, strict vendor certification requirements, unusual support contracts, or highly complex network policy may be better served by another platform. The same is true when an existing system is stable, documented, supported, and already meets the actual requirements.",
+          "Product availability, software changes, feature maturity, and support expectations also matter. We evaluate the complete environment before selecting equipment. The goal is not to install a favorite brand. The goal is to deliver a network that fits the property, risks, budget, and support model.",
+        ],
+      },
+      {
+        heading: "The platform matters less than the design",
+        paragraphs: [
+          "A poorly placed UniFi access point is still poorly placed. An undocumented firewall is still hard to support. A switch without enough power capacity will still create failures. Reliable results come from good cabling, deliberate access point locations, correct channel and power settings, sensible network separation, backup power, current documentation, and validation after installation.",
+          "Golden State Visions uses UniFi when it provides the right balance of visibility, capability, serviceability, and cost. We combine the platform with site planning, installation, configuration, testing, documentation, and ongoing support so the client receives a managed system rather than a collection of boxes.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "warehouse-wifi-planning-guide",
     title: "Warehouse Wi-Fi Planning: Coverage for Scanners, Docks, and Inventory",
     description:
