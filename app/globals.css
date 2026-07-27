@@ -18,6 +18,7 @@
   --gold-line: rgba(255, 199, 44, 0.24);
 
   --max: 1280px;
+  --gsv-content-max: 1280px;
   --radius-xl: 32px;
   --radius-lg: 28px;
 }
@@ -7441,7 +7442,7 @@ header.gsv-header {
       minmax(140px, 0.78fr) !important;
     column-gap: clamp(14px, 1.25vw, 20px) !important;
     width: 90vw !important;
-    max-width: 1440px !important;
+    max-width: var(--gsv-content-max) !important;
     align-items: start !important;
   }
 
@@ -7536,7 +7537,10 @@ header.gsv-header {
 }
 
 .gsv-unified-header-inner {
-  width: min(calc(100% - clamp(44px, 10vw, 152px)), 1600px);
+  width: min(
+    calc(100% - clamp(44px, 10vw, 152px)),
+    var(--gsv-content-max)
+  );
   min-height: 94px;
   margin: 0 auto;
   padding: 18px 0;
@@ -7813,7 +7817,7 @@ header.gsv-header {
 
 @media (max-width: 900px) {
   .gsv-unified-header-inner {
-    width: min(calc(100% - 36px), 1600px);
+    width: min(calc(100% - 36px), var(--gsv-content-max));
   }
 
   .gsv-unified-brand {
@@ -7868,7 +7872,7 @@ header.gsv-header {
 
 @media (max-width: 440px) {
   .gsv-unified-header-inner {
-    width: min(calc(100% - 24px), 1600px);
+    width: min(calc(100% - 24px), var(--gsv-content-max));
   }
 
   .gsv-unified-brand {

@@ -34,7 +34,7 @@
 .content,
 .articleShell {
   min-width: 0;
-  width: min(100%, 1440px);
+  width: min(100%, 1280px);
   margin: 0 auto;
 }
 
@@ -579,7 +579,7 @@
 
 .relatedInner {
   min-width: 0;
-  width: min(100%, 1440px);
+  width: min(100%, 1280px);
   margin: 0 auto;
   padding-top: 64px;
   border-top: 1px solid var(--line);
