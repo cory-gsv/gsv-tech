@@ -3,8 +3,8 @@ import SiteFooter from "@/app/components/SiteFooter";
 import SiteHeader from "@/app/components/SiteHeader";
 import { siteUrl } from "@/app/config/site";
 import { blogPosts } from "@/app/data/blog";
-import Link from "next/link";
 import type { Metadata } from "next";
+import BlogExplorer from "./BlogExplorer";
 import styles from "./blog.module.css";
 
 export const metadata: Metadata = {
@@ -90,25 +90,7 @@ export default function BlogPage() {
           </p>
         </div>
 
-        <div className={styles.categoryNav} aria-label="Blog topics">
-          <span>Business IT</span>
-          <span>Networks &amp; Security</span>
-          <span>Smart Home</span>
-        </div>
-
-        <div className={styles.postGrid}>
-          {blogPosts.map((post) => (
-            <Link href={`/blog/${post.slug}`} className={styles.postCard} key={post.slug}>
-              <div className={styles.cardMeta}>
-                <span>{post.category}</span>
-                <span>{post.readTime}</span>
-              </div>
-              <h2>{post.title}</h2>
-              <p>{post.excerpt}</p>
-              <span className={styles.cardLink}>Read the article →</span>
-            </Link>
-          ))}
-        </div>
+        <BlogExplorer posts={blogPosts} />
       </section>
 
       <SiteFooter />
