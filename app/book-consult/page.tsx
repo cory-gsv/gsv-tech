@@ -916,7 +916,7 @@ export default function BookConsultPage() {
           --gsv-left-col: minmax(0, 1.45fr);
           --gsv-right-col: minmax(370px, 0.85fr);
           --gsv-two-col-layout: var(--gsv-left-col) var(--gsv-right-col);
-          width: min(calc(100% - 48px), 1380px);
+          width: min(calc(100% - 48px), 1280px);
           margin: 0 auto;
         }
 
@@ -1792,7 +1792,7 @@ export default function BookConsultPage() {
 
         @media (max-width: 640px) {
           .gsv-book-shell {
-            width: min(calc(100% - 24px), 1380px);
+            width: min(calc(100% - 24px), 1280px);
             margin-top: 24px;
           }
 

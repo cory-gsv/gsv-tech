@@ -3439,7 +3439,7 @@ nextjs-portal,
 
 .gsv-footer-clean-grid {
   width: 100%;
-  max-width: 1360px;
+  max-width: var(--gsv-content-max);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 300px 270px 390px 300px;
@@ -3531,7 +3531,7 @@ nextjs-portal,
 }
 
 .gsv-footer-clean-bottom {
-  max-width: 1360px !important;
+  max-width: var(--gsv-content-max) !important;
   margin: 52px auto 0 !important;
 }
 
@@ -6494,6 +6494,18 @@ header.gsv-header {
 .gsv-redesign-page h2,
 .gsv-redesign-page h3 {
   text-wrap: balance;
+}
+
+/*
+ * Keep every public redesign section on one shared content grid.
+ * Section backgrounds remain full bleed; only their internal content box is
+ * capped. This also covers sections rendered through child components.
+ */
+.gsv-redesign-page > section {
+  padding-inline: max(
+    clamp(22px, 5vw, 76px),
+    calc((100vw - var(--gsv-content-max)) / 2)
+  ) !important;
 }
 
 .gsv-redesign-awning {
