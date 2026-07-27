@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
   }
 
   const state = crypto.randomUUID()
+  const nonce = crypto.randomUUID()
+  const vaultStepUp = request.nextUrl.searchParams.get("vault") === "1"
   const authorizeUrl = new URL(
     `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`
   )
@@ -47,6 +49,17 @@ export async function GET(request: NextRequest) {
   authorizeUrl.searchParams.set("response_mode", "query")
   authorizeUrl.searchParams.set("scope", "openid profile email")
   authorizeUrl.searchParams.set("state", state)
+  authorizeUrl.searchParams.set("nonce", nonce)
+  if (vaultStepUp) {
+    authorizeUrl.searchParams.set("prompt", "login")
+    authorizeUrl.searchParams.set("max_age", "0")
+    const authenticationContextId = process.env.VAULT_AUTH_CONTEXT_ID || ""
+    if (authenticationContextId) {
+      authorizeUrl.searchParams.set("claims", JSON.stringify({
+        id_token: { acrs: { essential: true, value: authenticationContextId } },
+      }))
+    }
+  }
 
   const response = NextResponse.redirect(authorizeUrl)
   response.cookies.set("gsv_billing_ms_state", state, {
@@ -63,5 +76,7 @@ export async function GET(request: NextRequest) {
     path: "/",
     maxAge: 60 * 10,
   })
+  response.cookies.set("gsv_billing_ms_nonce", nonce, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 10 })
+  response.cookies.set("gsv_billing_ms_vault_stepup", vaultStepUp ? "1" : "0", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 10 })
   return response
 }

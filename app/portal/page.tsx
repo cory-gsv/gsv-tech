@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import "../billing/billing.css"
 import { verifyBillingSession } from "../billing/billingAuth"
 
@@ -87,13 +88,7 @@ export default async function PortalPage({ searchParams }: PortalPageProps) {
     )
   }
 
-  return (
-    <main className="gsv-billing-shell">
-      <iframe
-        className="gsv-billing-shell__frame"
-        src="/portal-app/index.html?v=portal-20260716-53"
-        title="GSV Client Portal"
-      />
-    </main>
-  )
+  // Run the portal as the top-level document. A full-screen iframe introduced
+  // an extra focus boundary that could swallow the first pointer interaction.
+  redirect("/portal-app/index.html?v=portal-20260722-219")
 }

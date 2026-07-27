@@ -3,8 +3,10 @@ import { verifyBillingSession } from "./app/billing/billingAuth"
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  // The portal runs as the top-level document after authentication. Keep its
+  // script, style, image, and font assets public while protecting index.html.
   const isStaticAppAsset =
-    /\.(?:html|css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i.test(pathname)
+    /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i.test(pathname)
 
   if (isStaticAppAsset) {
     return NextResponse.next()

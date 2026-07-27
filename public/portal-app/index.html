@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GSV Client Portal</title>
-  <link rel="stylesheet" href="styles.css?v=portal-20260716-53">
+  <link rel="stylesheet" href="styles.css?v=portal-20260722-219">
 </head>
 <body>
   <aside class="sidebar">
@@ -57,24 +57,23 @@
           <button class="nav-sub-link" data-view="exports"><span class="nav-sub-dot"></span><span>Reports</span></button>
         </div>
       </div>
-      <div class="nav-group" data-nav-group="clients">
-        <button class="nav-link nav-group-head" type="button" data-nav-toggle="clients">
-          <span class="nav-icon nav-svg-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M5 21c1.5-4 4-6 7-6s5.5 2 7 6"></path>
-            </svg>
-          </span>
-          <span>Clients</span>
-          <span class="nav-group-tools">
-            <span class="nav-chevron">⌄</span>
-          </span>
-        </button>
-        <div class="nav-submenu">
-          <button class="nav-sub-link" data-view="clients"><span class="nav-sub-dot"></span><span>Companies</span></button>
-          <button class="nav-sub-link" data-view="audit365"><span class="nav-sub-dot"></span><span>Services Audit</span></button>
-        </div>
-      </div>
+      <button class="nav-link" data-view="clients">
+        <span class="nav-icon nav-svg-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M5 21c1.5-4 4-6 7-6s5.5 2 7 6"></path>
+          </svg>
+        </span>
+        <span>Clients</span>
+      </button>
+      <button class="nav-link" data-view="audit365">
+        <span class="nav-icon">✓</span>
+        <span>Services Audit</span>
+      </button>
+      <button class="nav-link" data-view="vault">
+        <span class="nav-icon">▣</span>
+        <span>Vault</span>
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button id="save-snapshot" class="ghost">Download Backup</button>
@@ -82,10 +81,10 @@
         Restore Backup
         <input id="restore-snapshot" type="file" accept="application/json">
       </label>
-      <form action="/api/billing-logout" method="post" target="_top">
+      <form action="/api/billing-logout?next=/portal" method="post" target="_top">
         <button class="ghost" type="submit">Log Out</button>
       </form>
-      <small class="portal-build-version">Build portal-20260716-53</small>
+      <small class="portal-build-version">Build portal-20260722-219</small>
     </div>
   </aside>
 
@@ -211,15 +210,35 @@
     </section>
 
     <section id="clients" class="view">
-      <div class="section-head">
-        <h2>Clients</h2>
+      <div class="section-head client-directory-head">
+        <div>
+          <h2>Client directory</h2>
+          <p class="subtle">Open a client workspace or jump directly to its secure Vault.</p>
+        </div>
         <div class="toolbar">
-          <button id="audit-services-all" class="primary">Audit Services</button>
           <button id="add-client">Add Client</button>
         </div>
       </div>
+      <div class="client-directory-tools">
+        <label class="client-search-field" for="client-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="client-search" type="search" placeholder="Search clients or locations" autocomplete="off">
+        </label>
+        <span id="client-search-count" class="subtle"></span>
+      </div>
       <div id="client-list" class="grid-list"></div>
-      <div id="client-detail"></div>
+    </section>
+
+    <section id="client-dashboard" class="view client-dashboard-view">
+      <div id="client-dashboard-content"></div>
+    </section>
+
+    <section id="network-atlas" class="view network-atlas-view">
+      <div id="network-atlas-content"></div>
+    </section>
+
+    <section id="vault" class="view vault-portal-view">
+      <iframe src="/portal/vault?embedded=1" title="Client Vault"></iframe>
     </section>
 
     <section id="audit365" class="view">
@@ -370,6 +389,12 @@
         <h2>Quotes</h2>
         <button id="add-quote" class="primary">Add Quote</button>
       </div>
+      <div class="filter-panel quote-filter-panel">
+        <div class="field">
+          <label for="quote-client-filter">Company</label>
+          <select id="quote-client-filter"></select>
+        </div>
+      </div>
       <div id="quote-list" class="table-card"></div>
     </section>
 
@@ -459,6 +484,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=portal-20260716-53"></script>
+  <script src="app.js?v=portal-20260722-219"></script>
 </body>
 </html>

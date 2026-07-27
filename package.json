@@ -10,7 +10,12 @@
     "generate:city-pages": "node scripts/generate-city-pages.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@sparticuz/chromium": "^149.0.0",
+    "@vercel/blob": "^2.6.1",
+    "jose": "^6.2.3",
     "next": "latest",
+    "puppeteer-core": "^25.3.0",
     "react": "latest",
     "react-dom": "latest"
   },

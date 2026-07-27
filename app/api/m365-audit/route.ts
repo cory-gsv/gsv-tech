@@ -22,10 +22,14 @@ const FRIENDLY_SKU_NAMES: Record<string, string> = {
 
 type GraphUser = {
   displayName?: string;
+  givenName?: string;
+  surname?: string;
   userPrincipalName?: string;
+  mail?: string;
   accountEnabled?: boolean;
   assignedLicenses?: Array<{ skuId?: string }>;
   department?: string;
+  employeeType?: string;
   jobTitle?: string;
   userType?: string;
 };
@@ -146,10 +150,14 @@ export async function GET(request: Request) {
 
     const select = [
       "displayName",
+      "givenName",
+      "surname",
       "userPrincipalName",
+      "mail",
       "accountEnabled",
       "assignedLicenses",
       "department",
+      "employeeType",
       "jobTitle",
       "userType",
     ].join(",");
@@ -169,11 +177,15 @@ export async function GET(request: Request) {
 
         return {
           "Display Name": user.displayName || "",
+          "First Name": user.givenName || "",
+          "Last Name": user.surname || "",
           "User Principal Name": user.userPrincipalName || "",
+          "Email Address": user.mail || user.userPrincipalName || "",
           "Account Enabled": user.accountEnabled ? "TRUE" : "FALSE",
           "License Names": licenseNames.join("; "),
           "Sku Part Numbers": skuParts.join("; "),
           Department: user.department || "",
+          "Employee Type": user.employeeType || "",
           "Job Title": user.jobTitle || "",
           "User Type": user.userType || "",
           Notes: "",

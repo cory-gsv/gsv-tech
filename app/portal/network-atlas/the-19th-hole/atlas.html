@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The 19th Hole Network Atlas</title>
+  <script src="https://unpkg.com/lucide@1.25.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #66717d;
+      --line: #d8dee5;
+      --canvas: #f5f7f9;
+      --paper: #ffffff;
+      --core: #17735a;
+      --core-soft: #e8f4ef;
+      --wan: #256aa7;
+      --wan-soft: #e9f2fb;
+      --wifi: #b56a13;
+      --wifi-soft: #fff3df;
+      --vlan: #7450a4;
+      --vlan-soft: #f2ecf9;
+      --service: #46515d;
+      --service-soft: #eef1f4;
+      --danger: #b63e3e;
+      --danger-soft: #fbecec;
+      --ok: #16835f;
+      --warn: #b06b12;
+      --radius: 7px;
+      --shadow: 0 14px 30px rgba(30, 45, 60, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+    button, input { font: inherit; letter-spacing: 0; }
+    button { color: inherit; }
+    svg { display: block; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 224px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px 16px;
+      background: #17232d;
+      color: #f7fafc;
+      border-right: 1px solid #2d3943;
+      z-index: 20;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 2px 8px 22px;
+    }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      color: #b8f0d8;
+      background: #21483d;
+      border: 1px solid #337661;
+      flex: 0 0 auto;
+    }
+    .brand-name { font-weight: 760; font-size: 15px; }
+    .brand-sub { color: #9eabb6; font-size: 12px; margin-top: 1px; }
+
+    .nav { display: grid; gap: 3px; }
+    .nav-button {
+      width: 100%;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 11px;
+      background: transparent;
+      color: #bfc9d1;
+      cursor: pointer;
+      text-align: left;
+    }
+    .nav-button:hover { background: #22313c; color: #ffffff; }
+    .nav-button.active { background: #2b3d48; color: #ffffff; box-shadow: inset 3px 0 0 #56c69d; }
+    .nav-button svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+    .sidebar-foot {
+      margin-top: auto;
+      padding: 15px 9px 4px;
+      border-top: 1px solid #33414b;
+      color: #aab5bd;
+      font-size: 12px;
+    }
+    .controller-link { color: #dcf8eb; font-weight: 650; text-decoration: none; }
+    .controller-link:hover { text-decoration: underline; }
+
+    .workspace { min-width: 0; }
+    .topbar {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 26px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      backdrop-filter: blur(10px);
+    }
+    .page-title { font-size: 18px; font-weight: 760; }
+    .page-context { color: var(--muted); font-size: 12px; margin-top: 1px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .portal-back-link {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 720;
+      text-decoration: none;
+    }
+    .portal-back-link:hover { background: #f0f3f5; }
+    .portal-back-link svg { width: 15px; height: 15px; }
+    .snapshot-stamp {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 11px;
+      border-left: 2px solid var(--core);
+      background: #f6f8fa;
+      color: var(--muted);
+      font-weight: 680;
+      font-size: 11px;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(22, 131, 95, 0.12); }
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      cursor: pointer;
+    }
+    .icon-button:hover { background: #f0f3f5; }
+    .icon-button svg { width: 17px; height: 17px; }
+
+    main { padding: 24px 26px 40px; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .section-head h2 { margin: 0; font-size: 20px; }
+    .section-head p { margin: 3px 0 0; color: var(--muted); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .metric { min-height: 92px; padding: 17px 18px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric-label { color: var(--muted); font-size: 12px; font-weight: 650; text-transform: uppercase; }
+    .metric-value { margin-top: 5px; font-size: 25px; line-height: 1.1; font-weight: 780; }
+    .metric-note { margin-top: 5px; color: var(--muted); font-size: 12px; }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-title { font-weight: 760; }
+    .panel-sub { color: var(--muted); font-size: 12px; }
+    .panel-body { padding: 16px; }
+
+    .wan-path { display: grid; grid-template-columns: 1fr 42px 1fr; align-items: stretch; gap: 10px; }
+    .wan-block { padding: 17px; border: 1px solid var(--line); border-radius: 6px; background: #fbfcfd; }
+    .wan-block.primary { border-color: #9fc9ec; background: var(--wan-soft); }
+    .wan-block.standby { border-color: #e1c495; background: #fff9ef; }
+    .wan-name { font-weight: 760; }
+    .wan-role { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .wan-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+    .wan-stat strong { display: block; font-size: 15px; }
+    .wan-stat span { color: var(--muted); font-size: 11px; }
+    .wan-arrow { display: grid; place-items: center; color: #7a8792; }
+
+    .health-list { display: grid; }
+    .health-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; min-height: 52px; border-bottom: 1px solid #edf0f3; }
+    .health-row:last-child { border-bottom: 0; }
+    .health-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 6px; background: var(--core-soft); color: var(--core); }
+    .health-icon svg { width: 15px; height: 15px; }
+    .health-label { font-weight: 680; }
+    .health-note { color: var(--muted); font-size: 12px; }
+    .health-value { font-weight: 720; color: var(--ok); font-size: 12px; }
+
+    .radio-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+    .radio-summary { padding: 14px 16px; border-right: 1px solid var(--line); }
+    .radio-summary:last-child { border-right: 0; }
+    .radio-name { font-weight: 730; }
+    .radio-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .mini-bars { display: flex; gap: 3px; height: 26px; align-items: end; margin-top: 10px; }
+    .mini-bars span { width: 7px; border-radius: 2px 2px 0 0; background: #79bca5; }
+
+    .topology-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; min-height: 690px; border: 1px solid var(--line); background: var(--paper); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .topology-stage { position: relative; min-width: 0; background-color: #fbfcfd; background-image: linear-gradient(#edf1f4 1px, transparent 1px), linear-gradient(90deg, #edf1f4 1px, transparent 1px); background-size: 28px 28px; overflow: hidden; }
+    .topology-toolbar { position: absolute; top: 12px; right: 12px; display: flex; gap: 5px; z-index: 3; }
+    .topology-toolbar .icon-button { background: rgba(255,255,255,.96); }
+    .topology-wrap { width: 100%; height: 100%; overflow: auto; }
+    #network-map { width: 100%; height: 100%; min-height: 690px; }
+    .map-link { fill: none; stroke: #91a0ac; stroke-width: 2; }
+    .map-link.ten { stroke: #21725b; stroke-width: 5; }
+    .map-link.multi { stroke: #b9771d; stroke-width: 3; }
+    .map-link.standby { stroke: #bc7d21; stroke-dasharray: 8 7; }
+    .map-link.wireless { stroke: #7d64a8; stroke-dasharray: 4 6; }
+    .map-link.blocked { stroke: var(--danger); stroke-dasharray: 6 5; }
+    .map-link-label { font-size: 11px; fill: #66717d; font-weight: 650; paint-order: stroke; stroke: #fbfcfd; stroke-width: 5px; stroke-linejoin: round; }
+    .map-node { cursor: pointer; outline: none; }
+    .map-node rect { stroke-width: 2; transition: filter 140ms ease, stroke-width 140ms ease; }
+    .map-node:hover rect, .map-node:focus rect { filter: drop-shadow(0 5px 8px rgba(30,45,60,.16)); stroke-width: 3; }
+    .map-node .node-title { font-size: 14px; font-weight: 760; fill: var(--ink); }
+    .map-node .node-sub { font-size: 11px; fill: #66717d; }
+    .map-node .node-status { fill: var(--ok); }
+    .node-wan rect { fill: var(--wan-soft); stroke: #4d8fc8; }
+    .node-core rect { fill: var(--core-soft); stroke: #429276; }
+    .node-wifi rect { fill: var(--wifi-soft); stroke: #ce892f; }
+    .node-service rect { fill: var(--service-soft); stroke: #78838e; }
+    .node-vlan rect { fill: var(--vlan-soft); stroke: #8a69b2; }
+    .node-warning rect { fill: #fff7e9; stroke: #c68629; }
+    .topology-detail { border-left: 1px solid var(--line); background: #ffffff; }
+    .detail-hero { min-height: 150px; padding: 20px; border-bottom: 1px solid var(--line); background: #f7faf9; }
+    .detail-type { color: var(--core); font-size: 11px; text-transform: uppercase; font-weight: 800; }
+    .detail-title { margin-top: 7px; font-size: 22px; line-height: 1.18; font-weight: 790; }
+    .detail-status { margin-top: 12px; display: flex; align-items: center; gap: 7px; color: var(--ok); font-weight: 700; font-size: 12px; }
+    .detail-grid { padding: 8px 20px; }
+    .detail-row { display: grid; grid-template-columns: 94px 1fr; gap: 10px; padding: 11px 0; border-bottom: 1px solid #edf0f3; }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-key { color: var(--muted); font-size: 12px; }
+    .detail-value { font-weight: 650; overflow-wrap: anywhere; }
+
+    .filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .search-box { position: relative; width: min(420px, 100%); }
+    .search-box svg { position: absolute; left: 11px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: #7b8791; }
+    .search-box input { width: 100%; height: 38px; padding: 0 12px 0 36px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); outline: none; }
+    .search-box input:focus { border-color: #5d9f88; box-shadow: 0 0 0 3px rgba(32, 132, 97, .10); }
+    .filter-button { height: 38px; border: 1px solid var(--line); border-radius: 6px; padding: 0 12px; background: var(--paper); cursor: pointer; }
+    .filter-button.active { border-color: #7aa995; background: #edf7f3; color: #1a654d; }
+
+    .table-shell { border: 1px solid var(--line); border-radius: var(--radius); overflow: auto; background: var(--paper); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th { height: 42px; padding: 0 14px; text-align: left; background: #f4f6f8; color: #596570; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+    td { height: 47px; padding: 0 14px; border-bottom: 1px solid #edf0f3; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fafcfd; }
+    .port-number { font-weight: 790; }
+    .link-state { display: inline-flex; align-items: center; gap: 7px; }
+    .state-dot { width: 7px; height: 7px; border-radius: 50%; background: #9aa4ad; }
+    .state-dot.up { background: var(--ok); }
+    .state-dot.off { background: var(--danger); }
+    .speed { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .device-muted { color: var(--muted); }
+
+    .wifi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .ap-panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow); }
+    .ap-head { display: flex; justify-content: space-between; align-items: center; min-height: 58px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+    .ap-title { font-size: 16px; font-weight: 780; }
+    .ap-uplink { color: var(--ok); font-weight: 700; font-size: 12px; }
+    .radio-table { display: grid; }
+    .radio-row { display: grid; grid-template-columns: 64px 1fr 1fr 1fr; gap: 10px; align-items: center; min-height: 54px; padding: 0 16px; border-bottom: 1px solid #edf0f3; }
+    .radio-row:last-child { border-bottom: 0; }
+    .band-label { font-weight: 760; }
+    .radio-value strong { display: block; }
+    .radio-value span { color: var(--muted); font-size: 11px; }
+    .util-meter { height: 6px; background: #e7ebee; border-radius: 3px; overflow: hidden; margin-top: 5px; }
+    .util-meter span { display: block; height: 100%; background: #55a888; }
+    .util-meter.high span { background: #d18a31; }
+
+    .security-flow { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 14px; align-items: center; margin-bottom: 18px; }
+    .zone-block { min-height: 128px; display: grid; align-content: center; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+    .zone-block.trusted { border-left: 4px solid var(--core); }
+    .zone-block.iot { border-left: 4px solid var(--vlan); }
+    .zone-name { font-size: 18px; font-weight: 780; }
+    .zone-sub { color: var(--muted); margin-top: 3px; }
+    .flow-arrows { display: grid; gap: 13px; color: var(--muted); text-align: center; font-size: 11px; font-weight: 700; }
+    .flow-arrow { display: grid; place-items: center; gap: 3px; }
+    .flow-arrow svg { width: 26px; height: 26px; }
+    .flow-arrow.allowed { color: var(--ok); }
+    .flow-arrow.blocked { color: var(--danger); }
+    .rule-list { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+    .rule-row { display: grid; grid-template-columns: 72px 1.3fr 1fr 1fr 100px; gap: 12px; align-items: center; min-height: 58px; padding: 0 16px; border-bottom: 1px solid #edf0f3; }
+    .rule-row:last-child { border-bottom: 0; }
+    .rule-id { font-weight: 780; font-variant-numeric: tabular-nums; }
+    .rule-action { font-weight: 780; }
+    .rule-action.allow { color: var(--ok); }
+    .rule-action.drop { color: var(--danger); }
+
+    .runbook { display: grid; grid-template-columns: 230px minmax(0, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--paper); box-shadow: var(--shadow); }
+    .runbook-index { background: #f4f6f8; border-right: 1px solid var(--line); padding: 10px; }
+    .runbook-link { width: 100%; min-height: 42px; border: 0; background: transparent; border-radius: 5px; text-align: left; padding: 0 11px; cursor: pointer; color: #54606b; }
+    .runbook-link.active { background: #ffffff; color: var(--ink); font-weight: 740; box-shadow: 0 1px 4px rgba(30,45,60,.08); }
+    .runbook-content { padding: 24px 28px 30px; }
+    .runbook-pane { display: none; }
+    .runbook-pane.active { display: block; }
+    .runbook-pane h3 { margin: 0 0 14px; font-size: 19px; }
+    .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+    .steps li { counter-increment: step; position: relative; padding: 0 0 18px 44px; min-height: 38px; }
+    .steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #94bba9; border-radius: 50%; color: #176247; font-weight: 800; background: #eef8f4; }
+    .steps li::after { content: ""; position: absolute; left: 14px; top: 30px; bottom: 2px; width: 1px; background: #dce4e0; }
+    .steps li:last-child::after { display: none; }
+    .steps strong { display: block; margin-bottom: 2px; }
+    .steps span { color: var(--muted); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: #eef1f4; padding: 2px 5px; border-radius: 3px; }
+
+    @media (max-width: 1450px) {
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+      .metric:nth-child(3) { border-right: 0; }
+      .metric:nth-child(n+4) { border-top: 1px solid var(--line); }
+      .overview-grid { grid-template-columns: 1fr; }
+      .topology-layout { grid-template-columns: 1fr; }
+      .topology-detail { border-left: 0; border-top: 1px solid var(--line); }
+      .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px; }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { position: sticky; height: auto; padding: 8px 10px; flex-direction: row; align-items: center; overflow-x: auto; border-right: 0; border-bottom: 1px solid #2d3943; }
+      .brand { padding: 0 8px 0 0; }
+      .brand-copy, .sidebar-foot { display: none; }
+      .brand-mark { width: 34px; height: 34px; }
+      .nav { display: flex; gap: 4px; }
+      .nav-button { width: 42px; padding: 0; justify-content: center; }
+      .nav-button span { display: none; }
+      .nav-button.active { box-shadow: inset 0 -3px 0 #56c69d; }
+      .topbar { top: 51px; height: 60px; padding: 0 15px; }
+      .page-context, .snapshot-stamp { display: none; }
+      main { padding: 18px 14px 30px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .metric { border-top: 1px solid var(--line); }
+      .metric:nth-child(-n+2) { border-top: 0; }
+      .metric:nth-child(2n) { border-right: 0; }
+      .metric:nth-child(3) { border-right: 1px solid var(--line); }
+      .metric:last-child { grid-column: 1 / -1; }
+      .wan-path { grid-template-columns: 1fr; }
+      .wan-arrow { transform: rotate(90deg); min-height: 24px; }
+      .radio-strip { grid-template-columns: repeat(2, 1fr); }
+      .radio-summary:nth-child(2) { border-right: 0; }
+      .radio-summary:nth-child(n+3) { border-top: 1px solid var(--line); }
+      .wifi-grid { grid-template-columns: 1fr; }
+      .security-flow { grid-template-columns: 1fr; }
+      .flow-arrows { grid-template-columns: repeat(2, 1fr); }
+      .rule-row { grid-template-columns: 62px 1fr 90px; padding: 10px 12px; }
+      .rule-row > :nth-child(3), .rule-row > :nth-child(4) { display: none; }
+      .runbook { grid-template-columns: 1fr; }
+      .runbook-index { display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .runbook-link { min-width: 150px; }
+      .runbook-content { padding: 20px; }
+    }
+
+    @media print {
+      .sidebar, .topbar, .topology-toolbar, .filter-row { display: none !important; }
+      .app-shell { display: block; }
+      main { padding: 0; }
+      .view { display: block !important; break-after: page; }
+      .panel, .table-shell, .topology-layout, .ap-panel, .runbook { box-shadow: none; }
+      .topology-layout { grid-template-columns: 1fr; }
+      .topology-detail { display: none; }
+      #network-map { min-width: 0; min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><i data-lucide="network"></i></div>
+        <div class="brand-copy">
+          <div class="brand-name">The 19th Hole</div>
+          <div class="brand-sub">757 Caber Drive · Lincoln</div>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Network atlas sections">
+        <button class="nav-button active" data-view="overview" title="Overview"><i data-lucide="layout-dashboard"></i><span>Overview</span></button>
+        <button class="nav-button" data-view="topology" title="Topology"><i data-lucide="waypoints"></i><span>Topology</span></button>
+        <button class="nav-button" data-view="ports" title="Port map"><i data-lucide="list-tree"></i><span>Port Map</span></button>
+        <button class="nav-button" data-view="wifi" title="WiFi"><i data-lucide="wifi"></i><span>WiFi</span></button>
+        <button class="nav-button" data-view="security" title="Security"><i data-lucide="shield-check"></i><span>Security</span></button>
+        <button class="nav-button" data-view="runbook" title="Runbook"><i data-lucide="book-open-check"></i><span>Runbook</span></button>
+      </nav>
+      <div class="sidebar-foot">
+        <div>Controller</div>
+        <a class="controller-link" href="https://192.168.1.1" target="_blank" rel="noreferrer">192.168.1.1</a>
+        <div style="margin-top:9px">Snapshot: July 18, 2026<br>1:45 PM PDT</div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="page-title" id="page-title">Network Overview</div>
+          <div class="page-context">757 Caber Drive · UDM-SE · Four access points</div>
+        </div>
+        <div class="top-actions">
+          <a class="portal-back-link" href="/portal"><i data-lucide="arrow-left"></i><span>Back to client</span></a>
+          <div class="snapshot-stamp">Snapshot · Jul 18, 2026 · 1:45 PM PDT</div>
+          <button class="icon-button" id="print-button" title="Print network atlas"><i data-lucide="printer"></i></button>
+        </div>
+      </header>
+
+      <main>
+        <section class="view active" id="view-overview">
+          <div class="section-head">
+            <div><h2>Network Overview</h2><p>Current design, capacity and operating state.</p></div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-label">Gateway</div><div class="metric-value">UDM-SE</div><div class="metric-note">UniFi Network 10.4.57</div></div>
+            <div class="metric"><div class="metric-label">Internet</div><div class="metric-value">2.5 GbE</div><div class="metric-note">Fidium primary · 9 ms</div></div>
+            <div class="metric"><div class="metric-label">Access Points</div><div class="metric-value">4</div><div class="metric-note">All at 2.5 GbE</div></div>
+            <div class="metric"><div class="metric-label">Clients</div><div class="metric-value">88</div><div class="metric-note">Snapshot count</div></div>
+            <div class="metric"><div class="metric-label">Core Links</div><div class="metric-value">10 GbE</div><div class="metric-note">Switch uplink and NAS</div></div>
+          </div>
+
+          <div class="overview-grid">
+            <div class="panel">
+              <div class="panel-head"><div><div class="panel-title">Internet path</div><div class="panel-sub">Priority-ordered WAN services</div></div><i data-lucide="route"></i></div>
+              <div class="panel-body">
+                <div class="wan-path">
+                  <div class="wan-block primary">
+                    <div class="wan-name">Fidium Fiber</div><div class="wan-role">WAN 1 · Priority 1 · Active</div>
+                    <div class="wan-stats"><div class="wan-stat"><strong>2.5G</strong><span>Link</span></div><div class="wan-stat"><strong>2.22G</strong><span>Last down</span></div><div class="wan-stat"><strong>2.33G</strong><span>Last up</span></div></div>
+                  </div>
+                  <div class="wan-arrow"><i data-lucide="arrow-right-left"></i></div>
+                  <div class="wan-block standby">
+                    <div class="wan-name">Starlink</div><div class="wan-role">WAN 2 · Priority 2 · Standby</div>
+                    <div class="wan-stats"><div class="wan-stat"><strong>1G</strong><span>Link</span></div><div class="wan-stat"><strong>DHCP</strong><span>Mode</span></div><div class="wan-stat"><strong>Port 8</strong><span>UDM</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="radio-strip">
+                <div class="radio-summary"><div class="radio-name">Garage</div><div class="radio-meta">11 clients · port 17</div><div class="mini-bars"><span style="height:35%"></span><span style="height:55%"></span><span style="height:22%"></span><span style="height:70%"></span><span style="height:48%"></span><span style="height:61%"></span></div></div>
+                <div class="radio-summary"><div class="radio-name">Upstairs</div><div class="radio-meta">24 clients · port 18</div><div class="mini-bars"><span style="height:42%"></span><span style="height:74%"></span><span style="height:92%"></span><span style="height:68%"></span><span style="height:82%"></span><span style="height:61%"></span></div></div>
+                <div class="radio-summary"><div class="radio-name">Patio</div><div class="radio-meta">5 clients · port 19</div><div class="mini-bars"><span style="height:20%"></span><span style="height:28%"></span><span style="height:38%"></span><span style="height:24%"></span><span style="height:33%"></span><span style="height:18%"></span></div></div>
+                <div class="radio-summary"><div class="radio-name">Kitchen</div><div class="radio-meta">22 clients · port 20</div><div class="mini-bars"><span style="height:61%"></span><span style="height:70%"></span><span style="height:57%"></span><span style="height:75%"></span><span style="height:66%"></span><span style="height:72%"></span></div></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><div><div class="panel-title">Core health</div><div class="panel-sub">Controller snapshot</div></div><i data-lucide="activity"></i></div>
+              <div class="panel-body health-list">
+                <div class="health-row"><div class="health-icon"><i data-lucide="wifi"></i></div><div><div class="health-label">Wireless</div><div class="health-note">4 of 4 APs online</div></div><div class="health-value">Excellent</div></div>
+                <div class="health-row"><div class="health-icon"><i data-lucide="router"></i></div><div><div class="health-label">Gateway</div><div class="health-note">Fidium active</div></div><div class="health-value">Online</div></div>
+                <div class="health-row"><div class="health-icon"><i data-lucide="network"></i></div><div><div class="health-label">Switching</div><div class="health-note">RSTP root stable</div></div><div class="health-value">Healthy</div></div>
+                <div class="health-row"><div class="health-icon"><i data-lucide="server"></i></div><div><div class="health-label">Home Assistant</div><div class="health-note">Synology · 10 GbE</div></div><div class="health-value">Reachable</div></div>
+                <div class="health-row"><div class="health-icon"><i data-lucide="shield-check"></i></div><div><div class="health-label">IoT policy</div><div class="health-note">Stateful segmentation</div></div><div class="health-value">Applied</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-topology">
+          <div class="section-head"><div><h2>Interactive Topology</h2><p>Physical links, logical networks and protected service paths.</p></div></div>
+          <div class="topology-layout">
+            <div class="topology-stage">
+              <div class="topology-toolbar">
+                <button class="icon-button" id="zoom-in" title="Zoom in"><i data-lucide="zoom-in"></i></button>
+                <button class="icon-button" id="zoom-out" title="Zoom out"><i data-lucide="zoom-out"></i></button>
+                <button class="icon-button" id="zoom-reset" title="Reset zoom"><i data-lucide="maximize"></i></button>
+              </div>
+              <div class="topology-wrap" id="topology-wrap">
+                <svg id="network-map" viewBox="0 0 1320 760" role="img" aria-label="Interactive network topology">
+                  <defs>
+                    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#91a0ac"/></marker>
+                    <marker id="arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b63e3e"/></marker>
+                  </defs>
+
+                  <text x="32" y="28" class="map-link-label">WAN EDGE</text>
+                  <text x="32" y="178" class="map-link-label">CORE</text>
+                  <text x="32" y="350" class="map-link-label">ACCESS</text>
+                  <text x="980" y="178" class="map-link-label">SERVICES &amp; NETWORKS</text>
+
+                  <path class="map-link multi" d="M155 118 C155 155 470 130 560 202" marker-end="url(#arrow)"/>
+                  <text x="288" y="145" class="map-link-label">2.5 GbE · UDM port 9</text>
+                  <path class="map-link standby" d="M380 118 C380 155 555 150 625 202" marker-end="url(#arrow)"/>
+                  <text x="415" y="172" class="map-link-label">1 GbE · failover</text>
+                  <path class="map-link ten" d="M650 296 L650 370" marker-end="url(#arrow)"/>
+                  <text x="667" y="338" class="map-link-label">10 GbE SFP+</text>
+
+                  <path class="map-link multi" d="M566 452 C520 488 180 470 150 542" marker-end="url(#arrow)"/>
+                  <path class="map-link multi" d="M610 452 C590 495 420 485 410 542" marker-end="url(#arrow)"/>
+                  <path class="map-link multi" d="M685 452 C700 495 670 510 670 542" marker-end="url(#arrow)"/>
+                  <path class="map-link multi" d="M735 452 C790 485 915 490 930 542" marker-end="url(#arrow)"/>
+                  <path class="map-link ten" d="M770 416 C875 416 970 260 1010 260" marker-end="url(#arrow)"/>
+                  <path class="map-link" d="M770 430 C900 455 1010 415 1040 415" marker-end="url(#arrow)"/>
+                  <path class="map-link" d="M770 445 C915 500 1040 555 1070 555" marker-end="url(#arrow)"/>
+
+                  <path class="map-link wireless" d="M150 616 C230 700 865 688 1010 650" marker-end="url(#arrow)"/>
+                  <path class="map-link wireless" d="M410 616 C520 670 910 665 1010 650" marker-end="url(#arrow)"/>
+                  <path class="map-link wireless" d="M670 616 C785 645 930 652 1010 650" marker-end="url(#arrow)"/>
+                  <path class="map-link wireless" d="M930 616 C970 625 990 638 1010 650" marker-end="url(#arrow)"/>
+                  <text x="735" y="705" class="map-link-label">The 19th Hole · The 19th Hole IoT · UniFi Identity</text>
+
+                  <path class="map-link" d="M1115 328 L1115 372" marker-end="url(#arrow)"/>
+                  <text x="1130" y="355" class="map-link-label">trusted</text>
+                  <path class="map-link blocked" d="M1180 690 C1260 660 1270 505 1195 472" marker-end="url(#arrow-red)"/>
+                  <text x="1202" y="600" class="map-link-label" style="fill:#b63e3e">new sessions blocked</text>
+
+                  <g class="map-node node-wan" data-node="fidium" tabindex="0" transform="translate(65 50)"><rect width="180" height="68" rx="7"/><circle class="node-status" cx="162" cy="17" r="5"/><text class="node-title" x="16" y="28">Fidium Fiber</text><text class="node-sub" x="16" y="48">WAN 1 · Primary</text></g>
+                  <g class="map-node node-warning" data-node="starlink" tabindex="0" transform="translate(290 50)"><rect width="180" height="68" rx="7"/><circle cx="162" cy="17" r="5" fill="#b06b12"/><text class="node-title" x="16" y="28">Starlink</text><text class="node-sub" x="16" y="48">WAN 2 · Standby</text></g>
+                  <g class="map-node node-core" data-node="udm" tabindex="0" transform="translate(540 202)"><rect width="220" height="94" rx="7"/><circle class="node-status" cx="200" cy="18" r="5"/><text class="node-title" x="18" y="31">UDM-SE · The Beck's</text><text class="node-sub" x="18" y="53">Gateway · Network 10.4.57</text><text class="node-sub" x="18" y="73">Fidium active · Starlink ready</text></g>
+                  <g class="map-node node-core" data-node="switch" tabindex="0" transform="translate(530 370)"><rect width="240" height="82" rx="7"/><circle class="node-status" cx="220" cy="18" r="5"/><text class="node-title" x="18" y="30">Main Switch 1</text><text class="node-sub" x="18" y="51">Pro Max 24 PoE · 192.168.1.200</text><text class="node-sub" x="18" y="68">RSTP root · priority 4096</text></g>
+
+                  <g class="map-node node-wifi" data-node="garage" tabindex="0" transform="translate(55 542)"><rect width="190" height="74" rx="7"/><circle class="node-status" cx="172" cy="17" r="5"/><text class="node-title" x="16" y="29">Garage AP</text><text class="node-sub" x="16" y="49">Port 17 · 2.5 GbE</text><text class="node-sub" x="16" y="65">11 clients</text></g>
+                  <g class="map-node node-wifi" data-node="upstairs" tabindex="0" transform="translate(315 542)"><rect width="190" height="74" rx="7"/><circle class="node-status" cx="172" cy="17" r="5"/><text class="node-title" x="16" y="29">Upstairs AP</text><text class="node-sub" x="16" y="49">Port 18 · 2.5 GbE</text><text class="node-sub" x="16" y="65">24 clients</text></g>
+                  <g class="map-node node-wifi" data-node="patio" tabindex="0" transform="translate(575 542)"><rect width="190" height="74" rx="7"/><circle class="node-status" cx="172" cy="17" r="5"/><text class="node-title" x="16" y="29">Patio AP</text><text class="node-sub" x="16" y="49">Port 19 · 2.5 GbE</text><text class="node-sub" x="16" y="65">5 clients</text></g>
+                  <g class="map-node node-wifi" data-node="kitchen" tabindex="0" transform="translate(835 542)"><rect width="190" height="74" rx="7"/><circle class="node-status" cx="172" cy="17" r="5"/><text class="node-title" x="16" y="29">Kitchen AP</text><text class="node-sub" x="16" y="49">Port 20 · 2.5 GbE</text><text class="node-sub" x="16" y="65">22 clients</text></g>
+
+                  <g class="map-node node-service" data-node="synology" tabindex="0" transform="translate(1010 210)"><rect width="245" height="118" rx="7"/><circle class="node-status" cx="225" cy="18" r="5"/><text class="node-title" x="16" y="29">Synology NAS</text><text class="node-sub" x="16" y="50">192.168.1.10 · port 26</text><text class="node-sub" x="16" y="69">10 GbE</text><text class="node-title" x="16" y="95">Home Assistant</text></g>
+                  <g class="map-node node-service" data-node="sonos" tabindex="0" transform="translate(1040 372)"><rect width="215" height="100" rx="7"/><circle class="node-status" cx="195" cy="18" r="5"/><text class="node-title" x="16" y="29">Wired Sonos</text><text class="node-sub" x="16" y="49">Garage · port 1</text><text class="node-sub" x="16" y="65">Patio · port 2</text><text class="node-sub" x="16" y="81">Family Room · port 3</text></g>
+                  <g class="map-node node-service" data-node="protect" tabindex="0" transform="translate(1070 512)"><rect width="185" height="86" rx="7"/><circle class="node-status" cx="165" cy="18" r="5"/><text class="node-title" x="16" y="30">UniFi Protect</text><text class="node-sub" x="16" y="50">8 cameras online</text><text class="node-sub" x="16" y="68">PoE access layer</text></g>
+                  <g class="map-node node-vlan" data-node="networks" tabindex="0" transform="translate(1010 630)"><rect width="245" height="92" rx="7"/><circle class="node-status" cx="225" cy="18" r="5"/><text class="node-title" x="16" y="29">Logical Networks</text><text class="node-sub" x="16" y="50">Default · 192.168.1.0/24</text><text class="node-sub" x="16" y="68">IoT VLAN 3 · 192.168.3.0/24</text></g>
+                </svg>
+              </div>
+            </div>
+            <aside class="topology-detail" aria-live="polite">
+              <div class="detail-hero"><div class="detail-type" id="detail-type">Core device</div><div class="detail-title" id="detail-title">Main Switch 1</div><div class="detail-status"><span class="status-dot"></span><span id="detail-status">Online · healthy</span></div></div>
+              <div class="detail-grid" id="detail-grid"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-ports">
+          <div class="section-head"><div><h2>Core Switch Port Map</h2><p>Main Switch 1 · Pro Max 24 PoE · 192.168.1.200</p></div></div>
+          <div class="filter-row">
+            <label class="search-box"><i data-lucide="search"></i><input id="port-search" type="search" placeholder="Search ports, devices or addresses" aria-label="Search ports"></label>
+            <button class="filter-button active" data-port-filter="all">All</button>
+            <button class="filter-button" data-port-filter="up">Active</button>
+            <button class="filter-button" data-port-filter="down">Down</button>
+          </div>
+          <div class="table-shell">
+            <table>
+              <thead><tr><th>Port</th><th>State</th><th>Speed</th><th>Device / Purpose</th><th>Address</th><th>Power</th></tr></thead>
+              <tbody id="port-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="view-wifi">
+          <div class="section-head"><div><h2>WiFi Radio Plan</h2><p>Manual channel and transmit-power design across four APs.</p></div></div>
+          <div class="wifi-grid" id="wifi-grid"></div>
+        </section>
+
+        <section class="view" id="view-security">
+          <div class="section-head"><div><h2>IoT Security</h2><p>Stateful segmentation that preserves phone-app and Home Assistant access.</p></div></div>
+          <div class="security-flow">
+            <div class="zone-block trusted"><div class="zone-name">Default LAN</div><div class="zone-sub">192.168.1.0/24 · trusted clients and services</div></div>
+            <div class="flow-arrows"><div class="flow-arrow allowed"><i data-lucide="arrow-right"></i><span>Initiate</span></div><div class="flow-arrow blocked"><i data-lucide="ban"></i><span>New sessions</span></div></div>
+            <div class="zone-block iot"><div class="zone-name">The 19th Hole IoT</div><div class="zone-sub">VLAN 3 · 192.168.3.0/24 · mDNS enabled</div></div>
+          </div>
+          <div class="rule-list">
+            <div class="rule-row"><div class="rule-id">System</div><div><strong>Established and related</strong><div class="panel-sub">UniFi predefined state handling</div></div><div>All managed networks</div><div>Return traffic</div><div class="rule-action allow">Allow</div></div>
+            <div class="rule-row"><div class="rule-id">40000</div><div><strong>IoT to Home Assistant</strong><div class="panel-sub">Explicit compatibility exception</div></div><div>192.168.3.0/24</div><div>192.168.1.10</div><div class="rule-action allow">Allow</div></div>
+            <div class="rule-row"><div class="rule-id">40001</div><div><strong>IoT to Default LAN</strong><div class="panel-sub">Blocks new IoT-initiated sessions</div></div><div>192.168.3.0/24</div><div>192.168.1.0/24</div><div class="rule-action drop">Drop</div></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-runbook">
+          <div class="section-head"><div><h2>Operations Runbook</h2><p>Focused checks for the most common failure modes.</p></div></div>
+          <div class="runbook">
+            <div class="runbook-index">
+              <button class="runbook-link active" data-runbook="internet">Internet outage</button>
+              <button class="runbook-link" data-runbook="wifi">Spotty WiFi</button>
+              <button class="runbook-link" data-runbook="iot">IoT onboarding</button>
+              <button class="runbook-link" data-runbook="sonos">Sonos rooms</button>
+              <button class="runbook-link" data-runbook="homeassistant">Home Assistant</button>
+            </div>
+            <div class="runbook-content">
+              <div class="runbook-pane active" id="runbook-internet"><h3>Internet outage</h3><ol class="steps"><li><strong>Check Fidium WAN 1</strong><span>UDM port 9 should negotiate at 2.5 GbE and hold a DHCP lease.</span></li><li><strong>Confirm gateway DNS</strong><span>Default and IoT clients should receive <code>1.1.1.1</code> and <code>8.8.8.8</code>.</span></li><li><strong>Inspect Starlink WAN 2</strong><span>UDM port 8 should remain linked at 1 GbE, even while the Starlink plan is in standby.</span></li><li><strong>Activate standby service if required</strong><span>Failover routing cannot create paid Starlink service when the account is not active.</span></li></ol></div>
+              <div class="runbook-pane" id="runbook-wifi"><h3>Spotty WiFi</h3><ol class="steps"><li><strong>Identify the serving AP and band</strong><span>Do not judge coverage from the nearest ceiling AP alone; verify the actual association.</span></li><li><strong>Check signal and retries together</strong><span>A strong signal with high retries suggests contention; a weak signal with low retries suggests coverage.</span></li><li><strong>Verify the fixed channel plan</strong><span>2.4 GHz uses channels 1 and 11, 5 GHz uses 36/44/149/157, and 6 GHz uses four distinct 160 MHz channels.</span></li><li><strong>Change power one AP at a time</strong><span>Observe roaming for at least a day before making another adjustment.</span></li></ol></div>
+              <div class="runbook-pane" id="runbook-iot"><h3>IoT onboarding</h3><ol class="steps"><li><strong>Use The 19th Hole IoT</strong><span>The compatibility SSID is WPA2, 2.4 GHz, PMF disabled and mapped to VLAN 3.</span></li><li><strong>Confirm the address</strong><span>The device should receive <code>192.168.3.x</code>, gateway <code>192.168.3.1</code>.</span></li><li><strong>Keep the phone close to the target device</strong><span>Temporarily join the phone to the IoT SSID when an onboarding app requires same-network discovery.</span></li><li><strong>Verify cloud and local control</strong><span>Test the vendor app from the trusted SSID after setup, then confirm the Home Assistant entity remains available.</span></li></ol></div>
+              <div class="runbook-pane" id="runbook-sonos"><h3>Sonos rooms</h3><ol class="steps"><li><strong>Keep Sonos on Default LAN</strong><span>Do not move Sonos to VLAN 3; the phone app, AirPlay, TV audio and Home Assistant depend on trusted-LAN discovery.</span></li><li><strong>Check the three wired zones</strong><span>Garage Workshop is port 1, Patio is port 2, and Family Room is port 3.</span></li><li><strong>Preserve the bridge design</strong><span>Patio is the intended SonosNet bridge on channel 6. Garage Workshop is wired with WiFi disabled.</span></li><li><strong>Test before rewiring</strong><span>Confirm room visibility, grouping and TV playback before changing Ethernet connections.</span></li></ol></div>
+              <div class="runbook-pane" id="runbook-homeassistant"><h3>Home Assistant</h3><ol class="steps"><li><strong>Check the Synology path</strong><span><code>192.168.1.10</code> connects to switch port 26 at 10 GbE.</span></li><li><strong>Verify the explicit IoT exception</strong><span>Firewall rule <code>40000</code> allows VLAN 3 to initiate traffic to the Home Assistant host.</span></li><li><strong>Confirm discovery method</strong><span>mDNS is enabled on Default and IoT. SSDP-based integrations may still require integration-specific handling.</span></li><li><strong>Do not tighten ports blindly</strong><span>Record active integrations and webhooks before narrowing the broad Home Assistant exception.</span></li></ol></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const pageTitles = {
+      overview: "Network Overview",
+      topology: "Interactive Topology",
+      ports: "Core Switch Port Map",
+      wifi: "WiFi Radio Plan",
+      security: "IoT Security Policy",
+      runbook: "Operations Runbook"
+    };
+
+    const details = {
+      fidium: { type: "Primary WAN", title: "Fidium Fiber", status: "Active · 100% available", rows: [["UDM port", "9"], ["Link", "2.5 GbE full duplex"], ["Addressing", "DHCP"], ["Latency", "9 ms snapshot"], ["Smart Queues", "Disabled"]] },
+      starlink: { type: "Standby WAN", title: "Starlink", status: "Linked · standby plan", rows: [["UDM port", "8"], ["Link", "1 GbE full duplex"], ["Priority", "WAN 2 · failover only"], ["Gateway", "192.168.4.1"], ["Lease", "192.168.4.227"]] },
+      udm: { type: "Gateway", title: "UDM-SE · The Beck's", status: "Online · healthy", rows: [["Controller", "192.168.1.1"], ["Network", "10.4.57"], ["Firmware", "5.1.19.33549"], ["WAN 1", "Fidium · port 9"], ["WAN 2", "Starlink · port 8"]] },
+      switch: { type: "Core switching", title: "Main Switch 1", status: "Online · RSTP root", rows: [["Address", "192.168.1.200"], ["Model", "Pro Max 24 PoE"], ["Firmware", "7.4.1.16850"], ["RSTP", "Priority 4096"], ["Uplink", "Port 25 · 10 GbE"]] },
+      garage: { type: "Access point", title: "Garage AP", status: "Online · 11 clients", rows: [["Switch port", "17"], ["Uplink", "2.5 GbE"], ["2.4 GHz", "Ch 1 · 20 MHz · 18 dBm"], ["5 GHz", "Ch 157 · 40 MHz · 20 dBm"], ["6 GHz", "Ch 69 · 160 MHz"]] },
+      upstairs: { type: "Access point", title: "Upstairs AP", status: "Online · 24 clients", rows: [["Switch port", "18"], ["Uplink", "2.5 GbE"], ["2.4 GHz", "Ch 11 · 20 MHz · 18 dBm"], ["5 GHz", "Ch 36 · 40 MHz · 22 dBm"], ["6 GHz", "Ch 133 · 160 MHz"]] },
+      patio: { type: "Access point", title: "Patio AP", status: "Online · 5 clients", rows: [["Switch port", "19"], ["Uplink", "2.5 GbE"], ["2.4 GHz", "Ch 11 · 20 MHz · 16 dBm"], ["5 GHz", "Ch 149 · 40 MHz · 18 dBm"], ["6 GHz", "Ch 101 · 160 MHz"]] },
+      kitchen: { type: "Access point", title: "Kitchen AP", status: "Online · 22 clients", rows: [["Switch port", "20"], ["Uplink", "2.5 GbE"], ["2.4 GHz", "Ch 1 · 20 MHz · 15 dBm"], ["5 GHz", "Ch 44 · 40 MHz · 20 dBm"], ["6 GHz", "Ch 37 · 160 MHz"]] },
+      synology: { type: "Core service", title: "Synology + Home Assistant", status: "Reachable · 10 GbE", rows: [["Address", "192.168.1.10"], ["Switch port", "26 · SFP+"], ["Network", "Default"], ["IoT access", "Allowed by rule 40000"], ["Role", "NAS and Home Assistant"]] },
+      sonos: { type: "Audio system", title: "Sonos", status: "7 network-visible zones", rows: [["Garage Workshop", "Port 1 · WiFi off"], ["Patio", "Port 2 · SonosNet bridge"], ["Family Room", "Port 3"], ["SonosNet", "Channel 6"], ["Network", "Default LAN"]] },
+      protect: { type: "Video security", title: "UniFi Protect", status: "8 cameras online", rows: [["Doorbell", "Port 6"], ["Cameras", "Ports 7, 8, 10–13, 23"], ["Network", "Default"], ["Power", "PoE"], ["Recorder", "UDM-SE"]] },
+      networks: { type: "Logical networks", title: "VLAN and SSID Design", status: "Policy active", rows: [["Default", "192.168.1.0/24"], ["IoT", "VLAN 3 · 192.168.3.0/24"], ["VPN", "192.168.8.0/24"], ["DNS", "1.1.1.1 · 8.8.8.8"], ["mDNS", "Enabled on Default and IoT"]] }
+    };
+
+    const ports = [
+      [1,"up","100 MbE","Sonos Garage Workshop","192.168.1.155","—"], [2,"up","100 MbE","Sonos Patio","192.168.1.87","—"], [3,"up","100 MbE","Sonos Family Room","192.168.1.233","—"], [4,"up","100 MbE","Lutron bridge","192.168.1.245","—"], [5,"down","—","Unused","—","—"], [6,"up","1 GbE","Doorbell","192.168.1.160","PoE"], [7,"up","1 GbE","Driveway camera","192.168.1.154","PoE"], [8,"up","1 GbE","Side camera","192.168.1.209","PoE"], [9,"down","—","Unused","—","—"], [10,"up","100 MbE","Front PTZ","192.168.1.136","PoE"], [11,"up","100 MbE","Garage camera","192.168.1.92","PoE"], [12,"up","1 GbE","Side Entrance camera","192.168.1.93","PoE"], [13,"up","1 GbE","Backyard camera","192.168.1.14","PoE"], [14,"down","—","Unused","—","—"], [15,"disabled","—","Unknown former run","—","PoE off"], [16,"down","—","Unused","—","—"], [17,"up","2.5 GbE","Garage AP","—","PoE"], [18,"up","2.5 GbE","Upstairs AP","—","PoE"], [19,"up","2.5 GbE","Patio AP","—","PoE"], [20,"up","2.5 GbE","Kitchen AP","—","PoE"], [21,"up","2.5 GbE","Steve's PC","192.168.1.26","—"], [22,"down","—","Unused","—","—"], [23,"up","100 MbE","Patio camera","192.168.1.82","PoE"], [24,"down","—","Unused","—","PoE off"], [25,"up","10 GbE","UDM-SE uplink","Core","—"], [26,"up","10 GbE","Synology NAS + Home Assistant","192.168.1.10","—"]
+    ];
+
+    const aps = [
+      {name:"Garage", port:17, clients:11, radios:[["2.4","1","20 MHz","18 dBm",37],["5","157","40 MHz","20 dBm",27],["6","69","160 MHz","21 dBm",1]]},
+      {name:"Upstairs", port:18, clients:24, radios:[["2.4","11","20 MHz","18 dBm",67],["5","36","40 MHz","22 dBm",8],["6","133","160 MHz","21 dBm",2]]},
+      {name:"Patio", port:19, clients:5, radios:[["2.4","11","20 MHz","16 dBm",58],["5","149","40 MHz","18 dBm",17],["6","101","160 MHz","21 dBm",1]]},
+      {name:"Kitchen", port:20, clients:22, radios:[["2.4","1","20 MHz","15 dBm",59],["5","44","40 MHz","20 dBm",3],["6","37","160 MHz","21 dBm",6]]}
+    ];
+
+    function showView(name) {
+      document.querySelectorAll('.nav-button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+      document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
+      document.getElementById('page-title').textContent = pageTitles[name];
+      location.hash = name;
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    document.querySelectorAll('.nav-button').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+    document.getElementById('print-button').addEventListener('click', () => window.print());
+
+    function renderDetail(key) {
+      const item = details[key];
+      if (!item) return;
+      document.getElementById('detail-type').textContent = item.type;
+      document.getElementById('detail-title').textContent = item.title;
+      document.getElementById('detail-status').textContent = item.status;
+      document.getElementById('detail-grid').innerHTML = item.rows.map(([k,v]) => `<div class="detail-row"><div class="detail-key">${k}</div><div class="detail-value">${v}</div></div>`).join('');
+    }
+    document.querySelectorAll('.map-node').forEach(node => {
+      const open = () => renderDetail(node.dataset.node);
+      node.addEventListener('click', open);
+      node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') open(); });
+    });
+    renderDetail('switch');
+
+    let zoom = 1;
+    const map = document.getElementById('network-map');
+    const applyZoom = () => { map.style.width = `${zoom * 100}%`; map.style.height = `${zoom * 100}%`; };
+    document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.6, zoom + .15); applyZoom(); });
+    document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(.75, zoom - .15); applyZoom(); });
+    document.getElementById('zoom-reset').addEventListener('click', () => { zoom = 1; applyZoom(); document.getElementById('topology-wrap').scrollTo(0,0); });
+
+    const portBody = document.getElementById('port-table-body');
+    let portFilter = 'all';
+    function renderPorts() {
+      const query = document.getElementById('port-search').value.trim().toLowerCase();
+      portBody.innerHTML = ports.filter(p => (portFilter === 'all' || (portFilter === 'up' ? p[1] === 'up' : p[1] !== 'up')) && p.join(' ').toLowerCase().includes(query)).map(p => {
+        const label = p[1] === 'up' ? 'Active' : p[1] === 'disabled' ? 'Disabled' : 'Down';
+        const dot = p[1] === 'up' ? 'up' : p[1] === 'disabled' ? 'off' : '';
+        return `<tr><td class="port-number">${p[0]}</td><td><span class="link-state"><span class="state-dot ${dot}"></span>${label}</span></td><td class="speed">${p[2]}</td><td class="${p[3] === 'Unused' ? 'device-muted' : ''}">${p[3]}</td><td>${p[4]}</td><td>${p[5]}</td></tr>`;
+      }).join('');
+    }
+    document.getElementById('port-search').addEventListener('input', renderPorts);
+    document.querySelectorAll('[data-port-filter]').forEach(button => button.addEventListener('click', () => {
+      portFilter = button.dataset.portFilter;
+      document.querySelectorAll('[data-port-filter]').forEach(b => b.classList.toggle('active', b === button));
+      renderPorts();
+    }));
+    renderPorts();
+
+    document.getElementById('wifi-grid').innerHTML = aps.map(ap => `<article class="ap-panel"><div class="ap-head"><div><div class="ap-title">${ap.name}</div><div class="panel-sub">${ap.clients} clients · switch port ${ap.port}</div></div><div class="ap-uplink">2.5 GbE</div></div><div class="radio-table">${ap.radios.map(r => `<div class="radio-row"><div class="band-label">${r[0]} GHz</div><div class="radio-value"><strong>Ch ${r[1]}</strong><span>Channel</span></div><div class="radio-value"><strong>${r[2]}</strong><span>Width</span></div><div class="radio-value"><strong>${r[3]}</strong><span>Power</span><div class="util-meter ${r[4] > 60 ? 'high' : ''}"><span style="width:${r[4]}%"></span></div></div></div>`).join('')}</div></article>`).join('');
+
+    document.querySelectorAll('.runbook-link').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.runbook-link').forEach(b => b.classList.toggle('active', b === button));
+      document.querySelectorAll('.runbook-pane').forEach(p => p.classList.toggle('active', p.id === `runbook-${button.dataset.runbook}`));
+    }));
+
+    const initial = location.hash.replace('#','');
+    if (pageTitles[initial]) showView(initial);
+    if (window.lucide) lucide.createIcons();
+  </script>
+</body>
+</html>

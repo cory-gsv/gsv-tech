@@ -6,7 +6,7 @@ import SiteChatWidget from "./components/SiteChatWidget";
 import { siteUrl } from "./config/site";
 import { globalStructuredData } from "./data/structuredData";
 
-const socialImage = "/images/gsv-logo.png";
+const socialImage = "/opengraph-image";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: socialImage,
-        width: 1798,
-        height: 877,
+        width: 1200,
+        height: 630,
         alt: "Golden State Visions managed IT, network, smart home, and audio video services",
       },
     ],

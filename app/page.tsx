@@ -16,6 +16,14 @@ export const metadata: Metadata = {
       "One local technology partner for managed IT, secure networks, smart-home automation, lighting, audio, video, and surveillance.",
     url: "/",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Golden State Visions managed IT, network, smart home, and audio video services",
+      },
+    ],
   },
 };
 

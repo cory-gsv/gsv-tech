@@ -1,0 +1,1409 @@
+{
+  "site": "default",
+  "counts": {
+    "aps": 4,
+    "wlans": 3,
+    "clients": 78
+  },
+  "health": [
+    {
+      "subsystem": "wlan",
+      "num_user": 65,
+      "num_guest": 0,
+      "num_iot": 21,
+      "tx_bytes-r": 1521167,
+      "rx_bytes-r": 28638,
+      "status": "ok",
+      "num_ap": 4,
+      "num_adopted": 4,
+      "num_disabled": 0,
+      "num_disconnected": 0,
+      "num_pending": 0
+    },
+    {
+      "subsystem": "wan",
+      "num_gw": 1,
+      "num_adopted": 1,
+      "num_disconnected": 0,
+      "num_pending": 0,
+      "status": "ok",
+      "wan_ip": "156.47.247.149",
+      "gateways": [
+        "156.47.247.254"
+      ],
+      "netmask": "255.255.255.0",
+      "nameservers": [],
+      "num_sta": 78,
+      "tx_bytes-r": 42912,
+      "rx_bytes-r": 2170215,
+      "gw_mac": "60:22:32:8b:b6:49",
+      "gw_name": "The Beck's",
+      "gw_system-stats": {
+        "cpu": "39.9",
+        "mem": "72.3",
+        "uptime": "2382060"
+      },
+      "gw_version": "5.1.19.33549",
+      "isp_name": "Consolidated Communications",
+      "isp_organization": "Fidium",
+      "asn": 14051,
+      "uptime_stats": {
+        "WAN": {
+          "alerting_monitors": [
+            {
+              "availability": 100,
+              "latency_average": 8,
+              "target": "ping.ui.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 100,
+              "latency_average": 12,
+              "target": "1.1.1.1",
+              "type": "dns"
+            },
+            {
+              "availability": 100,
+              "latency_average": 19,
+              "target": "8.8.8.8",
+              "type": "dns"
+            }
+          ],
+          "availability": 100,
+          "latency_average": 8,
+          "monitors": [
+            {
+              "availability": 100,
+              "latency_average": 6,
+              "target": "www.microsoft.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 100,
+              "latency_average": 8,
+              "target": "google.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 100,
+              "latency_average": 8,
+              "target": "1.1.1.1",
+              "type": "icmp"
+            }
+          ],
+          "time_period": 6081,
+          "uptime": 6061
+        },
+        "WAN2": {
+          "alerting_monitors": [
+            {
+              "availability": 0,
+              "target": "ping.ui.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 0,
+              "latency_average": 0,
+              "target": "1.1.1.1",
+              "type": "dns"
+            },
+            {
+              "availability": 0,
+              "latency_average": 0,
+              "target": "8.8.8.8",
+              "type": "dns"
+            }
+          ],
+          "downtime": 6082,
+          "monitors": [
+            {
+              "availability": 0,
+              "target": "www.microsoft.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 0,
+              "target": "google.com",
+              "type": "icmp"
+            },
+            {
+              "availability": 100,
+              "target": "1.1.1.1",
+              "type": "icmp"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "subsystem": "www",
+      "status": "ok",
+      "tx_bytes-r": 42912,
+      "rx_bytes-r": 2170215,
+      "latency": 8,
+      "uptime": 78343,
+      "drops": 8,
+      "xput_up": 2333,
+      "xput_down": 2222,
+      "speedtest_status": "Success",
+      "speedtest_lastrun": 1784392566,
+      "speedtest_ping": 7,
+      "gw_mac": "60:22:32:8b:b6:49"
+    },
+    {
+      "subsystem": "lan",
+      "lan_ip": null,
+      "status": "ok",
+      "num_user": 13,
+      "num_guest": 0,
+      "num_iot": 0,
+      "tx_bytes-r": 113,
+      "rx_bytes-r": 186,
+      "num_sw": 2,
+      "num_adopted": 2,
+      "num_disconnected": 0,
+      "num_pending": 0
+    },
+    {
+      "subsystem": "vpn",
+      "status": "ok",
+      "remote_user_enabled": true,
+      "remote_user_num_active": 0,
+      "remote_user_num_inactive": 0,
+      "remote_user_rx_bytes": 0,
+      "remote_user_tx_bytes": 0,
+      "remote_user_rx_packets": 0,
+      "remote_user_tx_packets": 0,
+      "site_to_site_enabled": false
+    }
+  ],
+  "aps": [
+    {
+      "name": "Upstairs",
+      "model": "UAPA6A9",
+      "id": "6a5ab1e8cc26555d32f14040",
+      "mac": "90:41:b2:b4:6c:18",
+      "ip": "192.168.1.176",
+      "state": 1,
+      "version": "8.6.11.18870",
+      "adopted": true,
+      "disconnected": false,
+      "site_id": "6600781161b0ca39559bd162",
+      "uptime": 6242,
+      "satisfaction": 100,
+      "num_sta": 22,
+      "sys_stats": {
+        "loadavg_1": "1.08",
+        "loadavg_15": "1.09",
+        "loadavg_5": "1.11",
+        "mem_buffer": 8396800,
+        "mem_total": 919404544,
+        "mem_used": 434098176
+      },
+      "radio_table": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 11,
+          "ht": "20",
+          "tx_power_mode": "custom",
+          "tx_power": 18,
+          "antenna_gain": 4,
+          "radio_caps": 16404
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 36,
+          "ht": "40",
+          "tx_power_mode": "custom",
+          "tx_power": 22,
+          "antenna_gain": 5,
+          "radio_caps": 134889492
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 133,
+          "ht": "160",
+          "antenna_gain": 6,
+          "radio_caps": -2012856300
+        }
+      ],
+      "uplink": {
+        "type": "wire",
+        "uplink_mac": "9c:05:d6:e1:d5:41",
+        "uplink_device_name": "Main Switch 1",
+        "uplink_remote_port": 18,
+        "speed": 2500,
+        "full_duplex": true,
+        "tx_bytes": 1902535478,
+        "rx_bytes": 203067261997
+      },
+      "radio_table_stats": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 11,
+          "tx_power": 18,
+          "num_sta": 10,
+          "satisfaction": -1,
+          "cu_total": 67,
+          "cu_self_rx": 0,
+          "cu_self_tx": 15,
+          "tx_packets": 121,
+          "tx_retries": 7
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 36,
+          "tx_power": 22,
+          "num_sta": 11,
+          "satisfaction": -1,
+          "cu_total": 5,
+          "cu_self_rx": 0,
+          "cu_self_tx": 2,
+          "tx_packets": 11241,
+          "tx_retries": 1801
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 133,
+          "tx_power": 21,
+          "num_sta": 1,
+          "satisfaction": -1,
+          "cu_total": 2,
+          "cu_self_rx": 0,
+          "cu_self_tx": 1,
+          "tx_packets": 593,
+          "tx_retries": 107
+        }
+      ]
+    },
+    {
+      "name": "Patio",
+      "model": "UAPA6A9",
+      "id": "69727b3d0e3f674e64c2875d",
+      "mac": "a8:9c:6c:3a:a1:28",
+      "ip": "192.168.1.180",
+      "state": 1,
+      "version": "8.6.11.18870",
+      "adopted": true,
+      "disconnected": false,
+      "site_id": "6600781161b0ca39559bd162",
+      "uptime": 6231,
+      "satisfaction": 100,
+      "num_sta": 6,
+      "sys_stats": {
+        "loadavg_1": "1.02",
+        "loadavg_15": "1.00",
+        "loadavg_5": "1.01",
+        "mem_buffer": 7987200,
+        "mem_total": 919404544,
+        "mem_used": 428539904
+      },
+      "radio_table": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 11,
+          "ht": "20",
+          "tx_power_mode": "custom",
+          "tx_power": 16,
+          "antenna_gain": 4,
+          "radio_caps": 16404
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 149,
+          "ht": "40",
+          "tx_power_mode": "custom",
+          "tx_power": 18,
+          "antenna_gain": 5,
+          "radio_caps": 134889492
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 101,
+          "ht": "160",
+          "antenna_gain": 6,
+          "radio_caps": -2012856300
+        }
+      ],
+      "uplink": {
+        "type": "wire",
+        "uplink_mac": "9c:05:d6:e1:d5:41",
+        "uplink_device_name": "Main Switch 1",
+        "uplink_remote_port": 19,
+        "speed": 2500,
+        "full_duplex": true,
+        "tx_bytes": 33095142,
+        "rx_bytes": 43768580
+      },
+      "radio_table_stats": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 11,
+          "tx_power": 16,
+          "num_sta": 4,
+          "satisfaction": -1,
+          "cu_total": 64,
+          "cu_self_rx": 4,
+          "cu_self_tx": 20,
+          "tx_packets": 8,
+          "tx_retries": 0
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 149,
+          "tx_power": 18,
+          "num_sta": 1,
+          "satisfaction": -1,
+          "cu_total": 13,
+          "cu_self_rx": 0,
+          "cu_self_tx": 3,
+          "tx_packets": 61,
+          "tx_retries": 10
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 101,
+          "tx_power": 21,
+          "num_sta": 1,
+          "satisfaction": -1,
+          "cu_total": 3,
+          "cu_self_rx": 0,
+          "cu_self_tx": 3,
+          "tx_packets": 148,
+          "tx_retries": 28
+        }
+      ]
+    },
+    {
+      "name": "Kitchen",
+      "model": "UAPA6A9",
+      "id": "6a5a95f2cc26555d32f1339a",
+      "mac": "90:41:b2:b4:7d:d4",
+      "ip": "192.168.1.222",
+      "state": 1,
+      "version": "8.6.11.18870",
+      "adopted": true,
+      "disconnected": false,
+      "site_id": "6600781161b0ca39559bd162",
+      "uptime": 6251,
+      "satisfaction": 100,
+      "num_sta": 22,
+      "sys_stats": {
+        "loadavg_1": "1.04",
+        "loadavg_15": "1.33",
+        "loadavg_5": "1.29",
+        "mem_buffer": 9830400,
+        "mem_total": 919404544,
+        "mem_used": 431972352
+      },
+      "radio_table": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 1,
+          "ht": "20",
+          "tx_power_mode": "custom",
+          "tx_power": 15,
+          "antenna_gain": 4,
+          "radio_caps": 16404
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 44,
+          "ht": "40",
+          "tx_power_mode": "custom",
+          "tx_power": 20,
+          "antenna_gain": 5,
+          "radio_caps": 134889492
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 37,
+          "ht": "160",
+          "antenna_gain": 6,
+          "radio_caps": -2012856300
+        }
+      ],
+      "uplink": {
+        "type": "wire",
+        "uplink_mac": "9c:05:d6:e1:d5:41",
+        "uplink_device_name": "Main Switch 1",
+        "uplink_remote_port": 20,
+        "speed": 2500,
+        "full_duplex": true,
+        "tx_bytes": 1286809024,
+        "rx_bytes": 1904165308
+      },
+      "radio_table_stats": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 1,
+          "tx_power": 15,
+          "num_sta": 17,
+          "satisfaction": -1,
+          "cu_total": 72,
+          "cu_self_rx": 0,
+          "cu_self_tx": 29,
+          "tx_packets": 49,
+          "tx_retries": 4
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 44,
+          "tx_power": 20,
+          "num_sta": 3,
+          "satisfaction": -1,
+          "cu_total": 2,
+          "cu_self_rx": 0,
+          "cu_self_tx": 1,
+          "tx_packets": 66,
+          "tx_retries": 8
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 37,
+          "tx_power": 21,
+          "num_sta": 2,
+          "satisfaction": -1,
+          "cu_total": 10,
+          "cu_self_rx": 2,
+          "cu_self_tx": 7,
+          "tx_packets": 20613,
+          "tx_retries": 4
+        }
+      ]
+    },
+    {
+      "name": "Garage",
+      "model": "UAPA6A4",
+      "id": "6a5a90f3cc26555d32f131b1",
+      "mac": "a8:9c:6c:30:34:3a",
+      "ip": "192.168.1.23",
+      "state": 1,
+      "version": "8.6.11.18870",
+      "adopted": true,
+      "disconnected": false,
+      "site_id": "6600781161b0ca39559bd162",
+      "uptime": 6264,
+      "satisfaction": 100,
+      "num_sta": 12,
+      "sys_stats": {
+        "loadavg_1": "1.03",
+        "loadavg_15": "1.08",
+        "loadavg_5": "1.09",
+        "mem_buffer": 9867264,
+        "mem_total": 1882918912,
+        "mem_used": 542736384
+      },
+      "radio_table": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 1,
+          "ht": "20",
+          "tx_power_mode": "custom",
+          "tx_power": 18,
+          "antenna_gain": 4,
+          "radio_caps": 16404
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 157,
+          "ht": "40",
+          "tx_power_mode": "custom",
+          "tx_power": 20,
+          "antenna_gain": 6,
+          "radio_caps": 201998340
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 69,
+          "ht": "160",
+          "antenna_gain": 6,
+          "radio_caps": -2012856300
+        }
+      ],
+      "uplink": {
+        "type": "wire",
+        "uplink_mac": "9c:05:d6:e1:d5:41",
+        "uplink_device_name": "Main Switch 1",
+        "uplink_remote_port": 17,
+        "speed": 2500,
+        "full_duplex": true,
+        "tx_bytes": 159947715,
+        "rx_bytes": 5055155793
+      },
+      "radio_table_stats": [
+        {
+          "name": "wifi0",
+          "radio": "ng",
+          "channel": 1,
+          "tx_power": 18,
+          "num_sta": 9,
+          "satisfaction": -1,
+          "cu_total": 40,
+          "cu_self_rx": 0,
+          "cu_self_tx": 16,
+          "tx_packets": 75,
+          "tx_retries": 30
+        },
+        {
+          "name": "wifi1",
+          "radio": "na",
+          "channel": 157,
+          "tx_power": 20,
+          "num_sta": 2,
+          "satisfaction": -1,
+          "cu_total": 11,
+          "cu_self_rx": 0,
+          "cu_self_tx": 3,
+          "tx_packets": 15893,
+          "tx_retries": 1547
+        },
+        {
+          "name": "wifi2",
+          "radio": "6e",
+          "channel": 69,
+          "tx_power": 21,
+          "num_sta": 1,
+          "satisfaction": -1,
+          "cu_total": 3,
+          "cu_self_rx": 0,
+          "cu_self_tx": 2,
+          "tx_packets": 2294,
+          "tx_retries": 256
+        }
+      ]
+    }
+  ],
+  "switches": [
+    {
+      "name": "Main Switch 1",
+      "model": "USPM24P",
+      "mac": "9c:05:d6:e1:d5:41",
+      "ip": "192.168.1.200",
+      "state": 1,
+      "version": "7.4.1.16850",
+      "stp_version": "rstp",
+      "stp_priority": 4096,
+      "uplink": {
+        "type": "wire",
+        "uplink_mac": "60:22:32:8b:b6:49",
+        "uplink_device_name": "The Beck's",
+        "speed": 10000,
+        "full_duplex": true
+      },
+      "port_overrides": [
+        {
+          "port_idx": 7,
+          "setting_preference": "auto",
+          "port_security_enabled": false,
+          "poe_mode": "auto",
+          "forward": "all",
+          "native_networkconf_id": "6600782761b0ca39559bd17c",
+          "name": "Port 7",
+          "port_security_mac_address": [],
+          "tagged_vlan_mgmt": "auto"
+        },
+        {
+          "setting_preference": "auto",
+          "port_security_enabled": false,
+          "poe_mode": "auto",
+          "stormctrl_ucast_rate": 100,
+          "forward": "all",
+          "stormctrl_mcast_enabled": false,
+          "stormctrl_ucast_enabled": false,
+          "egress_rate_limit_kbps_enabled": false,
+          "stormctrl_bcast_rate": 100,
+          "isolation": false,
+          "tagged_vlan_mgmt": "auto",
+          "port_idx": 9,
+          "stormctrl_bcast_enabled": false,
+          "voice_networkconf_id": "",
+          "stp_port_mode": true,
+          "port_keepalive_enabled": false,
+          "stormctrl_mcast_rate": 100,
+          "native_networkconf_id": "6600782761b0ca39559bd17c",
+          "name": "Port 9",
+          "port_security_mac_address": [],
+          "autoneg": true,
+          "lldpmed_enabled": true
+        },
+        {
+          "port_idx": 15,
+          "setting_preference": "manual",
+          "name": "Port 15",
+          "poe_mode": "off",
+          "port_security_enabled": true,
+          "port_security_mac_address": [],
+          "native_networkconf_id": "",
+          "tagged_vlan_mgmt": "block_all",
+          "multicast_router_mode": "NONE",
+          "lldpmed_enabled": true,
+          "voice_networkconf_id": "",
+          "dot1x_ctrl": "force_authorized",
+          "dot1x_idle_timeout": 300,
+          "egress_rate_limit_kbps_enabled": false,
+          "autoneg": true,
+          "isolation": false,
+          "flow_control_enabled": true,
+          "stp_port_mode": true,
+          "stp_edge_state": "auto",
+          "stp_bpdu_guard_enabled": false,
+          "port_keepalive_enabled": false,
+          "forward": "disabled"
+        },
+        {
+          "setting_preference": "auto",
+          "port_security_enabled": false,
+          "poe_mode": "auto",
+          "forward": "all",
+          "egress_rate_limit_kbps_enabled": false,
+          "isolation": false,
+          "tagged_vlan_mgmt": "auto",
+          "port_idx": 17,
+          "multicast_router_mode": "NONE",
+          "voice_networkconf_id": "",
+          "stp_port_mode": true,
+          "port_keepalive_enabled": false,
+          "stp_bpdu_guard_enabled": false,
+          "native_networkconf_id": "6600782761b0ca39559bd17c",
+          "name": "Port 17",
+          "port_security_mac_address": [],
+          "dot1x_idle_timeout": 300,
+          "autoneg": true,
+          "flow_control_enabled": true,
+          "stp_edge_state": "auto",
+          "lldpmed_enabled": true,
+          "dot1x_ctrl": "force_authorized"
+        },
+        {
+          "setting_preference": "auto",
+          "port_security_enabled": false,
+          "op_mode": "switch",
+          "poe_mode": "off",
+          "stormctrl_ucast_rate": 100,
+          "forward": "all",
+          "egress_rate_limit_kbps_enabled": false,
+          "stormctrl_ucast_enabled": false,
+          "stormctrl_bcast_rate": 100,
+          "stormctrl_mcast_enabled": false,
+          "isolation": false,
+          "tagged_vlan_mgmt": "auto",
+          "stormctrl_bcast_enabled": false,
+          "port_idx": 24,
+          "voice_networkconf_id": "",
+          "stp_port_mode": true,
+          "port_keepalive_enabled": false,
+          "stormctrl_mcast_rate": 100,
+          "native_networkconf_id": "6600782761b0ca39559bd17c",
+          "name": "Port 24",
+          "port_security_mac_address": [],
+          "autoneg": true,
+          "lldpmed_enabled": true
+        },
+        {
+          "setting_preference": "auto",
+          "port_security_enabled": false,
+          "stormctrl_ucast_rate": 100,
+          "forward": "all",
+          "stormctrl_bcast_rate": 100,
+          "stormctrl_ucast_enabled": false,
+          "egress_rate_limit_kbps_enabled": false,
+          "stormctrl_mcast_enabled": false,
+          "isolation": false,
+          "tagged_vlan_mgmt": "auto",
+          "port_idx": 26,
+          "stormctrl_bcast_enabled": false,
+          "voice_networkconf_id": "",
+          "stp_port_mode": true,
+          "port_keepalive_enabled": false,
+          "stormctrl_mcast_rate": 100,
+          "native_networkconf_id": "6600782761b0ca39559bd17c",
+          "name": "SFP+ 2",
+          "autoneg": true,
+          "port_security_mac_address": [],
+          "lldpmed_enabled": true
+        }
+      ],
+      "port_table": [
+        {
+          "port_idx": 1,
+          "name": "Port 1",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 2,
+          "name": "Port 2",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 3,
+          "name": "Port 3",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 4,
+          "name": "Port 4",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 5,
+          "name": "Port 5",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 6,
+          "name": "Port 6",
+          "up": true,
+          "speed": 1000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "4.25"
+        },
+        {
+          "port_idx": 7,
+          "name": "Port 7",
+          "up": true,
+          "speed": 1000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "8.89"
+        },
+        {
+          "port_idx": 8,
+          "name": "Port 8",
+          "up": true,
+          "speed": 1000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "5.99"
+        },
+        {
+          "port_idx": 9,
+          "name": "Port 9",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 10,
+          "name": "Port 10",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "8.09"
+        },
+        {
+          "port_idx": 11,
+          "name": "Port 11",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "4.20"
+        },
+        {
+          "port_idx": 12,
+          "name": "Port 12",
+          "up": true,
+          "speed": 1000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "7.48"
+        },
+        {
+          "port_idx": 13,
+          "name": "Port 13",
+          "up": true,
+          "speed": 1000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "8.67"
+        },
+        {
+          "port_idx": 14,
+          "name": "Port 14",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 15,
+          "name": "Port 15",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 20000,
+          "poe_mode": "off",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 16,
+          "name": "Port 16",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 20000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 17,
+          "name": "Port 17",
+          "up": true,
+          "speed": 2500,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 8000,
+          "poe_mode": "auto",
+          "poe_power": "12.70"
+        },
+        {
+          "port_idx": 18,
+          "name": "Port 18",
+          "up": true,
+          "speed": 2500,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 8000,
+          "poe_mode": "auto",
+          "poe_power": "9.51"
+        },
+        {
+          "port_idx": 19,
+          "name": "Port 19",
+          "up": true,
+          "speed": 2500,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 8000,
+          "poe_mode": "auto",
+          "poe_power": "10.09"
+        },
+        {
+          "port_idx": 20,
+          "name": "Port 20",
+          "up": true,
+          "speed": 2500,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 8000,
+          "poe_mode": "auto",
+          "poe_power": "9.50"
+        },
+        {
+          "port_idx": 21,
+          "name": "Port 21",
+          "up": true,
+          "speed": 10,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 2000000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 22,
+          "name": "Port 22",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 8000,
+          "poe_mode": "auto",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 23,
+          "name": "Port 23",
+          "up": true,
+          "speed": 100,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 200000,
+          "poe_mode": "auto",
+          "poe_power": "6.11"
+        },
+        {
+          "port_idx": 24,
+          "name": "Port 24",
+          "up": false,
+          "speed": 0,
+          "full_duplex": false,
+          "stp_state": "disabled",
+          "stp_pathcost": 8000,
+          "poe_mode": "off",
+          "poe_power": "0.00"
+        },
+        {
+          "port_idx": 25,
+          "name": "SFP+ 1",
+          "up": true,
+          "speed": 10000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 2000
+        },
+        {
+          "port_idx": 26,
+          "name": "SFP+ 2",
+          "up": true,
+          "speed": 10000,
+          "full_duplex": true,
+          "stp_state": "forwarding",
+          "stp_pathcost": 2000
+        }
+      ]
+    }
+  ],
+  "networks": [
+    {
+      "name": "Fidium (WAN 1)",
+      "id": "6600782761b0ca39559bd17a",
+      "purpose": "wan",
+      "wan_type": "dhcp",
+      "wan_dns_preference": "auto"
+    },
+    {
+      "name": "Starlink (WAN 2)",
+      "id": "6600782761b0ca39559bd17b",
+      "purpose": "wan",
+      "wan_type": "dhcp",
+      "wan_dns_preference": "auto"
+    },
+    {
+      "name": "Default",
+      "id": "6600782761b0ca39559bd17c",
+      "purpose": "corporate",
+      "enabled": true,
+      "vlan_enabled": false,
+      "ip_subnet": "192.168.1.1/24",
+      "dhcpd_enabled": true,
+      "network_isolation_enabled": false,
+      "internet_access_enabled": true,
+      "dhcpd_dns_enabled": true,
+      "dhcpd_dns_1": "1.1.1.1",
+      "dhcpd_dns_2": "8.8.8.8",
+      "dhcpd_dns_3": "",
+      "dhcpd_dns_4": "",
+      "mdns_enabled": true,
+      "igmp_snooping": false
+    },
+    {
+      "name": "One-Click VPN",
+      "id": "695fe67b0e3f674e64bcc8de",
+      "purpose": "remote-user-vpn",
+      "enabled": true,
+      "ip_subnet": "192.168.8.1/24"
+    },
+    {
+      "name": "The 19th Hole IoT",
+      "id": "697924d60e3f674e64c4e24b",
+      "purpose": "corporate",
+      "enabled": true,
+      "vlan_enabled": true,
+      "vlan": 3,
+      "ip_subnet": "192.168.3.1/24",
+      "dhcpd_enabled": true,
+      "network_isolation_enabled": false,
+      "internet_access_enabled": true,
+      "dhcpd_dns_enabled": true,
+      "dhcpd_dns_1": "1.1.1.1",
+      "dhcpd_dns_2": "8.8.8.8",
+      "dhcpd_dns_3": "",
+      "dhcpd_dns_4": "",
+      "mdns_enabled": true,
+      "igmp_snooping": false
+    }
+  ],
+  "ap_groups": [],
+  "relevant_events": [],
+  "wlans": [
+    {
+      "name": "The 19th Hole",
+      "id": "66243ca4581446570c759b18",
+      "enabled": true,
+      "networkconf_id": "6600782761b0ca39559bd17c",
+      "security": "wpapsk",
+      "wpa_mode": "wpa2",
+      "wpa3_support": true,
+      "pmf_mode": "optional",
+      "usergroup_id": "6600782761b0ca39559bd17d",
+      "ap_group_ids": [
+        "6600782761b0ca39559bd182"
+      ],
+      "bss_transition": true,
+      "fast_roaming_enabled": false,
+      "proxy_arp": false,
+      "minrate_na_enabled": false,
+      "minrate_ng_enabled": true,
+      "minrate_na_data_rate_kbps": 6000,
+      "minrate_ng_data_rate_kbps": 1000,
+      "minrate_setting_preference": "auto",
+      "uapsd_enabled": false,
+      "mac_filter_enabled": false,
+      "l2_isolation": false,
+      "dtim_mode": "default",
+      "dtim_na": 3,
+      "dtim_ng": 1
+    },
+    {
+      "name": "The 19th Hole IoT",
+      "id": "6745c102a289ad37bcb41ae2",
+      "enabled": true,
+      "networkconf_id": "697924d60e3f674e64c4e24b",
+      "security": "wpapsk",
+      "wpa_mode": "wpa2",
+      "wpa3_support": false,
+      "pmf_mode": "disabled",
+      "usergroup_id": "6600782761b0ca39559bd17d",
+      "ap_group_ids": [
+        "6600782761b0ca39559bd182"
+      ],
+      "bss_transition": false,
+      "fast_roaming_enabled": false,
+      "proxy_arp": false,
+      "minrate_na_enabled": false,
+      "minrate_ng_enabled": true,
+      "minrate_na_data_rate_kbps": 6000,
+      "minrate_ng_data_rate_kbps": 1000,
+      "minrate_setting_preference": "auto",
+      "uapsd_enabled": false,
+      "mac_filter_enabled": false,
+      "l2_isolation": false,
+      "dtim_mode": "default",
+      "dtim_na": 3,
+      "dtim_ng": 1
+    },
+    {
+      "name": "UniFi Identity",
+      "id": "695fe73e0e3f674e64bcc8ee",
+      "enabled": true,
+      "networkconf_id": "6600782761b0ca39559bd17c",
+      "security": "wpaeap",
+      "wpa_mode": "wpa2",
+      "pmf_mode": "disabled",
+      "usergroup_id": "6600782761b0ca39559bd17d",
+      "ap_group_ids": [
+        "6600782761b0ca39559bd182"
+      ],
+      "minrate_na_enabled": false,
+      "minrate_ng_enabled": true,
+      "minrate_na_data_rate_kbps": 6000,
+      "minrate_ng_data_rate_kbps": 1000,
+      "minrate_setting_preference": "manual",
+      "mac_filter_enabled": false,
+      "dtim_mode": "default",
+      "dtim_na": 3,
+      "dtim_ng": 1
+    }
+  ],
+  "possible_sonos_clients": [
+    {
+      "name": "SonosZP",
+      "mac": "54:2a:1b:a2:69:2b",
+      "ip": "192.168.1.122",
+      "oui": "Sonos, Inc.",
+      "is_wired": false
+    },
+    {
+      "name": "SonosZP",
+      "mac": "54:2a:1b:14:93:b6",
+      "ip": "192.168.1.161",
+      "oui": "Sonos, Inc.",
+      "is_wired": false
+    },
+    {
+      "name": "SonosZP",
+      "mac": "38:42:0b:29:aa:01",
+      "ip": "192.168.1.233",
+      "oui": "Sonos, Inc.",
+      "is_wired": true,
+      "sw_mac": "9c:05:d6:e1:d5:41",
+      "sw_port": 3,
+      "satisfaction": 100
+    },
+    {
+      "name": "SonosZP",
+      "mac": "74:ca:60:6c:6f:bd",
+      "ip": "192.168.1.243",
+      "oui": "Sonos, Inc.",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:7d:d4",
+      "essid": "The 19th Hole",
+      "radio": "na",
+      "channel": 44,
+      "signal": -48,
+      "rssi": 47,
+      "noise": -95,
+      "tx_rate": 455800,
+      "rx_rate": 573500,
+      "satisfaction": 100
+    },
+    {
+      "name": "SonosZP",
+      "mac": "48:a6:b8:fa:08:da",
+      "ip": "192.168.1.169",
+      "oui": "Sonos, Inc.",
+      "is_wired": false
+    },
+    {
+      "name": "SonosZP",
+      "mac": "74:ca:60:e0:6b:c1",
+      "ip": "192.168.1.87",
+      "oui": "Sonos, Inc.",
+      "is_wired": true,
+      "sw_mac": "9c:05:d6:e1:d5:41",
+      "sw_port": 2,
+      "satisfaction": 100
+    },
+    {
+      "name": "SonosZP",
+      "mac": "38:42:0b:29:b9:c1",
+      "ip": "192.168.1.155",
+      "oui": "Sonos, Inc.",
+      "is_wired": true,
+      "sw_mac": "9c:05:d6:e1:d5:41",
+      "sw_port": 1,
+      "satisfaction": 100
+    },
+    {
+      "name": "SonosZP",
+      "mac": "c4:38:75:97:fc:c6",
+      "ip": "192.168.1.251",
+      "oui": "Sonos, Inc.",
+      "is_wired": false,
+      "ap_mac": "a8:9c:6c:3a:a1:28",
+      "essid": "The 19th Hole",
+      "radio": "na",
+      "channel": 149,
+      "signal": -58,
+      "rssi": 35,
+      "noise": -93,
+      "tx_rate": 573500,
+      "rx_rate": 455800,
+      "satisfaction": 100
+    }
+  ],
+  "weak_wifi_clients": [
+    {
+      "name": "iPad",
+      "mac": "02:4c:38:29:9e:3a",
+      "ip": "192.168.1.128",
+      "oui": "",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:7d:d4",
+      "essid": "The 19th Hole",
+      "radio": "6e",
+      "channel": 37,
+      "signal": -86,
+      "rssi": 10,
+      "noise": -96,
+      "tx_rate": 576500,
+      "rx_rate": 288200,
+      "satisfaction": 100
+    },
+    {
+      "name": "iPhone",
+      "mac": "2a:97:56:06:53:fa",
+      "ip": "192.168.1.147",
+      "oui": "",
+      "is_wired": false,
+      "ap_mac": "a8:9c:6c:30:34:3a",
+      "essid": "The 19th Hole",
+      "radio": "6e",
+      "channel": 69,
+      "signal": -81,
+      "rssi": 13,
+      "noise": -94,
+      "tx_rate": 960800,
+      "rx_rate": 272200,
+      "satisfaction": 100
+    },
+    {
+      "name": "Emporia",
+      "mac": "30:83:98:91:64:a4",
+      "ip": "192.168.3.222",
+      "oui": "Espressif Inc.",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:6c:18",
+      "essid": "The 19th Hole IoT",
+      "radio": "ng",
+      "channel": 11,
+      "signal": -81,
+      "rssi": 15,
+      "noise": -96,
+      "tx_rate": 39000,
+      "rx_rate": 19500,
+      "satisfaction": 100,
+      "vlan": 3
+    },
+    {
+      "name": "iPhone",
+      "mac": "02:7a:86:f2:e3:c1",
+      "ip": "192.168.1.18",
+      "oui": "",
+      "is_wired": false,
+      "ap_mac": "a8:9c:6c:3a:a1:28",
+      "essid": "The 19th Hole",
+      "radio": "6e",
+      "channel": 101,
+      "signal": -80,
+      "rssi": 16,
+      "noise": -96,
+      "tx_rate": 1153000,
+      "rx_rate": 432400,
+      "satisfaction": 100
+    },
+    {
+      "name": "Tesla",
+      "mac": "0c:29:8f:54:87:81",
+      "ip": "192.168.1.235",
+      "oui": "Tesla,Inc.",
+      "is_wired": false,
+      "ap_mac": "a8:9c:6c:30:34:3a",
+      "essid": "The 19th Hole",
+      "radio": "na",
+      "channel": 157,
+      "signal": -79,
+      "rssi": 15,
+      "noise": -94,
+      "tx_rate": 60000,
+      "rx_rate": 108000,
+      "satisfaction": 96
+    },
+    {
+      "name": "Mac",
+      "mac": "e6:c4:63:1b:53:50",
+      "ip": "192.168.1.39",
+      "oui": "",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:6c:18",
+      "essid": "The 19th Hole",
+      "radio": "6e",
+      "channel": 133,
+      "signal": -76,
+      "rssi": 20,
+      "noise": -96,
+      "tx_rate": 1921600,
+      "rx_rate": 1633300,
+      "satisfaction": 100
+    },
+    {
+      "name": "66:eb:fd:d3:71:81",
+      "mac": "66:eb:fd:d3:71:81",
+      "ip": "192.168.1.232",
+      "oui": "",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:6c:18",
+      "essid": "The 19th Hole",
+      "radio": "na",
+      "channel": 36,
+      "signal": -74,
+      "rssi": 20,
+      "noise": -94,
+      "tx_rate": 270000,
+      "rx_rate": 135000,
+      "satisfaction": 100
+    },
+    {
+      "name": "Peloton Tred",
+      "mac": "ac:04:0b:d2:b5:9d",
+      "ip": "192.168.1.163",
+      "oui": "Peloton Interactive, Inc",
+      "is_wired": false,
+      "ap_mac": "90:41:b2:b4:7d:d4",
+      "essid": "The 19th Hole",
+      "radio": "na",
+      "channel": 44,
+      "signal": -71,
+      "rssi": 24,
+      "noise": -95,
+      "tx_rate": 360000,
+      "rx_rate": 243000,
+      "satisfaction": 100
+    }
+  ],
+  "recommendations": [
+    "Use 20 MHz channel width on 2.4 GHz for all APs.",
+    "Use only channels 1/6/11 on 2.4 GHz, re-used across the 5 APs based on physical separation.",
+    "Prefer 5 GHz at 40 or 80 MHz after checking DFS/radar history and neighboring AP overlap.",
+    "Avoid globally high transmit power; start 2.4 GHz Low/Medium and 5 GHz Medium, then adjust by AP coverage.",
+    "Detected 8 possible Sonos clients; keep Sonos and controllers on the same non-guest network unless mDNS is deliberately relayed."
+  ]
+}

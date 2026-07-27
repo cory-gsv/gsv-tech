@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  serverExternalPackages: ["@sparticuz/chromium"],
+  outputFileTracingIncludes: {
+    "/api/network-report-pdf": ["./node_modules/@sparticuz/chromium/bin/**/*"],
+  },
   async redirects() {
     return [
       {
