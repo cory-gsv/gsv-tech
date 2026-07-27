@@ -151,6 +151,93 @@ export const blogPosts: BlogPost[] = [
     ],
   },
   {
+    slug: "wifi-design-guide",
+    title: "Wi-Fi Design Guide: Coverage, Capacity, Roaming, and Reliability",
+    description:
+      "Learn how professional Wi-Fi design handles coverage, capacity, roaming, access-point placement, cabling, channels, interference, security, and validation.",
+    excerpt:
+      "Reliable Wi-Fi is designed around the building, connected devices, and real workflows—not bars on a phone or access points placed wherever convenient.",
+    category: "Networks & Security",
+    audience: "Business owners, homeowners, builders, and facility teams",
+    published: "2026-07-27",
+    updated: "2026-07-27",
+    readTime: "11 min read",
+    serviceHref: "/managed-it?service=06",
+    serviceLabel: "Explore professional Wi-Fi and network design",
+    sections: [
+      {
+        heading: "Good Wi-Fi starts with requirements, not hardware",
+        paragraphs: [
+          "A Wi-Fi design should begin by defining what the network must support. A small office using laptops and video meetings has different needs than a restaurant with handheld point-of-sale devices, a warehouse full of scanners, or a large home with cameras, streaming, automation, and outdoor living spaces.",
+          "Document the number and type of devices, important applications, expected simultaneous use, mobility, outdoor coverage, guest access, security boundaries, and areas where a dropped connection would interrupt work. Those requirements determine the design more reliably than a target number of access points.",
+        ],
+        bullets: [
+          "Identify critical applications and the devices that run them.",
+          "Mark where users work, gather, move, and expect outdoor coverage.",
+          "Separate operational, employee, guest, camera, and smart-device requirements.",
+          "Define what must keep working during an internet, switch, or access-point failure.",
+          "Account for future devices, building changes, and higher-bandwidth applications.",
+        ],
+      },
+      {
+        heading: "Coverage and capacity are different problems",
+        paragraphs: [
+          "Coverage asks whether a usable signal reaches a location. Capacity asks whether the network can serve all the devices and traffic in that location at the same time. One powerful access point may show strong signal across a large area while still becoming a bottleneck in a busy conference room, dining area, event space, or open office.",
+          "A professional design evaluates both. It considers client density, application traffic, radio airtime, channel reuse, and how the building attenuates signals. The objective is consistent service where it matters, not the largest possible coverage circle from each access point.",
+        ],
+      },
+      {
+        heading: "Access-point placement follows the building",
+        paragraphs: [
+          "Walls, floors, glass, mirrors, tile, concrete, masonry, metal, insulation, equipment, shelving, and even furniture change radio behavior. Access points should be located with those materials in mind and mounted in the orientation for which their antennas were designed.",
+          "Hiding an access point inside a cabinet, above metal ductwork, behind a television, or at one end of a long building can create uneven coverage. Outdoor spaces, detached buildings, stairwells, elevators, freezers, mechanical rooms, and high ceilings may require different equipment or antenna strategies.",
+        ],
+        bullets: [
+          "Use floor plans and construction materials to create an initial predictive design.",
+          "Favor wired ceiling or wall-mounted access points in deliberate locations.",
+          "Plan Ethernet, Power over Ethernet, switch capacity, and battery backup together.",
+          "Use outdoor-rated equipment and correct pathways for exterior coverage.",
+          "Keep access points accessible for inspection, replacement, and future upgrades.",
+        ],
+      },
+      {
+        heading: "More access points can make Wi-Fi worse",
+        paragraphs: [
+          "Adding access points without coordinating channels and transmit power can increase interference, reduce usable airtime, and encourage devices to remain connected to the wrong radio. Wi-Fi is a shared medium: nearby devices take turns transmitting, even when speed tests occasionally look fast.",
+          "Channel width, channel reuse, transmit power, minimum data rates, and band strategy should be configured as one system. Wider channels can provide higher peak throughput, but they also consume more spectrum and are not always the best choice in dense environments.",
+        ],
+      },
+      {
+        heading: "Roaming is a system and client decision",
+        paragraphs: [
+          "Access points advertise the network, but client devices usually decide when to leave one access point and join another. A device may hold onto a weak connection longer than expected if coverage overlap, power levels, supported roaming features, or client behavior are poorly matched.",
+          "Design roaming around the actual devices that move. Test phones, tablets, scanners, voice devices, and handheld point-of-sale equipment along real walking paths while their applications are active. A stationary laptop speed test does not validate a roaming design.",
+        ],
+      },
+      {
+        heading: "The wired network determines wireless reliability",
+        paragraphs: [
+          "Every access point depends on cabling, switch ports, Power over Ethernet, uplinks, routing, DNS, DHCP, firewall rules, and the internet connection. A wireless problem can originate anywhere along that path. The design should verify cable performance, available PoE power, switch capacity, uplink speed, redundancy, and configuration ownership.",
+          "Use separate network segments and access policies for systems with different trust levels. Guest devices should not reach business systems; cameras and smart devices should not automatically share the same access as employee computers; and management interfaces should be restricted to authorized administrators.",
+        ],
+      },
+      {
+        heading: "Validate after installation and monitor over time",
+        paragraphs: [
+          "Predictive plans are valuable, but the finished environment must be measured. After installation, validate signal strength, interference, channel use, roaming, throughput, application behavior, and coverage at the height and locations where devices are actually used.",
+          "Buildings and networks change. New neighbors, furniture, inventory, equipment, devices, and software can alter performance. Keep access-point locations, switch-port assignments, cable tests, network diagrams, configurations, and validation results with the system documentation, then monitor health and capacity so emerging problems are visible before users begin reporting them.",
+        ],
+        bullets: [
+          "Perform an onsite post-installation survey and correct gaps.",
+          "Test critical applications, not only internet speed.",
+          "Review client experience, interference, retries, and access-point utilization.",
+          "Back up network configurations and document administrative access.",
+          "Reassess the design after material layout or usage changes.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "warehouse-wifi-planning-guide",
     title: "Warehouse Wi-Fi Planning: Coverage for Scanners, Docks, and Inventory",
     description:
