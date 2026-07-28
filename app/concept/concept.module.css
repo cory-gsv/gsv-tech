@@ -238,7 +238,7 @@
   max-width: 920px;
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(3.25rem, 6.15vw, 6.75rem);
+  font-size: clamp(3rem, 5.6vw, 6rem);
   font-weight: 400;
   letter-spacing: -0.072em;
   line-height: 0.88;
