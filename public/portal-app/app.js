@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260728-230";
+const portalBuild = "portal-20260728-231";
 const portalIsLocalHost = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
@@ -118,7 +118,8 @@ const defaultData = {
         { phrase: "email only", license: "Exchange Online Plan 1" },
         { phrase: "mailbox", license: "Exchange Online Plan 1" }
       ],
-      licenseAuditBilling: false,
+      licenseAuditBilling: true,
+      m365IncludedInMsp: true,
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -365,7 +366,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "m365MarkupPercent", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "m365IncludedInMsp", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "m365MarkupPercent", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = structuredClone(record[field]);
             changed = true;
@@ -588,6 +589,41 @@ function migrateDefaultRecords() {
         invoice.notes = "";
       });
     state.billingMigrations.moxieBundledMicrosoft365V2 = new Date().toISOString();
+    changed = true;
+  }
+  if (!state.billingMigrations.moxieTenantCalculatedBillingV3) {
+    const moxieClient = state.clients.find(client => client.id === "client_moxie");
+    if (moxieClient) {
+      moxieClient.licenseAuditBilling = true;
+      moxieClient.m365IncludedInMsp = true;
+    }
+    state.serviceAgreements.forEach(service => {
+      if (service.clientId !== "client_moxie") return;
+      if (
+        service.id === "svc_moxie_credit" ||
+        /Microsoft 365 licensing|Moxie-paid direct Microsoft licenses/i.test(service.name || "")
+      ) {
+        service.active = false;
+      }
+    });
+    state.invoices
+      .filter(invoice =>
+        invoice.clientId === "client_moxie" &&
+        invoice.type === "Monthly MSP" &&
+        String(invoice.status || "").toLowerCase() !== "paid"
+      )
+      .forEach(invoice => {
+        const audit = latestAudit("client_moxie", invoice.month);
+        invoice.items = audit
+          ? auditInvoiceItems(audit)
+          : (invoice.items || []).filter(item =>
+              !/Microsoft 365 licensing|Moxie-paid direct Microsoft licenses/i.test(item.description || "")
+            );
+        invoice.notes = audit?.reviewCount
+          ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.`
+          : "";
+      });
+    state.billingMigrations.moxieTenantCalculatedBillingV3 = new Date().toISOString();
     changed = true;
   }
   if (!Array.isArray(state.vaultDocuments)) {
@@ -10459,6 +10495,7 @@ function microsoft365BillingItemsForBillingClient(client, month) {
   const billingClient = billingClientFor(client.id);
   return billingGroupClientIds(billingClient.id).flatMap(sourceId => {
     const sourceClient = clientById(sourceId);
+    if (sourceClient?.m365IncludedInMsp) return [];
     const pax8 = latestPax8Costs(sourceId, month);
     const pax8Rows = aggregatedPax8Subscriptions(pax8);
     const rawMicrosoft365Total = pax8Rows.reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
