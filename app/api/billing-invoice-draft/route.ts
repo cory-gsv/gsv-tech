@@ -393,9 +393,9 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     const primaryW = trackedWidth(primaryLabel, brandSize, brandTracking);
     const accentW = trackedWidth(accentLabel, brandSize, brandTracking);
     const wordmarkX = brandX + (brandW - primaryW - brandGap - accentW) / 2;
-    content += drawLogo(brandX + (brandW - markW) / 2, pageY(667), markW);
-    content += drawTrackedText(primaryLabel, wordmarkX, pageY(644), brandSize, brandTracking, headerFill);
-    content += drawTrackedText(accentLabel, wordmarkX + primaryW + brandGap, pageY(644), brandSize, brandTracking, gold);
+    content += drawLogo(brandX + (brandW - markW) / 2, pageY(655), markW);
+    content += drawTrackedText(primaryLabel, wordmarkX, pageY(632), brandSize, brandTracking, headerFill);
+    content += drawTrackedText(accentLabel, wordmarkX + primaryW + brandGap, pageY(632), brandSize, brandTracking, gold);
     content += drawText(contactEmail, margin, pageY(596), 8.5, muted);
     content += drawText("(916) 909-0500", 190, pageY(596), 8.5, muted);
 
