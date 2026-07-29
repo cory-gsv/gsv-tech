@@ -157,7 +157,7 @@ function paethPredictor(left: number, above: number, upperLeft: number) {
 }
 
 function pdfLogoImageObject() {
-  const png = readFileSync(join(process.cwd(), "public/portal-app/assets/gsv-logo.png"));
+  const png = readFileSync(join(process.cwd(), "public/billing-app/assets/gsv-bridge-mark.png"));
   let offset = 8;
   let width = 0;
   let height = 0;
@@ -226,7 +226,7 @@ function pdfLogoImageObject() {
       const sourceIndex = (sourceY * width + sourceX) * 4;
       const targetIndex = (targetY * imageWidth + targetX) * 3;
       const alpha = raw[sourceIndex + 3] / 255;
-      const logoBackground = 69;
+      const logoBackground = 255;
       rgb[targetIndex] = Math.round(raw[sourceIndex] * alpha + logoBackground * (1 - alpha));
       rgb[targetIndex + 1] = Math.round(raw[sourceIndex + 1] * alpha + logoBackground * (1 - alpha));
       rgb[targetIndex + 2] = Math.round(raw[sourceIndex + 2] * alpha + logoBackground * (1 - alpha));
@@ -271,7 +271,7 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
   }
 
   function drawText(value: string, x: number, y: number, size = 11, color = ink, font = "F1") {
-    return `BT /${font} ${size} Tf ${color} rg ${x} ${y} Td (${text(value)}) Tj ET\n`;
+    return `BT /${font} ${size} Tf 0 Tc ${color} rg ${x} ${y} Td (${text(value)}) Tj ET\n`;
   }
 
   function drawTextRight(value: string, x: number, y: number, width: number, size = 11, color = ink, font = "F1") {
@@ -280,6 +280,14 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
 
   function drawTextCenter(value: string, x: number, y: number, width: number, size = 11, color = ink, font = "F1") {
     return drawText(value, centerX(value, x, width, size), y, size, color, font);
+  }
+
+  function trackedWidth(value: string, size: number, tracking: number) {
+    return value.length * size * 0.62 + Math.max(0, value.length - 1) * tracking;
+  }
+
+  function drawTrackedText(value: string, x: number, y: number, size: number, tracking: number, color = ink, font = "F2") {
+    return `BT /${font} ${size} Tf ${tracking} Tc ${color} rg ${x} ${y} Td (${text(value)}) Tj ET\n`;
   }
 
   function rect(x: number, y: number, width: number, height: number, fill = "", stroke = line) {
@@ -299,12 +307,6 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
   function drawLogo(x: number, y: number, width: number) {
     const height = width * (logo.height / logo.width);
     return `q ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
-  }
-
-  function drawLogoMark(x: number, y: number, width: number) {
-    const height = width * (logo.height / logo.width);
-    const cropBottom = height * 0.23;
-    return `q ${x} ${y + cropBottom} ${width} ${height - cropBottom} re W n ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
   }
 
   function wrapLines(value: string, width: number, size: number) {
@@ -380,10 +382,20 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
     content += rect(0, pageY(756), page.width, 36, headerFill, headerFill);
     content += drawText("MANAGED IT SERVICES  /  CYBERSECURITY", margin, pageY(770), 8, gold, "F2");
-    content += rect(margin, pageY(618), 270, 118, headerFill, headerFill);
-    content += drawLogoMark(105, pageY(664), 140);
-    content += drawText("GOLDEN STATE", 61, pageY(638), 11, white, "F2");
-    content += drawText("VISIONS", 162, pageY(638), 11, gold, "F2");
+    const brandX = margin;
+    const brandW = 270;
+    const markW = 140;
+    const brandSize = 10.5;
+    const brandTracking = brandSize * 0.17;
+    const brandGap = brandSize * 1.1;
+    const primaryLabel = "GOLDEN STATE";
+    const accentLabel = "VISIONS";
+    const primaryW = trackedWidth(primaryLabel, brandSize, brandTracking);
+    const accentW = trackedWidth(accentLabel, brandSize, brandTracking);
+    const wordmarkX = brandX + (brandW - primaryW - brandGap - accentW) / 2;
+    content += drawLogo(brandX + (brandW - markW) / 2, pageY(668), markW);
+    content += drawTrackedText(primaryLabel, wordmarkX, pageY(638), brandSize, brandTracking, headerFill);
+    content += drawTrackedText(accentLabel, wordmarkX + primaryW + brandGap, pageY(638), brandSize, brandTracking, gold);
     content += drawText(contactEmail, margin, pageY(596), 8.5, muted);
     content += drawText("(916) 909-0500", 190, pageY(596), 8.5, muted);
 
