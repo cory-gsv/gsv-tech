@@ -38,6 +38,7 @@ type GraphSku = {
   skuId?: string;
   skuPartNumber?: string;
   capabilityStatus?: string;
+  consumedUnits?: number;
   prepaidUnits?: {
     enabled?: number;
     warning?: number;
@@ -147,7 +148,7 @@ export async function GET(request: Request) {
     const accessToken = await graphToken(tenantKey);
     const skus = await graphGetAll<GraphSku>(
       accessToken,
-      "/subscribedSkus?$select=skuId,skuPartNumber,capabilityStatus,prepaidUnits",
+      "/subscribedSkus?$select=skuId,skuPartNumber,capabilityStatus,consumedUnits,prepaidUnits",
     );
     const skuLookup = new Map(
       skus
@@ -226,6 +227,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       source: "Microsoft Graph",
       pulledAt: new Date().toISOString(),
+      subscriptions: skus.map((sku) => ({
+        skuPartNumber: sku.skuPartNumber || "",
+        name: friendlySkuName(sku.skuPartNumber || ""),
+        status: sku.capabilityStatus || "",
+        consumed: Number(sku.consumedUnits || 0),
+        enabled: Number(sku.prepaidUnits?.enabled || 0),
+        warning: Number(sku.prepaidUnits?.warning || 0),
+        suspended: Number(sku.prepaidUnits?.suspended || 0),
+        lockedOut: Number(sku.prepaidUnits?.lockedOut || 0),
+      })),
       rows,
     });
   } catch (error) {

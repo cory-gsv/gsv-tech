@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260728-231";
+const portalBuild = "portal-20260728-232";
 const portalIsLocalHost = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
@@ -120,6 +120,9 @@ const defaultData = {
       ],
       licenseAuditBilling: true,
       m365IncludedInMsp: true,
+      directMicrosoftRates: {
+        O365_BUSINESS_PREMIUM: 12.50
+      },
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -366,7 +369,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "m365IncludedInMsp", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "m365MarkupPercent", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "m365IncludedInMsp", "directMicrosoftRates", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "m365MarkupPercent", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = structuredClone(record[field]);
             changed = true;
@@ -624,6 +627,23 @@ function migrateDefaultRecords() {
           : "";
       });
     state.billingMigrations.moxieTenantCalculatedBillingV3 = new Date().toISOString();
+    changed = true;
+  }
+  if (!state.billingMigrations.moxieProjectedMicrosoftCreditV4) {
+    state.invoices
+      .filter(invoice =>
+        invoice.clientId === "client_moxie" &&
+        invoice.type === "Monthly MSP" &&
+        String(invoice.status || "").toLowerCase() !== "paid"
+      )
+      .forEach(invoice => {
+        invoice.items = (invoice.items || []).filter(item =>
+          !/Microsoft 365 licensing|Microsoft-direct bill|Moxie-paid direct Microsoft licenses/i.test(item.description || "")
+        );
+        const credit = projectedMicrosoftDirectCreditItem("client_moxie", invoice.month);
+        if (credit) invoice.items.push(credit);
+      });
+    state.billingMigrations.moxieProjectedMicrosoftCreditV4 = new Date().toISOString();
     changed = true;
   }
   if (!Array.isArray(state.vaultDocuments)) {
@@ -7977,6 +7997,63 @@ function aggregatedPax8Subscriptions(pax8) {
   }, new Map()).values()];
 }
 
+function pax8QuantityForMicrosoftSku(pax8, skuPartNumber) {
+  const sku = String(skuPartNumber || "").toUpperCase();
+  return aggregatedPax8Subscriptions(pax8)
+    .filter(row => {
+      const product = String(row.productName || "").toLowerCase();
+      if (sku === "O365_BUSINESS_PREMIUM") return /business standard/.test(product) && !/no teams/.test(product);
+      if (sku === "EXCHANGESTANDARD") return /exchange online/.test(product) && /plan 1/.test(product);
+      if (sku === "MICROSOFT_365_COPILOT_FOR_BUSINESS") return /copilot business/.test(product);
+      return false;
+    })
+    .reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+}
+
+function projectedMicrosoftDirectCreditItem(clientId, month) {
+  const client = clientById(clientId);
+  const audit = latestAudit(clientId, month);
+  const pax8 = latestPax8Costs(clientId, month);
+  const rates = client?.directMicrosoftRates || {};
+  if (!client?.m365IncludedInMsp || !audit || !pax8 || !Object.keys(rates).length) return null;
+  const breakdown = (audit.subscriptions || []).flatMap(subscription => {
+    const sku = String(subscription.skuPartNumber || "").toUpperCase();
+    const unitRate = Number(rates[sku] || 0);
+    if (!unitRate || String(subscription.status || "").toLowerCase() !== "enabled") return [];
+    const tenantQuantity = Number(subscription.enabled || 0);
+    const pax8Quantity = pax8QuantityForMicrosoftSku(pax8, sku);
+    const directQuantity = Math.max(0, tenantQuantity - pax8Quantity);
+    if (!directQuantity) return [];
+    return [{
+      clientId,
+      clientName: client.name,
+      productName: subscription.name || sku,
+      purchasedCount: directQuantity,
+      unitPartnerCost: unitRate,
+      monthlyPartnerCost: currencyAmount(directQuantity * unitRate),
+      source: "Microsoft Direct projection"
+    }];
+  });
+  const projectedTotal = currencyAmount(breakdown.reduce((sum, row) => sum + row.monthlyPartnerCost, 0));
+  if (!projectedTotal) return null;
+  const creditMonthDate = new Date(`${month}-01T12:00:00`);
+  creditMonthDate.setMonth(creditMonthDate.getMonth() + 1);
+  const creditMonth = creditMonthDate.toLocaleDateString("en-US", {
+    month: "long",
+    timeZone: "America/Los_Angeles"
+  });
+  return {
+    description: `Credit: projected ${creditMonth} Microsoft-direct bill`,
+    qty: 1,
+    unitCost: projectedTotal,
+    rate: -projectedTotal,
+    adminClientId: clientId,
+    adminCostSource: "Microsoft tenant quantity minus active Pax8 subscriptions",
+    adminCostPulledAt: audit.pulledAt || audit.createdAt || "",
+    adminLicenseBreakdown: breakdown
+  };
+}
+
 function clientLicensingPanel(client, audit, pax8) {
   const users = Array.isArray(audit?.rows) ? audit.rows : [];
   const subscriptions = aggregatedPax8Subscriptions(pax8);
@@ -8814,7 +8891,10 @@ function createInvoiceFromAudit() {
     month: audit.month,
     status: audit.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
-    items: auditInvoiceItems(audit),
+    items: [
+      ...auditInvoiceItems(audit),
+      ...[projectedMicrosoftDirectCreditItem(audit.clientId, audit.month)].filter(Boolean)
+    ],
     notes: audit.reviewCount ? `${audit.reviewCount} Microsoft 365 audit rows need review before sending.` : ""
   };
   state.invoices.push(invoice);
@@ -10577,8 +10657,12 @@ function monthlyInvoiceItemsForBillingClient(client, month) {
       description: `${sourceClient.name}: ${item.description}`
     }));
   });
+  const directMicrosoftCredits = sourceIds
+    .map(sourceId => projectedMicrosoftDirectCreditItem(sourceId, month))
+    .filter(Boolean);
   return [
     ...serviceItems,
+    ...directMicrosoftCredits,
     ...microsoft365BillingItemsForBillingClient(client, month)
   ];
 }
@@ -12992,6 +13076,7 @@ async function pullMicrosoft365Audit() {
     const audit = buildAudit(clientId, month, data.rows || []);
     audit.source = data.source || "Microsoft Graph";
     audit.pulledAt = data.pulledAt || new Date().toISOString();
+    audit.subscriptions = data.subscriptions || [];
     state.audits365 = state.audits365.filter(existing => !(existing.clientId === clientId && existing.month === month));
     state.audits365.push(audit);
     saveState();
@@ -13020,6 +13105,7 @@ async function pullMicrosoft365AuditForClient(clientId, month) {
   const audit = buildAudit(clientId, month, data.rows || []);
   audit.source = data.source || "Microsoft Graph";
   audit.pulledAt = data.pulledAt || new Date().toISOString();
+  audit.subscriptions = data.subscriptions || [];
   state.audits365 = state.audits365.filter(existing => !(existing.clientId === clientId && existing.month === month));
   state.audits365.push(audit);
   return audit;

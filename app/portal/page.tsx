@@ -90,5 +90,5 @@ export default async function PortalPage({ searchParams }: PortalPageProps) {
 
   // Run the portal as the top-level document. A full-screen iframe introduced
   // an extra focus boundary that could swallow the first pointer interaction.
-  redirect("/portal-app/index.html?v=portal-20260728-227")
+  redirect("/portal-app/index.html?v=portal-20260728-232")
 }
