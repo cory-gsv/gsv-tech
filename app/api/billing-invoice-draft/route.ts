@@ -383,7 +383,7 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     content += rect(0, pageY(756), page.width, 36, headerFill, headerFill);
     content += drawText("MANAGED IT SERVICES  /  CYBERSECURITY", margin, pageY(770), 8, gold, "F2");
     const brandX = margin;
-    const brandW = 270;
+    const brandW = 230;
     const markW = 140;
     const brandSize = 10.5;
     const brandTracking = brandSize * 0.17;
