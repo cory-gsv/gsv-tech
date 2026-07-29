@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260728-228";
+const portalBuild = "portal-20260728-230";
 const portalIsLocalHost = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
@@ -118,6 +118,7 @@ const defaultData = {
         { phrase: "email only", license: "Exchange Online Plan 1" },
         { phrase: "mailbox", license: "Exchange Online Plan 1" }
       ],
+      licenseAuditBilling: false,
       mspRates: {
         fullUser: 70,
         lightUser: 20,
@@ -247,7 +248,7 @@ const defaultData = {
     { id: "svc_moxie_light", clientId: "client_moxie", name: "Monthly IT (Light User)", qty: 25, rate: 20, active: true },
     { id: "svc_moxie_service", clientId: "client_moxie", name: "Monthly IT (Service Account)", qty: 1, rate: 10, active: true },
     { id: "svc_moxie_copilot", clientId: "client_moxie", name: "Copilot Add-on license billing", qty: 2, rate: 30, active: true },
-    { id: "svc_moxie_credit", clientId: "client_moxie", name: "Credit: Moxie-paid direct Microsoft licenses", qty: 1, rate: -164, active: true },
+    { id: "svc_moxie_credit", clientId: "client_moxie", name: "Credit: Moxie-paid direct Microsoft licenses", qty: 1, rate: -164, active: false },
     { id: "svc_nyssco_monthly_it", clientId: "client_nyssco", name: "Monthly IT Support", qty: 1, rate: 2000, active: true },
     { id: "svc_nyssco_backup", clientId: "client_nyssco", name: "Managed offsite backup protection", qty: 1, rate: 175, active: true },
     { id: "svc_nyssco_o365", clientId: "client_nyssco", name: "Office 365", qty: 1, rate: 150, active: true },
@@ -512,6 +513,81 @@ function migrateDefaultRecords() {
   }
   if (!state.clientDashboardDismissals || typeof state.clientDashboardDismissals !== "object" || Array.isArray(state.clientDashboardDismissals)) {
     state.clientDashboardDismissals = {};
+    changed = true;
+  }
+  if (!state.billingMigrations || typeof state.billingMigrations !== "object" || Array.isArray(state.billingMigrations)) {
+    state.billingMigrations = {};
+    changed = true;
+  }
+  if (!state.billingMigrations.moxieContractQuantitiesV1) {
+    const moxieClient = state.clients.find(client => client.id === "client_moxie");
+    if (moxieClient) {
+      moxieClient.licenseAuditBilling = false;
+    }
+    const contractedItems = {
+      svc_moxie_full: { qty: 7, rate: 70 },
+      svc_moxie_light: { qty: 25, rate: 20 },
+      svc_moxie_service: { qty: 1, rate: 10 },
+      svc_moxie_copilot: { qty: 2, rate: 30 },
+      svc_moxie_credit: { qty: 1, rate: -164 },
+    };
+    state.serviceAgreements.forEach(service => {
+      const contracted = contractedItems[service.id];
+      if (!contracted) return;
+      service.qty = contracted.qty;
+      service.rate = contracted.rate;
+      service.active = true;
+    });
+    const invoiceItemsByDescription = {
+      "Monthly IT (Full User)": contractedItems.svc_moxie_full,
+      "Monthly IT (Light User)": contractedItems.svc_moxie_light,
+      "Monthly IT (Service Account)": contractedItems.svc_moxie_service,
+      "Copilot Add-on license billing": contractedItems.svc_moxie_copilot,
+      "Credit: Moxie-paid direct Microsoft licenses": contractedItems.svc_moxie_credit,
+    };
+    state.invoices
+      .filter(invoice =>
+        invoice.clientId === "client_moxie" &&
+        invoice.type === "Monthly MSP" &&
+        invoice.month === "2026-07" &&
+        String(invoice.status || "").toLowerCase() !== "paid"
+      )
+      .forEach(invoice => {
+        (invoice.items || []).forEach(item => {
+          const contracted = invoiceItemsByDescription[item.description];
+          if (!contracted) return;
+          item.qty = contracted.qty;
+          item.rate = contracted.rate;
+        });
+      });
+    state.billingMigrations.moxieContractQuantitiesV1 = new Date().toISOString();
+    changed = true;
+  }
+  if (!state.billingMigrations.moxieBundledMicrosoft365V2) {
+    const moxieClient = state.clients.find(client => client.id === "client_moxie");
+    if (moxieClient) moxieClient.licenseAuditBilling = false;
+    state.serviceAgreements.forEach(service => {
+      if (service.clientId !== "client_moxie") return;
+      if (
+        service.id === "svc_moxie_credit" ||
+        /Microsoft 365 licensing|Moxie-paid direct Microsoft licenses/i.test(service.name || "")
+      ) {
+        service.active = false;
+      }
+    });
+    state.invoices
+      .filter(invoice =>
+        invoice.clientId === "client_moxie" &&
+        invoice.type === "Monthly MSP" &&
+        String(invoice.status || "").toLowerCase() !== "paid"
+      )
+      .forEach(invoice => {
+        invoice.items = (invoice.items || []).filter(item =>
+          !/Microsoft 365 licensing|Moxie-paid direct Microsoft licenses/i.test(item.description || "")
+        );
+        invoice.notes = "";
+      });
+    state.billingMigrations.moxieBundledMicrosoft365V2 = new Date().toISOString();
     changed = true;
   }
   if (!Array.isArray(state.vaultDocuments)) {
