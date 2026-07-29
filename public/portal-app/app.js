@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260722-219";
+const portalBuild = "portal-20260728-227";
 const portalIsLocalHost = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
@@ -163,6 +163,7 @@ const defaultData = {
         serviceAccount: 0,
         copilot: 0
       },
+      m365MarkupPercent: 40,
       ninjaOnePricing: [
         { name: "Ninja MSP Pro with Bitdefender GravityZone", qtySource: "api:endpoints", qty: 0, unitCost: 4.6, active: true },
         { name: "Ninja Data Protection Server", qtySource: "fixed", qty: 3, unitCost: 20, active: true },
@@ -363,7 +364,7 @@ function migrateDefaultRecords() {
         state[key].push(structuredClone(record));
         changed = true;
       } else if (key === "clients") {
-        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
+        for (const field of ["m365TenantKey", "pax8CompanyId", "ninjaOneOrgId", "licenseAuditBilling", "internalCosts", "ninjaOnePricing", "ccEmail", "billingClientId", "userAutomationEnabled", "approvedRequesterEmails", "defaultM365License", "licenseRequestAliases", "m365MarkupPercent", "networkAtlasPath", "networkLocations", "networkLinks", "networkSnapshots", "topologyEndpointLocations"]) {
           if (existing[field] === undefined && record[field] !== undefined) {
             existing[field] = structuredClone(record[field]);
             changed = true;
@@ -911,16 +912,28 @@ function pax8CostTotal(clientId, month = today.slice(0, 7)) {
   return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPartnerCost || 0);
 }
 
-function markedUpMicrosoft365Amount(amount) {
-  return Math.round(Number(amount || 0) * 1.5 * 100) / 100;
+function microsoft365MarkupPercent(clientId) {
+  const client = clientById(clientId);
+  const billingClient = billingClientFor(clientId);
+  const configured = client?.m365MarkupPercent ?? billingClient?.m365MarkupPercent;
+  return Number.isFinite(Number(configured)) ? Number(configured) : 50;
 }
 
-function pax8CustomerTotal(clientId, month = today.slice(0, 7)) {
-  return Number(latestPax8Costs(clientId, month)?.totals?.monthlyPrice || 0);
+function markedUpMicrosoft365Amount(amount, clientId) {
+  return Math.round(Number(amount || 0) * (1 + microsoft365MarkupPercent(clientId) / 100) * 100) / 100;
+}
+
+function currencyAmount(amount) {
+  return Math.round((Number(amount || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function currencyInputValue(amount, blankValue = "") {
+  if (amount === undefined || amount === null || amount === "") return blankValue;
+  return currencyAmount(amount).toFixed(2);
 }
 
 function microsoft365BillingTotal(clientId, month = today.slice(0, 7)) {
-  return markedUpMicrosoft365Amount(pax8CostTotal(clientId, month));
+  return markedUpMicrosoft365Amount(pax8CostTotal(clientId, month), clientId);
 }
 
 function currentBillingTotal(clientId, month = today.slice(0, 7)) {
@@ -3769,7 +3782,7 @@ function openClientDashboard(clientId, tab = selectedClientDashboardTab || "dash
   const client = clientById(clientId);
   if (!client) return;
   selectedClientId = client.id;
-  selectedClientDashboardTab = ["dashboard", "details", "users", "network", "files", "invoices", "quotes"].includes(tab) ? tab : "dashboard";
+  selectedClientDashboardTab = ["dashboard", "details", "users", "licensing", "network", "files", "invoices", "quotes"].includes(tab) ? tab : "dashboard";
   setView("client-dashboard");
 }
 
@@ -7831,6 +7844,113 @@ function clientMicrosoftUsersPanel(client, audit) {
     </section>`;
 }
 
+function aggregatedPax8Subscriptions(pax8) {
+  const rows = Array.isArray(pax8?.rows)
+    ? pax8.rows.filter(row => Number(row.quantity || 0) > 0)
+    : [];
+  return [...rows.reduce((groups, row) => {
+    const key = normalizedProductName(row.productName) || String(row.productName || "license").toLowerCase();
+    const existing = groups.get(key);
+    if (existing) {
+      existing.quantity += Number(row.quantity || 0);
+      existing.monthlyPartnerCost += Number(row.monthlyPartnerCost || 0);
+      return groups;
+    }
+    groups.set(key, {
+      ...row,
+      quantity: Number(row.quantity || 0),
+      monthlyPartnerCost: Number(row.monthlyPartnerCost || 0),
+    });
+    return groups;
+  }, new Map()).values()];
+}
+
+function clientLicensingPanel(client, audit, pax8) {
+  const users = Array.isArray(audit?.rows) ? audit.rows : [];
+  const subscriptions = aggregatedPax8Subscriptions(pax8);
+  const markupPercent = microsoft365MarkupPercent(client.id);
+  const partnerCost = subscriptions.reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
+  const customerPrice = markedUpMicrosoft365Amount(partnerCost, client.id);
+  const licensedUsers = users.filter(row => row.licenses && !/^unlicensed$/i.test(String(row.licenses))).length;
+  const enabledLicensedUsers = users.filter(row =>
+    row.licenses &&
+    !/^unlicensed$/i.test(String(row.licenses)) &&
+    row.accountEnabled !== false &&
+    row.status !== "Excluded"
+  ).length;
+  const licenseSource = licenseName => {
+    if (!licenseName || /^unlicensed$/i.test(String(licenseName))) return "Unlicensed";
+    if (!pax8) return client.pax8CompanyId ? "Awaiting Pax8 pull" : "Microsoft Direct";
+    return subscriptions.some(row => m365LicenseEquivalent(row.productName, licenseName)) ? "Pax8" : "Microsoft Direct";
+  };
+  return `
+    <div class="client-tab-head">
+      <div><h3>Licensing</h3><p class="subtle">Microsoft 365 accounts, assigned licenses, procurement source, and current partner cost for this company only.</p></div>
+      <button type="button" class="primary" data-audit-services="${escapeHtml(client.id)}">Refresh licensing</button>
+    </div>
+    <div class="client-health-line">
+      <article class="client-health-item"><span>Assigned licenses</span><strong>${licensedUsers}</strong><small>${enabledLicensedUsers} enabled · ${users.length} total Microsoft 365 accounts</small></article>
+      <article class="client-health-item"><span>Pax8 subscriptions</span><strong>${subscriptions.length}</strong><small>${pax8?.pulledAt ? `Updated ${escapeHtml(new Date(pax8.pulledAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }))}` : "Not pulled yet"}</small></article>
+      <article class="client-health-item"><span>Partner cost</span><strong>${costMoney.format(partnerCost)}</strong><small>Pax8 monthly cost</small></article>
+      <article class="client-health-item"><span>Customer price</span><strong>${money.format(customerPrice)}</strong><small>Partner cost + ${markupPercent}%</small></article>
+    </div>
+    <section class="client-dashboard-card">
+      <div class="card-head"><div><h3>License Inventory</h3><p class="subtle">Each product appears once. Pax8 seats purchased are compared with licenses currently assigned in Microsoft 365.</p></div></div>
+      <div class="client-users-table-wrap">
+        <table class="client-users-table">
+          <thead><tr><th>License type</th><th class="num">Pax8 seats purchased</th><th class="num">Assigned in Microsoft 365</th><th class="num">Unassigned seats</th><th>Status</th><th class="num">Partner cost / seat</th><th class="num">Monthly Pax8 cost</th><th class="num">Customer charge</th></tr></thead>
+          <tbody>
+            ${subscriptions.length ? subscriptions.map(row => {
+              const purchased = Number(row.quantity || 0);
+              const assigned = assignedCountForProduct(audit, row.productName);
+              const unitCost = Number(row.unitPartnerCost || 0);
+              const remaining = assigned === null ? null : purchased - assigned;
+              const status = assigned === null
+                ? ["Assignment data unavailable", "warn"]
+                : remaining < 0
+                  ? [`Over-assigned by ${Math.abs(remaining)}`, "danger"]
+                  : remaining === 0
+                    ? ["Fully assigned", "good"]
+                    : [`${remaining} available`, "normal"];
+              return `<tr>
+                <td>${escapeHtml(row.productName || "Microsoft 365 license")}</td>
+                <td class="num">${purchased}</td>
+                <td class="num">${assigned === null ? "n/a" : assigned}</td>
+                <td class="num">${remaining === null ? "n/a" : Math.max(0, remaining)}</td>
+                <td><span class="badge ${status[1]}">${escapeHtml(status[0])}</span></td>
+                <td class="num">${costMoney.format(unitCost)}</td>
+                <td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td>
+                <td class="num">${money.format(markedUpMicrosoft365Amount(row.monthlyPartnerCost || 0, client.id))}</td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="8">${client.pax8CompanyId ? "No current Pax8 subscription data. Refresh licensing to pull it." : "No Pax8 company is connected to this client."}</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="client-dashboard-card">
+      <div class="card-head"><div><h3>Microsoft 365 Accounts</h3><p class="subtle">License source is matched against this company's current Pax8 subscriptions; unmatched licenses are identified as Microsoft Direct.</p></div></div>
+      <div class="client-users-table-wrap">
+        <table class="client-users-table">
+          <thead><tr><th>User</th><th>Username / email</th><th>Assigned license</th><th>Source</th><th>Status</th></tr></thead>
+          <tbody>
+            ${users.length ? users.map(row => {
+              const source = licenseSource(row.licenses);
+              const enabled = row.accountEnabled !== false && row.status !== "Excluded";
+              return `<tr>
+                <td>${escapeHtml(row.displayName || [row.firstName, row.lastName].filter(Boolean).join(" ") || "—")}</td>
+                <td>${escapeHtml(row.email || row.upn || "—")}</td>
+                <td>${escapeHtml(row.licenses || "Unlicensed")}</td>
+                <td><span class="badge ${source === "Pax8" ? "good" : source === "Microsoft Direct" ? "normal" : "warn"}">${escapeHtml(source)}</span></td>
+                <td><span class="badge ${enabled ? "good" : "warn"}">${enabled ? "Enabled" : "Disabled"}</span></td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="5">No Microsoft 365 users have been pulled for this client.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
 function filterClientMicrosoftUsers() {
   const search = String(document.querySelector("[data-client-users-search]")?.value || "").trim().toLowerCase();
   const type = document.querySelector("[data-client-users-type]")?.value || "all";
@@ -8040,8 +8160,9 @@ function clientDetailDashboard(client) {
           </div>
         </section>
         <section class="client-dashboard-card">
-          <div class="card-head"><h3>Billing Rules</h3></div>
+          <div class="card-head"><h3>Billing Rules</h3><button type="button" data-edit-client="${escapeHtml(client.id)}">Edit Rules</button></div>
           <div class="client-doc-row-list">
+            <article class="client-doc-row"><div><strong>Microsoft 365 markup</strong><span>Pax8 partner cost + ${microsoft365MarkupPercent(client.id)}%</span></div><button type="button" class="badge normal" data-edit-client="${escapeHtml(client.id)}">Edit</button></article>
             <article class="client-doc-row"><div><strong>Monthly MSP rates</strong><span>Full user, light user, service account, Copilot</span></div><span class="badge normal">Edit form</span></article>
             <article class="client-doc-row"><div><strong>Internal costs</strong><span>${costs.length ? `${costs.length} active cost${costs.length === 1 ? "" : "s"}` : "No internal costs tracked"}</span></div><span class="badge normal">Client-level</span></article>
           </div>
@@ -8049,6 +8170,7 @@ function clientDetailDashboard(client) {
       </div>
     `,
     users: clientMicrosoftUsersPanel(client, audit),
+    licensing: clientLicensingPanel(client, audit, pax8),
     network: `
       <div class="ticket-detail-tabs network-atlas-tabs client-network-tabs">
         ${networkAtlasTabButton("overview", "Overview")}
@@ -8190,6 +8312,7 @@ function clientDetailDashboard(client) {
         ${clientDashboardTabButton("dashboard", "Dashboard")}
         ${clientDashboardTabButton("details", "Client Details")}
         ${clientDashboardTabButton("users", "Users")}
+        ${clientDashboardTabButton("licensing", "Licensing")}
         ${clientDashboardTabButton("network", "Infrastructure")}
         ${clientDashboardTabButton("files", "Files")}
         ${clientDashboardTabButton("invoices", "Invoices")}
@@ -8368,6 +8491,7 @@ function assignedCountForProduct(audit, productName) {
   if (!productWords.length) return null;
   return audit.rows.filter(row => {
     const license = normalizedProductName(row.licenses);
+    if (!license || license === "unlicensed") return false;
     return productWords.every(word => license.includes(word)) || license.includes(product) || product.includes(license);
   }).length;
 }
@@ -8568,7 +8692,7 @@ function createInvoiceFromAudit() {
     number: `GSV-${slug}-${audit.month}`,
     clientId: audit.clientId,
     date: today,
-    dueDate: addDays(today, 15),
+    dueDate: firstDayAfterInvoiceMonth(audit.month),
     month: audit.month,
     status: audit.reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
@@ -9044,12 +9168,13 @@ function editorFields(mode, item) {
       <div class="field full pricing-editor">
         <h3>Monthly MSP License Pricing</h3>
         <div class="pricing-grid">
+          ${field("m365MarkupPercent", "Microsoft 365 Markup %", item.m365MarkupPercent ?? microsoft365MarkupPercent(item.id), "number")}
           ${field("rateFullUser", "Full User", rates.fullUser, "number")}
           ${field("rateLightUser", "Light User", rates.lightUser, "number")}
           ${field("rateServiceAccount", "Service Account", rates.serviceAccount, "number")}
           ${field("rateCopilot", "Copilot Add-on", rates.copilot, "number")}
         </div>
-        <p class="subtle">New 365 audits and generated invoices use these rates. Existing invoices keep their saved line-item prices.</p>
+        <p class="subtle">Microsoft 365 customer pricing is calculated from Pax8 partner cost using this markup. New generated invoices use the saved rule; existing invoices keep their saved line-item values.</p>
       </div>
       <div class="field full pricing-editor">
         <h3>NinjaOne Internal Cost Pricing</h3>
@@ -9107,11 +9232,11 @@ function editorFields(mode, item) {
       </div>
       <div class="invoice-edit-section full">
         <h3>${mode === "quote" ? escapeHtml(item.title || "Project Quote") : "Monthly IT Services"}</h3>
-        <div class="line-editor ${mode === "quote" ? "quote-line-editor" : ""}" id="line-editor" data-mode="${mode}">
+        <div class="line-editor ${mode === "quote" ? "quote-line-editor" : "invoice-cost-line-editor"}" id="line-editor" data-mode="${mode}">
           <div class="line-editor-head">
             ${mode === "quote"
               ? "<span></span><span>Type</span><span>Description</span><span>Item Detail</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Taxable</span><span>Total</span><span></span>"
-              : "<span></span><span>Description</span><span>Item Detail</span><span>Qty</span><span>Unit Price</span><span>Amount</span><span></span>"}
+              : "<span></span><span>Description</span><span>Item Detail</span><span>Qty</span><span>Unit Cost</span><span>Mark Up %</span><span>Unit Price</span><span>Amount</span><span></span>"}
           </div>
           <div id="line-editor-rows">
             ${lineEditorRows(item.items || [], mode)}
@@ -9275,6 +9400,7 @@ function quickAddClientFromDocument() {
     phone: "",
     internalCosts: [],
     mspRates: { fullUser: 70, lightUser: 20, serviceAccount: 10, copilot: 30 },
+    m365MarkupPercent: 50,
     licenseAuditBilling: true
   };
   state.clients.push(newClient);
@@ -9307,7 +9433,7 @@ function lineEditorRow(item = {}, mode = editing.mode) {
   if (mode === "quote") {
     const type = quoteLineType(item);
     return `
-      <div class="line-editor-row quote-line-row" draggable="true">
+      <div class="line-editor-row quote-line-row pricing-line-row" draggable="true">
         <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
         <select name="itemType" aria-label="Line Type">
           <option value="line" ${type === "line" ? "selected" : ""}>Line</option>
@@ -9317,9 +9443,9 @@ function lineEditorRow(item = {}, mode = editing.mode) {
         <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
         <input name="itemDetail" aria-label="Item Detail" value="${escapeHtml(item.detail || item.itemDetail || "")}" placeholder="Model, SKU, license, or ordering note">
         <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
-        <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(item.unitCost ?? "")}">
+        <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(currencyInputValue(item.unitCost))}">
         <input name="itemMarkup" aria-label="Mark Up Percent" type="number" step="0.01" value="${escapeHtml(item.markupPercent ?? item.markup ?? "")}">
-        <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(rate)}">
+        <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(currencyInputValue(rate, "0.00"))}">
         <label class="line-taxable"><input name="itemTaxable" aria-label="Taxable" type="checkbox" ${item.taxable ? "checked" : ""}></label>
         <output class="line-amount">${money.format(Number(item.qty || 0) * rate)}</output>
         <button type="button" class="icon danger" data-remove-line aria-label="Remove line item">×</button>
@@ -9327,12 +9453,14 @@ function lineEditorRow(item = {}, mode = editing.mode) {
     `;
   }
   return `
-    <div class="line-editor-row" draggable="true">
+    <div class="line-editor-row pricing-line-row" draggable="true">
       <button type="button" class="drag-handle" aria-label="Drag to reorder line item">☰</button>
       <input name="itemDescription" aria-label="Description" value="${escapeHtml(item.description || "")}">
       <input name="itemDetail" aria-label="Item Detail" value="${escapeHtml(item.detail || item.itemDetail || "")}" placeholder="Model, SKU, license, or ordering note">
       <input name="itemQty" aria-label="Quantity" type="number" step="1" min="0" value="${escapeHtml(item.qty ?? 1)}">
-      <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(item.rate ?? 0)}">
+      <input name="itemUnitCost" aria-label="Unit Cost" type="number" step="0.01" value="${escapeHtml(currencyInputValue(item.unitCost))}">
+      <input name="itemMarkup" aria-label="Mark Up Percent" type="number" step="0.01" value="${escapeHtml(item.markupPercent ?? item.markup ?? "")}">
+      <input name="itemRate" aria-label="Unit Price" type="number" step="0.01" value="${escapeHtml(currencyInputValue(item.rate, "0.00"))}">
       <output class="line-amount">${money.format(Number(item.qty || 0) * Number(item.rate || 0))}</output>
       <button type="button" class="icon danger" data-remove-line aria-label="Remove line item">×</button>
     </div>
@@ -9341,13 +9469,17 @@ function lineEditorRow(item = {}, mode = editing.mode) {
 
 function editorLineItems() {
   return [...document.querySelectorAll("#line-editor-rows .line-editor-row")]
-    .map(row => {
+    .map((row, index) => {
+      const original = editing?.items?.[index] || {};
       const item = {
         description: row.querySelector('[name="itemDescription"]').value.trim(),
         detail: row.querySelector('[name="itemDetail"]')?.value.trim() || "",
         qty: Number(row.querySelector('[name="itemQty"]').value || 0),
         rate: Number(row.querySelector('[name="itemRate"]').value || 0)
       };
+      for (const key of ["adminClientId", "adminCostSource", "adminCostPulledAt", "adminLicenseBreakdown"]) {
+        if (original[key] !== undefined) item[key] = structuredClone(original[key]);
+      }
       const type = row.querySelector('[name="itemType"]');
       const unitCost = row.querySelector('[name="itemUnitCost"]');
       const markup = row.querySelector('[name="itemMarkup"]');
@@ -9361,8 +9493,8 @@ function editorLineItems() {
     .filter(item => item.description || item.detail || item.qty || item.rate || item.unitCost || item.markupPercent);
 }
 
-function syncQuoteLineMarkup(row, changedInput) {
-  if (!row.classList.contains("quote-line-row")) return;
+function syncLineMarkup(row, changedInput) {
+  if (!row.classList.contains("pricing-line-row")) return;
   const unitCostInput = row.querySelector('[name="itemUnitCost"]');
   const markupInput = row.querySelector('[name="itemMarkup"]');
   const rateInput = row.querySelector('[name="itemRate"]');
@@ -9384,7 +9516,7 @@ function updateEditorTotal(changedInput) {
   let subtotal = 0;
   let taxableSubtotal = 0;
   document.querySelectorAll("#line-editor-rows .line-editor-row").forEach(row => {
-    syncQuoteLineMarkup(row, changedInput && row.contains(changedInput) ? changedInput : null);
+    syncLineMarkup(row, changedInput && row.contains(changedInput) ? changedInput : null);
     const qty = Number(row.querySelector('[name="itemQty"]').value || 0);
     const rate = Number(row.querySelector('[name="itemRate"]').value || 0);
     const amount = qty * rate;
@@ -9449,6 +9581,14 @@ function addDays(dateText, days) {
   return d.toISOString().slice(0, 10);
 }
 
+function firstDayAfterInvoiceMonth(month) {
+  const match = String(month || "").match(/^(\d{4})-(\d{2})$/);
+  if (!match) return addDays(today, 15);
+  return new Date(Date.UTC(Number(match[1]), Number(match[2]), 1))
+    .toISOString()
+    .slice(0, 10);
+}
+
 function setEditorError(message = "", fieldName = "") {
   const error = document.getElementById("editor-error");
   if (!error) return;
@@ -9510,6 +9650,7 @@ function saveEditor() {
       defaultM365License: data.defaultM365License || "Microsoft 365 Business Standard",
       licenseRequestAliases: textToLicenseRequestAliases(data.licenseRequestAliasesText || ""),
       licenseAuditBilling: data.licenseAuditBilling === "on",
+      m365MarkupPercent: Number(data.m365MarkupPercent || 0),
       mspRates: {
         fullUser: Number(data.rateFullUser || 0),
         lightUser: Number(data.rateLightUser || 0),
@@ -10203,7 +10344,9 @@ function quoteFromEditor() {
 }
 
 function monthlyInvoiceNumber(client, month) {
-  const slug = (client?.name || "CLIENT").split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const slug = client?.id === "client_nyssco"
+    ? "NYSS"
+    : (client?.name || "CLIENT").split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
   return `GSV-${slug}-${month}`;
 }
 
@@ -10235,17 +10378,32 @@ function microsoft365BillingItemsForBillingClient(client, month) {
   return billingGroupClientIds(billingClient.id).flatMap(sourceId => {
     const sourceClient = clientById(sourceId);
     const pax8 = latestPax8Costs(sourceId, month);
-    const microsoft365Total = (pax8?.rows || [])
-      .filter(row => Number(row.quantity || 0) > 0)
-      .reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
+    const pax8Rows = aggregatedPax8Subscriptions(pax8);
+    const rawMicrosoft365Total = pax8Rows.reduce((sum, row) => sum + Number(row.monthlyPartnerCost || 0), 0);
+    const microsoft365Total = currencyAmount(rawMicrosoft365Total);
     if (!microsoft365Total) return [];
-    const rate = markedUpMicrosoft365Amount(microsoft365Total);
+    const markupPercent = microsoft365MarkupPercent(sourceId);
+    const rate = markedUpMicrosoft365Amount(microsoft365Total, sourceId);
+    const audit = latestAudit(sourceId, month);
     return [{
       description: `Microsoft 365 licensing (${sourceClient.name})`,
       qty: 1,
       unitCost: microsoft365Total,
-      markupPercent: 50,
-      rate
+      markupPercent,
+      rate,
+      adminClientId: sourceId,
+      adminCostSource: pax8.source || "Pax8",
+      adminCostPulledAt: pax8.pulledAt || pax8.createdAt || "",
+      adminLicenseBreakdown: pax8Rows.map(row => ({
+        clientId: sourceId,
+        clientName: sourceClient.name,
+        productName: row.productName || "Microsoft 365 license",
+        purchasedCount: Number(row.quantity || 0),
+        assignedCount: assignedCountForProduct(audit, row.productName),
+        unitPartnerCost: Number(row.unitPartnerCost || 0),
+        monthlyPartnerCost: Number(row.monthlyPartnerCost || 0),
+        markupPercent,
+      }))
     }];
   });
 }
@@ -10317,13 +10475,13 @@ function monthlyInvoiceReviewCount(client, month) {
 }
 
 function createMonthlyInvoiceForClient(client, month) {
-  if (!client) return;
+  if (!client) return null;
   const billingClient = billingClientFor(client.id);
   if (monthlyInvoiceNeedsAudit(client, month)) {
     selectedClientId = client.id;
     setView("clients");
     window.alert("Run Audit Services for this client before generating the monthly MSP invoice.");
-    return;
+    return null;
   }
   const items = monthlyInvoiceItemsForBillingClient(client, month);
   const reviewCount = monthlyInvoiceReviewCount(client, month);
@@ -10334,10 +10492,12 @@ function createMonthlyInvoiceForClient(client, month) {
   const invoice = {
     ...existingInvoice,
     id: existingInvoice?.id || id("inv"),
-    number: existingInvoice?.number || number,
+    number: existingInvoice?.number && !/^GSV-NEW-\d{4}-\d{2}$/.test(existingInvoice.number)
+      ? existingInvoice.number
+      : number,
     clientId: billingClient.id,
     date: today,
-    dueDate: addDays(today, 15),
+    dueDate: firstDayAfterInvoiceMonth(month),
     month,
     status: reviewCount ? "draft" : "ready",
     type: "Monthly MSP",
@@ -10353,6 +10513,7 @@ function createMonthlyInvoiceForClient(client, month) {
   });
   saveState();
   setView("invoices");
+  return invoice;
 }
 
 async function generateMonthlyInvoice(clientId = "", options = {}) {
@@ -10380,7 +10541,8 @@ async function generateMonthlyInvoice(clientId = "", options = {}) {
       return;
     }
   }
-  createMonthlyInvoiceForClient(client, month);
+  const invoice = createMonthlyInvoiceForClient(client, month);
+  if (invoice) previewDocument("invoice", invoice.id, "admin");
 }
 
 async function generateServicesQuote(clientId = "", options = {}) {
@@ -10661,6 +10823,92 @@ function rowMarginAmount(item) {
   return qty * (rate - unitCost);
 }
 
+function adminItemDetail(item) {
+  return item.detail || item.itemDetail || "";
+}
+
+function adminCostPulledLabel(item) {
+  if (!item.adminCostPulledAt) return "";
+  const pulledAt = new Date(item.adminCostPulledAt);
+  return Number.isNaN(pulledAt.getTime())
+    ? ""
+    : pulledAt.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+}
+
+function adminLicenseBreakdownRows(items, month) {
+  return items.flatMap(item => {
+    if (Array.isArray(item.adminLicenseBreakdown) && item.adminLicenseBreakdown.length) {
+      return item.adminLicenseBreakdown.map(row => ({
+        ...row,
+        markupPercent: Number(item.markupPercent ?? row.markupPercent ?? 0),
+      }));
+    }
+    if (!/microsoft\s*365\s+licensing/i.test(item.description || "")) return [];
+    const descriptionClientName = String(item.description || "").match(/\((.+)\)\s*$/)?.[1] || "";
+    const sourceClient = clientById(item.adminClientId) ||
+      state.clients.find(client => client.name.toLowerCase() === descriptionClientName.toLowerCase());
+    if (!sourceClient) return [];
+    const pax8 = latestPax8Costs(sourceClient.id, month);
+    const audit = latestAudit(sourceClient.id, month);
+    const markupPercent = Number(item.markupPercent ?? microsoft365MarkupPercent(sourceClient.id));
+    return aggregatedPax8Subscriptions(pax8).map(row => ({
+      clientId: sourceClient.id,
+      clientName: sourceClient.name,
+      productName: row.productName || "Microsoft 365 license",
+      purchasedCount: Number(row.quantity || 0),
+      assignedCount: assignedCountForProduct(audit, row.productName),
+      unitPartnerCost: Number(row.unitPartnerCost || 0),
+      monthlyPartnerCost: Number(row.monthlyPartnerCost || 0),
+      markupPercent,
+    }));
+  });
+}
+
+function adminLicenseBreakdown(items, month) {
+  const rows = adminLicenseBreakdownRows(items, month);
+  if (!rows.length) return "";
+  return `
+    <section class="admin-license-breakdown">
+      <div class="card-head"><div><h3>Microsoft 365 License Detail</h3><p class="subtle">Admin-only Pax8 quantities and costs supporting the invoice lines above.</p></div></div>
+      <table class="admin-preview-table">
+        <thead><tr><th>Company</th><th>License type</th><th>Source</th><th>Purchased</th><th>Assigned</th><th>Partner cost / license</th><th>Monthly partner cost</th><th>Mark Up %</th><th>Customer charge</th></tr></thead>
+        <tbody>${rows.map(row => `
+          <tr>
+            <td>${escapeHtml(row.clientName || "")}</td>
+            <td>${escapeHtml(row.productName || "")}</td>
+            <td>Pax8</td>
+            <td class="num">${Number(row.purchasedCount || 0)}</td>
+            <td class="num">${row.assignedCount === null ? "n/a" : Number(row.assignedCount || 0)}</td>
+            <td class="num">${costMoney.format(row.unitPartnerCost || 0)}</td>
+            <td class="num">${costMoney.format(row.monthlyPartnerCost || 0)}</td>
+            <td class="num">${Number(row.markupPercent || 0)}</td>
+            <td class="num">${money.format(Math.round(Number(row.monthlyPartnerCost || 0) * (1 + Number(row.markupPercent || 0) / 100) * 100) / 100)}</td>
+          </tr>
+        `).join("")}</tbody>
+      </table>
+    </section>
+  `;
+}
+
+function adminInvoiceItemEvidence(item, month) {
+  const rows = adminLicenseBreakdownRows([item], month);
+  const source = item.adminCostSource || (rows.length ? "Pax8" : "");
+  const pulled = adminCostPulledLabel(item);
+  if (!rows.length && !source && !pulled) return "";
+  return `
+    <div class="admin-evidence">
+      ${(source || pulled) ? `<div class="admin-evidence-source"><strong>${escapeHtml(source || "Source")}</strong>${pulled ? `<span>Pulled ${escapeHtml(pulled)}</span>` : ""}</div>` : ""}
+      ${rows.map(row => `
+        <div class="admin-license-subline">
+          <strong>${escapeHtml(row.productName || "Microsoft 365 license")}</strong>
+          <span>${Number(row.purchasedCount || 0)} Pax8 seat${Number(row.purchasedCount || 0) === 1 ? "" : "s"}</span>
+          <span>${costMoney.format(row.unitPartnerCost || 0)}/seat · ${costMoney.format(row.monthlyPartnerCost || 0)} monthly partner cost</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderAdminQuotePreview(doc, client) {
   const isInvoice = state.invoices.some(invoice => invoice.id === doc.id);
   const subtotal = documentSubtotal(doc);
@@ -10693,6 +10941,7 @@ function renderAdminQuotePreview(doc, client) {
             <th>Type</th>
             <th>Description</th>
             <th>Item Detail</th>
+            <th>Admin License Detail</th>
             <th>Qty</th>
             <th>Unit Cost</th>
             <th>Mark Up %</th>
@@ -10710,7 +10959,8 @@ function renderAdminQuotePreview(doc, client) {
               <tr class="${rowType === "title" ? "admin-section-row" : ""}">
                 <td>${typeLabel}</td>
                 <td>${escapeHtml(item.description || "")}</td>
-                <td>${escapeHtml(item.detail || item.itemDetail || "")}</td>
+                <td>${escapeHtml(adminItemDetail(item))}</td>
+                <td class="admin-source-detail">${adminInvoiceItemEvidence(item, String(doc.date || today).slice(0, 7))}</td>
                 <td class="num">${item.qty ?? ""}</td>
                 <td class="num">${money.format(Number(item.unitCost || 0))}</td>
                 <td class="num">${Number(item.markupPercent || 0)}</td>

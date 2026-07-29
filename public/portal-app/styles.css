@@ -5365,6 +5365,12 @@ button.danger {
   min-width: 1380px;
 }
 
+.invoice-cost-line-editor .line-editor-head,
+.invoice-cost-line-editor .line-editor-row {
+  grid-template-columns: 42px minmax(260px, 1fr) minmax(220px, .72fr) 88px 120px 110px 120px 130px 42px;
+  min-width: 1200px;
+}
+
 .line-editor-head {
   background: var(--soft);
   font-weight: 700;
@@ -5698,7 +5704,7 @@ button.danger {
 
 .admin-preview-table {
   width: 100%;
-  min-width: 1240px;
+  min-width: 1520px;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 13px;
@@ -5729,7 +5735,12 @@ button.danger {
 
 .admin-preview-table th:nth-child(3),
 .admin-preview-table td:nth-child(3) {
-  width: 300px;
+  width: 180px;
+}
+
+.admin-preview-table th:nth-child(4),
+.admin-preview-table td:nth-child(4) {
+  width: 430px;
 }
 
 .admin-preview-table .num {
@@ -5744,6 +5755,70 @@ button.danger {
 .admin-section-row td {
   background: #f8fafc;
   font-weight: 800;
+}
+
+.admin-source-detail {
+  padding: 0 !important;
+}
+
+.admin-evidence-source {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #eef3f8;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-evidence-source span {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.admin-license-subline {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-license-subline:last-child {
+  border-bottom: 0;
+}
+
+.admin-license-subline strong {
+  font-size: 12px;
+}
+
+.admin-license-subline span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.admin-license-breakdown {
+  margin-top: 24px;
+  overflow-x: auto;
+}
+
+.admin-license-breakdown .admin-preview-table {
+  min-width: 1280px;
+  table-layout: auto;
+}
+
+.admin-license-breakdown .admin-preview-table th:nth-child(1),
+.admin-license-breakdown .admin-preview-table td:nth-child(1) {
+  width: 210px;
+}
+
+.admin-license-breakdown .admin-preview-table th:nth-child(2),
+.admin-license-breakdown .admin-preview-table td:nth-child(2) {
+  width: 340px;
+}
+
+.admin-license-breakdown .admin-preview-table th:nth-child(3),
+.admin-license-breakdown .admin-preview-table td:nth-child(3) {
+  width: 90px;
 }
 
 .admin-preview-notes {
