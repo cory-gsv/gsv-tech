@@ -384,8 +384,8 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     content += drawText("MANAGED IT SERVICES  /  CYBERSECURITY", margin, pageY(770), 8, gold, "F2");
     const brandX = margin;
     const brandW = 230;
-    const markW = 140;
-    const brandSize = 10.5;
+    const markW = 110;
+    const brandSize = 9;
     const brandTracking = brandSize * 0.17;
     const brandGap = brandSize * 1.1;
     const primaryLabel = "GOLDEN STATE";
@@ -393,9 +393,9 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     const primaryW = trackedWidth(primaryLabel, brandSize, brandTracking);
     const accentW = trackedWidth(accentLabel, brandSize, brandTracking);
     const wordmarkX = brandX + (brandW - primaryW - brandGap - accentW) / 2;
-    content += drawLogo(brandX + (brandW - markW) / 2, pageY(668), markW);
-    content += drawTrackedText(primaryLabel, wordmarkX, pageY(638), brandSize, brandTracking, headerFill);
-    content += drawTrackedText(accentLabel, wordmarkX + primaryW + brandGap, pageY(638), brandSize, brandTracking, gold);
+    content += drawLogo(brandX + (brandW - markW) / 2, pageY(677), markW);
+    content += drawTrackedText(primaryLabel, wordmarkX, pageY(646), brandSize, brandTracking, headerFill);
+    content += drawTrackedText(accentLabel, wordmarkX + primaryW + brandGap, pageY(646), brandSize, brandTracking, gold);
     content += drawText(contactEmail, margin, pageY(596), 8.5, muted);
     content += drawText("(916) 909-0500", 190, pageY(596), 8.5, muted);
 
