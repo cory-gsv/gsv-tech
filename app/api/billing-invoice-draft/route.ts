@@ -157,7 +157,7 @@ function paethPredictor(left: number, above: number, upperLeft: number) {
 }
 
 function pdfLogoImageObject() {
-  const png = readFileSync(join(process.cwd(), "public/billing-app/assets/gsv-logo.png"));
+  const png = readFileSync(join(process.cwd(), "public/portal-app/assets/gsv-logo.png"));
   let offset = 8;
   let width = 0;
   let height = 0;
@@ -226,9 +226,10 @@ function pdfLogoImageObject() {
       const sourceIndex = (sourceY * width + sourceX) * 4;
       const targetIndex = (targetY * imageWidth + targetX) * 3;
       const alpha = raw[sourceIndex + 3] / 255;
-      rgb[targetIndex] = Math.round(raw[sourceIndex] * alpha + 255 * (1 - alpha));
-      rgb[targetIndex + 1] = Math.round(raw[sourceIndex + 1] * alpha + 255 * (1 - alpha));
-      rgb[targetIndex + 2] = Math.round(raw[sourceIndex + 2] * alpha + 255 * (1 - alpha));
+      const logoBackground = 69;
+      rgb[targetIndex] = Math.round(raw[sourceIndex] * alpha + logoBackground * (1 - alpha));
+      rgb[targetIndex + 1] = Math.round(raw[sourceIndex + 1] * alpha + logoBackground * (1 - alpha));
+      rgb[targetIndex + 2] = Math.round(raw[sourceIndex + 2] * alpha + logoBackground * (1 - alpha));
     }
   }
 
@@ -300,6 +301,12 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     return `q ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
   }
 
+  function drawLogoMark(x: number, y: number, width: number) {
+    const height = width * (logo.height / logo.width);
+    const cropBottom = height * 0.23;
+    return `q ${x} ${y + cropBottom} ${width} ${height - cropBottom} re W n ${width} 0 0 ${height} ${x} ${y} cm /Im1 Do Q\n`;
+  }
+
   function wrapLines(value: string, width: number, size: number) {
     const result: string[] = [];
     String(value || "").split(/\r?\n/).filter(Boolean).forEach(paragraph => {
@@ -355,7 +362,7 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     : sourceItems;
   const rowH = sectionMode ? 22 : 24;
   const headerH = 26;
-  const baseItemsTop = 456;
+  const baseItemsTop = 428;
   const itemsBottom = 118 + summaryReserve;
   const requiredItemsH = headerH + Math.max(printableRows.length, 1) * rowH;
   const pageYOffset = Math.max(0, requiredItemsH - (baseItemsTop - itemsBottom));
@@ -373,9 +380,12 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
     content += rect(0, 0, page.width, page.height, "1 1 1", "1 1 1");
     content += rect(0, pageY(756), page.width, 36, headerFill, headerFill);
     content += drawText("MANAGED IT SERVICES  /  CYBERSECURITY", margin, pageY(770), 8, gold, "F2");
-    content += drawLogo(margin, pageY(668), 150);
-    content += drawText(contactEmail, margin, pageY(648), 9, muted);
-    content += drawText("(916) 909-0500", margin, pageY(633), 9, muted);
+    content += rect(margin, pageY(618), 270, 118, headerFill, headerFill);
+    content += drawLogoMark(105, pageY(664), 140);
+    content += drawText("GOLDEN STATE", 61, pageY(638), 11, white, "F2");
+    content += drawText("VISIONS", 162, pageY(638), 11, gold, "F2");
+    content += drawText(contactEmail, margin, pageY(596), 8.5, muted);
+    content += drawText("(916) 909-0500", 190, pageY(596), 8.5, muted);
 
     content += drawText(isQuote ? "PROJECT QUOTE" : "INVOICE", 404, pageY(708), 22, ink, "F2");
     content += rect(350, pageY(618), 222, 72, softFill, line);
@@ -398,9 +408,9 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
       content += drawText(label.toUpperCase(), metaX, y, 7.5, muted, "F2");
       content += drawText(value, metaValueX, y, 9, ink, "F2");
     });
-    content += rect(margin, pageY(605), tableW, 2, gold, gold);
+    content += rect(margin, pageY(580), tableW, 2, gold, gold);
 
-    const billY = pageY(492);
+    const billY = pageY(464);
     const billH = 96;
     const addressGap = 18;
     const addressW = (tableW - addressGap) / 2;
@@ -423,7 +433,7 @@ export function generateInvoicePdf(invoice: InvoicePayload, client: ClientPayloa
       });
     }
 
-    content += drawText(isQuote ? (invoice.title || "Project Quote") : "SERVICES & LICENSING", tableX, pageY(470), 9, muted, "F2");
+    content += drawText(isQuote ? (invoice.title || "Project Quote") : "SERVICES & LICENSING", tableX, pageY(442), 9, muted, "F2");
     return content;
   }
 
