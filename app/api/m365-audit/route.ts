@@ -37,6 +37,13 @@ type GraphUser = {
 type GraphSku = {
   skuId?: string;
   skuPartNumber?: string;
+  capabilityStatus?: string;
+  prepaidUnits?: {
+    enabled?: number;
+    warning?: number;
+    suspended?: number;
+    lockedOut?: number;
+  };
 };
 
 function envValue(...keys: string[]) {
@@ -140,12 +147,21 @@ export async function GET(request: Request) {
     const accessToken = await graphToken(tenantKey);
     const skus = await graphGetAll<GraphSku>(
       accessToken,
-      "/subscribedSkus?$select=skuId,skuPartNumber",
+      "/subscribedSkus?$select=skuId,skuPartNumber,capabilityStatus,prepaidUnits",
     );
     const skuLookup = new Map(
       skus
         .filter((sku) => sku.skuId)
         .map((sku) => [String(sku.skuId).toLowerCase(), sku.skuPartNumber || sku.skuId || ""]),
+    );
+    const activeSkuIds = new Set(
+      skus
+        .filter((sku) => {
+          const status = String(sku.capabilityStatus || "").toLowerCase();
+          const usableSeats = Number(sku.prepaidUnits?.enabled || 0) + Number(sku.prepaidUnits?.warning || 0);
+          return Boolean(sku.skuId) && status === "enabled" && usableSeats > 0;
+        })
+        .map((sku) => String(sku.skuId).toLowerCase()),
     );
 
     const select = [
@@ -169,11 +185,21 @@ export async function GET(request: Request) {
 
     const rows = users
       .map((user) => {
-        const skuParts = (user.assignedLicenses || [])
-          .map((license) => skuLookup.get(String(license.skuId || "").toLowerCase()) || license.skuId || "")
+        const assignedSkuIds = (user.assignedLicenses || [])
+          .map((license) => String(license.skuId || "").toLowerCase())
+          .filter(Boolean);
+        const skuParts = assignedSkuIds
+          .filter((skuId) => activeSkuIds.has(skuId))
+          .map((skuId) => skuLookup.get(skuId) || skuId)
+          .filter(Boolean)
+          .sort();
+        const expiredSkuParts = assignedSkuIds
+          .filter((skuId) => !activeSkuIds.has(skuId))
+          .map((skuId) => skuLookup.get(skuId) || skuId)
           .filter(Boolean)
           .sort();
         const licenseNames = skuParts.map((part) => friendlySkuName(String(part)));
+        const expiredLicenseNames = expiredSkuParts.map((part) => friendlySkuName(String(part)));
 
         return {
           "Display Name": user.displayName || "",
@@ -184,11 +210,15 @@ export async function GET(request: Request) {
           "Account Enabled": user.accountEnabled ? "TRUE" : "FALSE",
           "License Names": licenseNames.join("; "),
           "Sku Part Numbers": skuParts.join("; "),
+          "Expired License Names": expiredLicenseNames.join("; "),
+          "Expired Sku Part Numbers": expiredSkuParts.join("; "),
           Department: user.department || "",
           "Employee Type": user.employeeType || "",
           "Job Title": user.jobTitle || "",
           "User Type": user.userType || "",
-          Notes: "",
+          Notes: expiredLicenseNames.length
+            ? `Excluded expired or suspended tenant license assignment: ${expiredLicenseNames.join("; ")}`
+            : "",
         };
       })
       .sort((a, b) => a["User Principal Name"].localeCompare(b["User Principal Name"]));

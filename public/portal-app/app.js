@@ -2,7 +2,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const costMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
-const portalBuild = "portal-20260728-227";
+const portalBuild = "portal-20260728-228";
 const portalIsLocalHost = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 const portalNoteAuthorName = "Cory";
 const m365AutomationRetryTimers = new Map();
@@ -8593,9 +8593,10 @@ function classify365Row(raw, clientId) {
   const displayName = raw["Display Name"] || raw.displayName || raw.name || "";
   const upn = raw["User Principal Name"] || raw.userPrincipalName || raw.mail || "";
   const licenses = raw["License Names"] || raw.licenses || raw.assignedLicenses || "";
+  const expiredLicenses = raw["Expired License Names"] || raw.expiredLicenses || "";
   const enabledText = raw["Account Enabled"] || raw.accountEnabled || "TRUE";
   const enabled = !["false", "no", "0", "disabled"].includes(String(enabledText).toLowerCase());
-  const search = `${displayName} ${upn} ${licenses} ${raw["Job Title"] || ""} ${raw.Notes || ""}`.toLowerCase();
+  const search = `${displayName} ${upn} ${licenses} ${expiredLicenses} ${raw["Job Title"] || ""} ${raw.Notes || ""}`.toLowerCase();
   let tier = "Needs Review";
   let status = "Ready";
   let reason = "Billable";
@@ -8603,7 +8604,11 @@ function classify365Row(raw, clientId) {
   if (!enabled || !licenses || upn.toLowerCase().includes("#ext#")) {
     tier = "Not Billable";
     status = "Excluded";
-    reason = !enabled ? "Disabled account" : "External or unlicensed account";
+    reason = !enabled
+      ? "Disabled account"
+      : expiredLicenses
+        ? `Expired or suspended license excluded: ${expiredLicenses}`
+        : "External or unlicensed account";
   } else if (["service", "scanner", "scan", "copier", "printer", "shared", "no-reply", "noreply", "relay", "info@"].some(marker => search.includes(marker))) {
     tier = "Service Account";
   } else if (/(Business|E3|E5|O365_BUSINESS|STANDARDPACK)/i.test(licenses)) {
@@ -8625,6 +8630,7 @@ function classify365Row(raw, clientId) {
     upn,
     email: raw["Email Address"] || raw.mail || upn,
     licenses,
+    expiredLicenses,
     department: raw.Department || raw.department || "",
     employeeType: raw["Employee Type"] || raw.employeeType || "",
     jobTitle: raw["Job Title"] || raw.jobTitle || "",
